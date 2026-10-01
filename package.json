@@ -20,6 +20,7 @@
     "verify:gemini": "tsx scripts/verifyGeminiCredentials.ts",
     "verify:e2e": "tsx scripts/verifyEndToEnd.ts",
     "verify:keys": "tsx scripts/verifyKeys.ts",
+    "verify:deployment": "tsx scripts/verifyDeployment.ts",
     "verify:all": "npm run lint && npm test && npm run verify:relay && npm run verify:vercel && npm run build"
   },
   "dependencies": {
