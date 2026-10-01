@@ -53,6 +53,11 @@ export const LiveTranscript: React.FC<LiveTranscriptProps> = ({
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    // The object URL holds a live reference to the blob until it is revoked, and the browser keeps
+    // it alive past the download itself. Revoking is deferred to the next task rather than done
+    // inline because revoking synchronously after `click()` can cancel the download in some
+    // browsers before it has started reading the blob.
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   };
 
   return (

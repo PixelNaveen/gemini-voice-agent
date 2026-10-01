@@ -7,9 +7,14 @@ coverage/
 .env*
 !.env.example
 
-# F-41: the container build bundles `server.ts` to this file. It is generated, never edited.
+# F-41/F-54: the build bundles `server.ts` to this file. The container runs it, and the Vercel
+# function imports it. It is generated, never edited.
 server.mjs
 server.mjs.map
+
+# Scratch directories for `scripts/verifyFunctionImports.ts`. Created inside the repository so the
+# server bundle can resolve `node_modules` by walking up, then deleted by the script.
+.tmp-aura-task*/
 
 # F-20: the local appointment journal. Written at runtime, and it holds caller contact details,
 # so it must never be committed.

@@ -29,13 +29,20 @@
  *   accepted it. A reconnect may therefore land on a *different* instance, which is exactly the
  *   multi-instance condition `PersistenceTopology` already reports on. `/ready` reports it; this
  *   file does not pretend otherwise.
+ * - The server is imported from the pre-bundled `server.mjs` and *not* from `server.ts`. The
+ *   deployed `api/index.js` is native ESM, and native ESM resolves specifiers literally with no
+ *   extension-guessing fallback, so the previous `from '../server'` failed at import time with
+ *   `ERR_MODULE_NOT_FOUND: Cannot find module '/var/task/server'`. Every route 500'd before any
+ *   code in this file ran, while the static build served normally and made it look like a live
+ *   site with a dead backend. `server.mjs` is the same bundle the container runs, so hosting
+ *   cannot drift from local. `scripts/verifyFunctionImports.ts` fails the build if this regresses.
  */
 
 import type { IncomingMessage, ServerResponse } from 'http';
 import type { Duplex } from 'stream';
 import type { Request, Response } from 'express';
 
-import { app, handleLiveUpgrade } from '../server';
+import { app, handleLiveUpgrade } from '../server.mjs';
 
 /**
  * Vercel exposes the upgrade primitives on a request-scoped context hung off `globalThis` under

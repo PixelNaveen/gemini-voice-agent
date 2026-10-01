@@ -12,7 +12,7 @@
     "build:server": "esbuild server.ts --bundle --platform=node --target=node22 --format=esm --packages=external --sourcemap --outfile=server.mjs",
     "start": "tsx server.ts",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js server.mjs server.mjs.map",
+    "clean": "rm -rf dist server.js server.mjs server.mjs.map .tmp-aura-task-broken-* .tmp-aura-task-*",
     "lint": "tsc --noEmit",
     "test": "tsx -e \"import { TestRunner } from './src/testing/TestRunner'; TestRunner.runAll().then(r => { TestRunner.printReport(r); if (!r.allPassed) process.exit(1); })\"",
     "verify:relay": "tsx scripts/verifyRelaySecurity.ts",
@@ -23,7 +23,8 @@
     "verify:deployment": "tsx scripts/verifyDeployment.ts",
     "verify:entrypoint": "tsx scripts/verifyEntrypointSafety.ts",
     "verify:fn-bundle": "tsx scripts/verifyFunctionBundle.ts",
-    "verify:all": "npm run lint && npm test && npm run verify:relay && npm run verify:vercel && npm run verify:entrypoint && npm run verify:fn-bundle && npm run build"
+    "verify:fn-imports": "tsx scripts/verifyFunctionImports.ts",
+    "verify:all": "npm run lint && npm test && npm run verify:relay && npm run verify:vercel && npm run verify:entrypoint && npm run build:server && npm run verify:fn-imports && npm run verify:fn-bundle && npm run build"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
