@@ -40,6 +40,31 @@ npm run verify:e2e      # full call: greeting, caller turn, real tool dispatch, 
 `<no speech>` or `{pause}` markers, which is precisely the failure a user experiences as the agent
 ignoring them.
 
+### Diagnosing a live deployment
+
+A successful build proves the code compiles and nothing more. Every deployment problem so far has
+been invisible at build time and obvious in a single HTTP response, so check a live URL directly:
+
+```bash
+npm run verify:deployment -- https://your-deployment.vercel.app
+```
+
+This replays the four requests the browser actually makes, in order:
+
+| Step                | Proves                                                   | Not this                                                 |
+| ------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| `/health`           | the function is running and `server.ts` imported cleanly   | —                                                        |
+| `/ready`            | whether the instance believes it can serve a call, and why not | not a browser step; `/live` never consults it        |
+| `/api/live-token`   | the HttpOnly relay cookie is issued                        | if this fails, the upgrade is refused 401                |
+| `GET /live`         | the upgrade is accepted (101) or refused with a reason     | 501 means enable Fluid compute; no code can work around it |
+
+It exits non-zero on any real failure, so it is safe to run in CI against a deployment. If the relay
+requires a shared secret, pass it with `--token` or `AURA_LIVE_TOKEN`; it is never written to disk.
+
+`/ready` returning `503 MULTI_INSTANCE_RISK` on Vercel is correct behaviour, not a fault: it is the
+design refusing to claim it can safely accept a booking when it has no shared store. It does not
+prevent calls, because `/live` does not consult it.
+
 ## Deploying
 
 ### The correct deployment: one instance
