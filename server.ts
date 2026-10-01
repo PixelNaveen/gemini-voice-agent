@@ -55,25 +55,55 @@ const __dirname = path.dirname(__filename);
  * The client was previously constructed unconditionally with `apiKey: ''`. Every request
  * then failed deep inside the SDK with an opaque 400, and the "fallback" paths happily
  * returned fake success to the caller. A missing key is now a hard, explicit boot error.
+ *
+ * F-51: "hard boot error" used to mean `process.exit(1)` at module scope. That is correct for
+ * `npm start`, where the process owns the terminal and the operator is watching it. It is
+ * actively harmful for a Vercel function: the module is imported once per invocation, so a
+ * missing environment variable killed the instance and Vercel reported every single route as
+ * `500 FUNCTION_INVOCATION_FAILED` - including `/health` and `/ready`, the two endpoints whose
+ * entire job is to explain what is wrong. The deployment looked healthy in the dashboard and
+ * was completely dead, and the only clue was a function log line nobody sees.
+ *
+ * Boot problems are therefore *recorded* here and surfaced through the diagnostic routes, and
+ * the process is only killed when it is the standalone entrypoint (`startServer`), where
+ * exiting is the correct and visible behaviour.
  */
+const bootProblems: string[] = [];
+
 const primaryApiKey = process.env.GEMINI_API_KEY?.trim();
 if (!primaryApiKey) {
-  console.error(
-    '[boot] GEMINI_API_KEY is not set. The relay cannot start.\n' +
-      '       Set it in .env.local (see .env.example) or in the Vercel project environment.'
-  );
-  process.exit(1);
+  const problem =
+    'GEMINI_API_KEY is not set. The relay cannot serve a call until it is configured ' +
+    '(set it in .env.local for local work, or in the Vercel project Environment Variables).';
+  bootProblems.push(problem);
+  console.error(`[boot] ${problem}`);
 }
 
-// Standard Server-Side Gemini Client
-const ai = new GoogleGenAI({
-  apiKey: primaryApiKey,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    },
-  },
-});
+// Standard Server-Side Gemini Client.
+//
+// Only constructed when a key exists. Constructing it unconditionally was the original bug, and
+// constructing it lazily is what lets the diagnostic routes still answer when the key is absent.
+const ai: GoogleGenAI | null = primaryApiKey
+  ? new GoogleGenAI({
+      apiKey: primaryApiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    })
+  : null;
+
+/** Returns the shared client, or throws a diagnosable error naming the missing configuration. */
+function requireAi(): GoogleGenAI {
+  if (!ai) {
+    throw new Error(
+      'Gemini is not configured: GEMINI_API_KEY is missing. ' +
+        'Check /health for the boot problems that prevented this instance from starting.'
+    );
+  }
+  return ai;
+}
 
 const LIVE_MODEL = process.env.AURA_LIVE_MODEL || 'gemini-3.8-live';
 
@@ -116,13 +146,16 @@ const liveTokenLimiter = new RateLimiter({ name: 'live-token', capacity: 20, win
 const registryProblems = PersonaBusinessTruth.auditRegistry((tool) => ToolGateway.isImplemented(tool));
 if (registryProblems.length > 0) {
   console.error('[boot] Persona registry validation FAILED:');
-  for (const problem of registryProblems) console.error(`       - ${problem}`);
-  process.exit(1);
+  for (const problem of registryProblems) {
+    console.error(`       - ${problem}`);
+    bootProblems.push(`Persona registry: ${problem}`);
+  }
+} else {
+  console.log(
+    `[boot] Persona registry validated: ${PersonaRegistry.list().length} personas, ` +
+      `ids = ${PersonaRegistry.list().map((p) => p.id).join(', ')}`
+  );
 }
-console.log(
-  `[boot] Persona registry validated: ${PersonaRegistry.list().length} personas, ` +
-    `ids = ${PersonaRegistry.list().map((p) => p.id).join(', ')}`
-);
 
 // ───────────────────────────── Read-only diagnostics ─────────────────────────────
 
@@ -155,10 +188,33 @@ function operatorDetailAvailable(req: Request): boolean {
  * server that is merely degraded; `/ready` is the gate that refuses traffic.
  */
 app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', uptimeMs: metrics.snapshot().uptimeMs, liveModel: LIVE_MODEL });
+  // F-51: boot problems are reported here. `/health` stays 200 while the process is alive so a
+  // restarting platform is not told to kill a merely degraded server, but a configuration fault
+  // means this instance cannot serve a call at all, so it is stated explicitly and named rather
+  // than being left to surface as an unexplained `500 FUNCTION_INVOCATION_FAILED`.
+  res.json({
+    status: bootProblems.length === 0 ? 'ok' : 'misconfigured',
+    uptimeMs: metrics.snapshot().uptimeMs,
+    liveModel: LIVE_MODEL,
+    ...(bootProblems.length > 0
+      ? { ready: false, bootProblems }
+      : {}),
+  });
 });
 
 app.get('/ready', async (_req: Request, res: Response) => {
+  // An unconfigured instance must never claim it is ready: doing so is how a caller gets routed
+  // into a function that will refuse the call.
+  if (bootProblems.length > 0) {
+    res.status(503).json({
+      ready: false,
+      error: 'MISCONFIGURED',
+      bootProblems,
+      persistence: { topology: describeTopology().includes('Multiple') ? 'MULTI_INSTANCE' : 'SINGLE_INSTANCE' },
+    });
+    return;
+  }
+
   // Touch the store so its real state is observed rather than assumed.
   const storeReadable = (() => {
     try {
@@ -363,7 +419,7 @@ async function synthesizeSpeech(
   style: string,
   personaId: string
 ): Promise<{ audio: string | null; mimeType: string }> {
-  const response = await ai.models.generateContent({
+  const response = await requireAi().models.generateContent({
     model: TTS_MODEL,
     contents: [
       {
@@ -1443,6 +1499,17 @@ async function startServer() {
     app.get('*', (_req, res) => {
       res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
     });
+  }
+
+  // F-51: for the standalone process the boot problems are fatal and exiting is the correct,
+  // visible behaviour - the operator is watching this terminal. The function path deliberately
+  // does NOT exit, so its diagnostic routes stay able to answer.
+  if (bootProblems.length > 0) {
+    console.error(
+      `[boot] Refusing to start: ${bootProblems.length} configuration problem(s) found. ` +
+        'Fix the above and restart.'
+    );
+    process.exit(1);
   }
 
   const PORT = Number(process.env.PORT) || 3000;
