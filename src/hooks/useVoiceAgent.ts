@@ -55,7 +55,7 @@ import { useMicrophoneCapture } from './useMicrophoneCapture';
 import { useAudioPlayback } from './useAudioPlayback';
 import { useSessionMemoryControls } from './useSessionMemoryControls';
 import { useSilenceLadder } from './useSilenceLadder';
-import { useRelayTransport, RELAY_COOKIE_PRIME_WAIT_MS } from './useRelayTransport';
+import { useRelayTransport } from './useRelayTransport';
 
 const STORAGE_KEY_LOCKED_PERSONA = 'aura_locked_persona_id_v3';
 
@@ -733,15 +733,43 @@ export function useVoiceAgent() {
 
           const { compiledContext } = resolveClientSessionContext(false);
 
-          // Prime the relay cookie, but do not serialise the WebSocket behind it. The cookie
-          // is HttpOnly and the browser sends it on the upgrade automatically, so the fetch
-          // and the socket handshake can proceed concurrently; the upgrade's own 401 is the
-          // authority on whether the cookie actually arrived, so a failed prime degrades to
-          // the same visible error rather than a silent hang here.
+          // The relay cookie must be in place BEFORE the upgrade is sent.
           //
-          // `primeRelayCookie` is memoised on success, so only the first call of a page pays
-          // this round trip at all.
-          const cookieReady = primeRelayCookie();
+          // F-50: this used to fire the cookie fetch and the WebSocket open concurrently to save
+          // a round trip. That saved nothing and cost a first-connection failure. The browser
+          // attaches the HttpOnly cookie to the upgrade itself, so a socket opened while the
+          // fetch is still in flight can reach the relay with no cookie and be refused with a
+          // 401. Critically, a 401 arrives *during the HTTP upgrade*: `onopen` never fires, so
+          // the in-`onopen` wait that used to sit below could not repair the race it was written
+          // for. The visitor paid for that with a failed first attempt and a retry, which is the
+          // exact thing this call exists to avoid.
+          //
+          // Awaiting costs nothing on any call after the first: `primeRelayCookie` memoises on
+          // success, so the first call of a page pays one round trip and every subsequent call
+          // resolves synchronously. There is no fast path to protect, only the first call to fix.
+          const cookieReady = await primeRelayCookie();
+          if (
+            !ConnectionGuard.validateEvent(context, initialTicket.connectionId, initialTicket.generation, activeSessionRef.current)
+          ) {
+            // The session was ended or superseded while the cookie was priming. Opening a
+            // socket now would create an unowned connection nobody is listening to. The
+            // session object is still returned because that is this callback's contract; the
+            // superseded session is already invalidated, so nothing will drive it.
+            console.warn(
+              '[Session Lifecycle] Session superseded while priming the relay cookie; ' +
+                'not opening a socket for it.'
+            );
+            return newActiveSession;
+          }
+          if (!cookieReady) {
+            // `configured: false` is a legitimate same-origin mode, so a false result is not by
+            // itself fatal and the upgrade stays the authority. Logged so a genuinely failed
+            // prime is visible instead of surfacing later as an opaque 401.
+            console.warn(
+              '[Session Lifecycle] Relay cookie did not confirm before the upgrade; ' +
+                'attempting the socket anyway and deferring to the relay response.'
+            );
+          }
           const ws = openSocket();
           wsRef.current = ws;
 
@@ -751,36 +779,20 @@ export function useVoiceAgent() {
               return;
             }
             console.log(`[Session Handshake] Socket connected for ${targetPreset.businessName}. Sending init_session...`);
-            // A cookie that had not finished priming when the socket opened would otherwise
-            // ride out on the upgrade and come back 401. Waiting here - only when priming is
-            // genuinely still in flight, and only on the first call of a page - costs nothing
-            // on the fast path and prevents a spurious auth failure on the slow one. The wait
-            // is bounded so a hanging fetch cannot delay the handshake indefinitely; if it
-            // expires, the upgrade is attempted anyway and the server's own 401 is reported.
-            const sendInit = () => {
-              if (!ConnectionGuard.validateEvent(context, initialTicket.connectionId, initialTicket.generation, activeSessionRef.current)) {
-                return;
-              }
-              ws.send(
-                JSON.stringify({
-                  type: 'init_session',
-                  connectionId: initialTicket.connectionId,
-                  sessionId: context.sessionId,
-                  personaId: context.personaId,
-                  voice: selectedVoice.id,
-                  // The base system prompt is composed SERVER-SIDE from the validated
-                  // persona registry. The client only supplies a bounded operator override.
-                  instructionOverride: systemInstructionOverride,
-                  sessionMemory: compiledContext,
-                })
-              );
-            };
-
-            // Settle the cookie without letting it gate the common case.
-            void Promise.race([
-              cookieReady,
-              new Promise<void>((resolve) => setTimeout(resolve, RELAY_COOKIE_PRIME_WAIT_MS)),
-            ]).then(sendInit);
+            // The cookie was awaited above, so `init_session` can go out immediately.
+            ws.send(
+              JSON.stringify({
+                type: 'init_session',
+                connectionId: initialTicket.connectionId,
+                sessionId: context.sessionId,
+                personaId: context.personaId,
+                voice: selectedVoice.id,
+                // The base system prompt is composed SERVER-SIDE from the validated
+                // persona registry. The client only supplies a bounded operator override.
+                instructionOverride: systemInstructionOverride,
+                sessionMemory: compiledContext,
+              })
+            );
           };
 
           ws.onmessage = (event) => {

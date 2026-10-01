@@ -42,14 +42,15 @@ import type {
 export const HANDSHAKE_VERIFY_TIMEOUT_MS = 20_000;
 
 /**
- * How long an open socket will wait for the relay cookie to finish priming before sending
- * `init_session` anyway.
+ * F-50: `RELAY_COOKIE_PRIME_WAIT_MS` was removed here.
  *
- * Only the first call of a page can hit this, and only when priming is genuinely slower than
- * the upgrade. The cap exists so a stalled fetch degrades into the server's own 401 - which is
- * reported to the user - rather than a call that simply never sends its handshake.
+ * It capped how long an *already open* socket would wait for the cookie before sending
+ * `init_session`. That wait could never fix the failure it was written for: a relay cookie that
+ * is missing is rejected during the HTTP upgrade itself, so a refused upgrade never reaches
+ * `onopen` and the timer was never reached. Priming is now awaited before the socket is opened in
+ * `useVoiceAgent`, which is the only ordering that actually guarantees the cookie rides out on
+ * the upgrade.
  */
-export const RELAY_COOKIE_PRIME_WAIT_MS = 1_500;
 
 export interface RelayTransportDeps {
   activeSessionRef: MutableRefObject<ActiveSession | null>;
