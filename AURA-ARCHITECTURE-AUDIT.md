@@ -1214,6 +1214,36 @@ statically for the two config faults that actually occurred here: a `runtime` th
 semver rule, and a rewrite pointing at a file that does not exist. The second is the same defect
 as the missing `api/index.ts` above, caught at commit time rather than as a 404 in production.
 
+**`"types": ["vite/client"]` failed the function build.** With the runtime fixed, the build got
+past validation and then failed at transpilation:
+
+```
+error TS2688: Cannot find type definition file for 'vite/client'.
+  Entry point of type library 'vite/client' specified in compilerOptions
+```
+
+`compilerOptions.types` is a *project-wide* requirement, not a per-file one. The Vercel function
+build compiles `api/index.ts` and its imports in an isolated dependency context containing only
+what the function imports, and Vite — a client build tool — is not among them, so a type library
+named in the shared config could not be resolved.
+
+The deeper problem is that the config forced a client-only dependency onto a server build, for
+code that has nothing to do with the API: `import.meta.env` is used in exactly one place, a
+`if (import.meta.env.DEV)` guard around a dev-only icon warning in the browser. Nothing in
+`api/index.ts`, `server.ts`, or anything they reach needs Vite types.
+
+The ambient types are now declared in `src/vite-env.d.ts` instead, along with per-extension module
+declarations for stylesheets and assets (which `vite/client` was also supplying — dropping the
+config entry without those breaks `import './index.css'`). Asset modules are declared
+per-extension rather than as a `*` wildcard so a misspelled import still fails to compile instead
+of resolving at runtime as a blank page.
+
+This is the third build-only failure in a row, and all three share a cause: each is a property of
+how the platform compiles the project rather than of the code's behaviour, so no test that imports
+the handler locally can observe it. The `verify:vercel` config checks now cover the runtime string
+and this tsconfig requirement, and both were confirmed to fail against the broken configuration
+and pass against the fix.
+
 **The server persistence stack was in the browser bundle.** `useVoiceAgent` imported `ToolGateway`
 from the `../tools` barrel purely to expose `executeAuthoritativeAction` — a helper with no consumer
 anywhere in the app. The barrel re-exports the entire server-side booking stack, which reaches `fs`

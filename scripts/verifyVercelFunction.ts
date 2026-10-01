@@ -120,6 +120,31 @@ function verifyVercelConfig(): void {
       : 'no invalid runtime declarations'
   );
 
+  // The function build compiles `api/index.ts` and its imports in an isolated dependency context.
+  // Anything tsconfig.json demands of the *whole* project must therefore resolve without a
+  // client-only build tool, or the build fails before emitting. `"types": ["vite/client"]` did
+  // exactly that and produced `error TS2688: Cannot find type definition file for 'vite/client'`
+  // on Vercel while every local command passed, because the local tree does have Vite installed.
+  const tsconfigRaw = fs.readFileSync(path.resolve(process.cwd(), 'tsconfig.json'), 'utf8');
+  let tsconfig: { compilerOptions?: { types?: unknown } };
+  try {
+    tsconfig = JSON.parse(tsconfigRaw);
+  } catch (err) {
+    fail('tsconfig.json parses as JSON', String(err));
+    return;
+  }
+  const declaredTypes = tsconfig.compilerOptions?.types;
+  const typesList = Array.isArray(declaredTypes) ? declaredTypes.map(String) : [];
+  const clientOnlyTypes = typesList.filter((t) => t.startsWith('vite/'));
+  check(
+    clientOnlyTypes.length === 0,
+    'tsconfig does not require a client-only type library at project scope',
+    clientOnlyTypes.length
+      ? `"types": [${typesList.join(', ')}] applies to every compilation including the Vercel ` +
+        'function build, which resolves only function dependencies. Declare the members in a .d.ts instead.'
+      : `declared types: ${typesList.length ? typesList.join(', ') : 'none'}`
+  );
+
   // A rewrite pointing at a file that does not exist is a 404 that looks like a working site with
   // a dead API - the exact failure that shipped when api/index.ts was missing. The handler test
   // below cannot catch it, because it imports the handler directly rather than going through
