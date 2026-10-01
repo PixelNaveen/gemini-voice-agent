@@ -6,7 +6,6 @@
   "installCommand": "npm install",
   "functions": {
     "api/index.ts": {
-      "runtime": "@vercel/node@5",
       "maxDuration": 300,
       "memory": 1024
     }

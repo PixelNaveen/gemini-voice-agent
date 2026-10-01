@@ -14,6 +14,8 @@
 
 import http from 'http';
 import type { IncomingMessage, ServerResponse } from 'http';
+import fs from 'fs';
+import path from 'path';
 import type { Duplex } from 'stream';
 
 import { WebSocket } from 'ws';
@@ -64,8 +66,88 @@ interface PlatformUpgrade {
   head: Buffer;
 }
 
+/**
+ * Semver as Vercel's own `validateFunctions` accepts it.
+ *
+ * Vercel validates `functions.*.runtime` by taking the substring after the last `@` and requiring
+ * full semver. The deployed build failed with "Function Runtimes must have a valid version" for
+ * `"@vercel/node@5"`, because the last `@` splits to the bare major `5`, which is not a complete
+ * version. This mirrors that check so the same mistake cannot be committed again - a build error
+ * on someone else's account is a poor place to discover a one-character config mistake.
+ */
+const FULL_SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+
+function runtimeVersionIsValid(runtime: unknown): boolean {
+  if (typeof runtime !== 'string' || !runtime.includes('@')) return false;
+  const tag = runtime.split('@').pop() ?? '';
+  return FULL_SEMVER.test(tag);
+}
+
+/**
+ * Static checks on `vercel.json` itself.
+ *
+ * These are the class of fault that no amount of local handler testing can catch, because the
+ * handler is never reached: the build fails during config validation. Both checks below are for
+ * mistakes that were actually made in this repository, not hypotheticals.
+ */
+function verifyVercelConfig(): void {
+  const configPath = path.resolve(process.cwd(), 'vercel.json');
+  let config: Record<string, any>;
+
+  try {
+    config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  } catch (err) {
+    fail('vercel.json parses as JSON', String(err));
+    return;
+  }
+  pass('vercel.json parses as JSON');
+
+  const functions = (config.functions ?? {}) as Record<string, { runtime?: unknown }>;
+  const badRuntime: string[] = [];
+  for (const [glob, fn] of Object.entries(functions)) {
+    if (fn && typeof fn === 'object' && fn.runtime !== undefined) {
+      if (!runtimeVersionIsValid(fn.runtime)) {
+        badRuntime.push(`${glob} -> "${String(fn.runtime)}"`);
+      }
+    }
+  }
+  check(
+    badRuntime.length === 0,
+    'every function runtime carries a complete semver version',
+    badRuntime.length
+      ? `Vercel splits on the last "@" and requires full semver, so these are rejected: ${badRuntime.join(', ')}. ` +
+        'Omit `runtime` entirely to use the project Node version, or pin e.g. "@vercel/node@5.9.3".'
+      : 'no invalid runtime declarations'
+  );
+
+  // A rewrite pointing at a file that does not exist is a 404 that looks like a working site with
+  // a dead API - the exact failure that shipped when api/index.ts was missing. The handler test
+  // below cannot catch it, because it imports the handler directly rather than going through
+  // Vercel's routing.
+  const missingTargets = (config.rewrites ?? [])
+    .map((r: { destination?: string }) => r.destination)
+    .filter((dest: unknown): dest is string => typeof dest === 'string' && dest.startsWith('/api/'))
+    // A rewrite destination may or may not carry the `.ts` suffix; Vercel resolves both to the
+    // function. Check with and without it so the check does not fail on a cosmetic difference.
+    .filter((dest: string) => {
+      // Vercel destinations are absolute web paths, but `path.resolve` would treat a leading
+      // slash as the filesystem root and look for `C:\api\index.ts`. Strip it: the project root
+      // is the base these are relative to.
+      const rel = dest.replace(/^\/+/, '');
+      return !fs.existsSync(path.resolve(process.cwd(), rel)) &&
+        !fs.existsSync(path.resolve(process.cwd(), `${rel}.ts`));
+    });
+  check(
+    missingTargets.length === 0,
+    'every rewrite destination that targets the API exists on disk',
+    missingTargets.length ? `missing: ${missingTargets.join(', ')}` : 'all API rewrite targets exist'
+  );
+}
+
 async function main(): Promise<void> {
   console.log('\n[verify:vercel] Vercel Function entrypoint verification\n');
+
+  verifyVercelConfig();
 
   const server = http.createServer();
 

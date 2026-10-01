@@ -1200,6 +1200,20 @@ succeeding through the context, refusal without the relay cookie, refusal for a 
 an actionable `501` when the platform offers no upgrade primitives at all — which is what Vercel
 looks like without Fluid compute.
 
+**`"runtime": "@vercel/node@5"` failed the deployment build.** Every build died at
+`Error: Function Runtimes must have a valid version, for example 'now-php@1.0.0'`. Vercel's
+`validateFunctions` takes the substring after the *last* `@` and requires complete semver, so a
+scoped package name defeats its own check: `"@vercel/node@5"` splits to `["", "vercel/node", "5"]`
+and the bare major `5` is not a version. It is a plausible-looking value, and nothing in the
+schema flags it. The `runtime` key is now omitted entirely and the Node version is pinned in
+`package.json` `engines` (22.x, matching the Dockerfile and CI), which is where Vercel reads it.
+
+This class of fault is invisible to a handler test, because the handler is never reached — the
+build fails during config validation, before any code runs. `verify:vercel` now checks `vercel.json`
+statically for the two config faults that actually occurred here: a `runtime` that fails Vercel's
+semver rule, and a rewrite pointing at a file that does not exist. The second is the same defect
+as the missing `api/index.ts` above, caught at commit time rather than as a 404 in production.
+
 **The server persistence stack was in the browser bundle.** `useVoiceAgent` imported `ToolGateway`
 from the `../tools` barrel purely to expose `executeAuthoritativeAction` — a helper with no consumer
 anywhere in the app. The barrel re-exports the entire server-side booking stack, which reaches `fs`
