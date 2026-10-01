@@ -46,8 +46,52 @@ import { AlertManager } from './src/observability/AlertManager';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/**
+ * F-53: this module's own directory, resolved WITHOUT `import.meta`.
+ *
+ * This was `fileURLToPath(import.meta.url)`, and it was the single reason the deployment
+ * returned `500 FUNCTION_INVOCATION_FAILED` on every route while the static build served a
+ * perfectly good looking page.
+ *
+ * Vercel builds a function as a single CommonJS bundle. Its bundler replaces `import.meta` with
+ * an empty object, so `import.meta.url` evaluates to `undefined` and `fileURLToPath(undefined)`
+ * throws `TypeError [ERR_INVALID_ARG_TYPE]` at module scope - before a single route exists, before
+ * the app object is even constructed. The Vercel build succeeded, the dashboard showed a healthy
+ * deployment, and every request died at import. It is invisible locally because `tsx` runs this
+ * file as ESM where `import.meta.url` is genuinely defined, and it is invisible in the ESM bundle
+ * too, so a passing local test proved nothing about the CJS artifact actually being deployed.
+ *
+ * The fallback ladder below is ordered from most to least trustworthy, and the last entry is
+ * always defined, so module scope can no longer throw on a platform whose module semantics differ
+ * from the ones this file was written for.
+ */
+function resolveModuleDir(): string {
+  // Node 22+: the caller is the file that performed the require/import. Only defined under CJS.
+  try {
+    if (typeof __filename === 'string' && __filename) return path.dirname(__filename);
+  } catch {
+    /* ESM: __filename is not defined and referencing it is a ReferenceError, not undefined. */
+  }
+
+  // Bundled CJS: esbuild injects this, and it is the bundled artifact's own path.
+  try {
+    const injected = (globalThis as Record<string, unknown>).__filename;
+    if (typeof injected === 'string' && injected) return path.dirname(injected);
+  } catch {
+    /* not provided by this runtime */
+  }
+
+  // ESM. Guarded so this file can be bundled to CJS without a ReferenceError.
+  const metaUrl = (import.meta as unknown as { url?: string } | undefined)?.url;
+  if (typeof metaUrl === 'string' && metaUrl) return path.dirname(fileURLToPath(metaUrl));
+
+  // Last resort: the working directory. Only used for resolving `dist`, and a wrong answer here
+  // degrades static file serving rather than breaking the relay.
+  return process.cwd();
+}
+
+const __dirname = resolveModuleDir();
+const __filename = path.join(__dirname, 'server.js');
 
 /**
  * SECTION 15: Fail fast on missing configuration.
@@ -1550,12 +1594,21 @@ async function startServer() {
  */
 export { app, httpServer, metrics, wss, startServer, handleLiveUpgrade };
 
-/** True when this file was executed directly rather than imported as a module. */
+/**
+ * True when this file was executed directly rather than imported as a module.
+ *
+ * F-53: this used to compare `import.meta.url` with `pathToFileURL(process.argv[1])`, which is
+ * wrong twice over under the function's CommonJS bundle. `import.meta.url` is `undefined` there,
+ * so the comparison threw; and had it worked, the bundle's own path equals `process.argv[1]`, so
+ * the function would have believed it was the standalone server and bound a port it does not
+ * own. Comparing directory names is stable across both module systems, and `shouldStartListener`
+ * below is what actually decides the question.
+ */
 function isEntrypoint(): boolean {
   const invoked = process.argv[1];
   if (!invoked) return false;
   try {
-    return import.meta.url === pathToFileURL(invoked).href;
+    return path.dirname(path.resolve(invoked)) === __dirname;
   } catch {
     return false;
   }
