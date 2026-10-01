@@ -14,6 +14,7 @@ import { runErrorClassificationTests } from './unit/ErrorClassification.test';
 import { runAuthorityHardeningTests } from './unit/AuthorityHardening.test';
 import { runMemoryBoundsTests, runSessionContinuityTests } from './unit/MemoryBounds.test';
 import { runOutboundPromptQueueTests } from './unit/OutboundPromptQueue.test';
+import { runNameExtractionTests } from './unit/NameExtraction.test';
 import { runFunctionCallingTests } from './unit/FunctionCalling.test';
 import { runBookingConcurrencyTests } from './integration/BookingConcurrency.test';
 import { runTenantIsolationTests } from './integration/TenantIsolation.test';
@@ -50,6 +51,7 @@ export class TestRunner {
       { name: 'Unit: Memory Bounds & Sensitive-Field Filtering', fn: runMemoryBoundsTests },
       { name: 'Unit: Session Continuity Across Refresh (F-11)', fn: runSessionContinuityTests },
       { name: 'Unit: Outbound Prompt Queue Across Recovery', fn: runOutboundPromptQueueTests },
+      { name: 'Unit: Caller Name Extraction', fn: runNameExtractionTests },
       { name: 'Unit: Live Function Calling & Error Taxonomy (F-22)', fn: runFunctionCallingTests },
       { name: 'Unit: Authority Hardening (Errors, Knowledge, Requirements)', fn: runAuthorityHardeningTests },
       { name: 'Unit: Honest Observability & Error Routing (F-21/F-22)', fn: runObservabilityTests },

@@ -1,5 +1,9 @@
 import { TestHarness, TestResult } from '../TestHarness';
 import { OutboundPromptQueue } from '../../core/recovery/OutboundPromptQueue';
+import { TranscriptStore } from '../../core/memory/TranscriptStore';
+import { MemoryManager } from '../../core/memory/MemoryManager';
+import { ConversationMachine } from '../../core/conversation/ConversationMachine';
+import { extractSessionFactsFromText } from '../../utils/transcriptUtils';
 
 /**
  * F-11/F-35 support: a typed turn must survive the transport that was supposed to carry it.
@@ -26,8 +30,8 @@ export async function runOutboundPromptQueueTests(): Promise<TestResult[]> {
     await TestHarness.runTest(SUITE, 'a prompt typed during recovery is delivered, not dropped', () => {
       const queue = new OutboundPromptQueue();
 
-      const queued = queue.enqueue('Can I book a haircut tomorrow?', 'conn_1');
-      TestHarness.assert(queued !== null, 'a non-empty prompt must be accepted for later delivery');
+      const outcome = queue.enqueue('Can I book a haircut tomorrow?', 'conn_1');
+      TestHarness.assert(outcome.accepted, 'a non-empty prompt must be accepted for later delivery');
       TestHarness.assertEqual(queue.size, 1, 'the prompt is held, not sent');
 
       const { deliver, expired, evicted } = queue.drain();
@@ -183,22 +187,73 @@ export async function runOutboundPromptQueueTests(): Promise<TestResult[]> {
     await TestHarness.runTest(SUITE, 'an empty or whitespace prompt is refused outright', () => {
       const queue = new OutboundPromptQueue();
 
-      TestHarness.assertEqual(queue.enqueue(''), null, 'an empty prompt is not worth holding');
-      TestHarness.assertEqual(queue.enqueue('   '), null, 'whitespace is not a turn');
+      const empty = queue.enqueue('');
+      TestHarness.assert(!empty.accepted, 'an empty prompt is not worth holding');
+      TestHarness.assertEqual(empty.accepted ? '' : empty.reason, 'EMPTY', 'an empty turn has its own reason');
+
+      const blank = queue.enqueue('   ');
+      TestHarness.assert(!blank.accepted, 'whitespace is not a turn');
       TestHarness.assertEqual(queue.size, 0, 'nothing may be queued from an empty send');
     })
   );
 
   results.push(
-    await TestHarness.runTest(SUITE, 'a prompt larger than the whole cap is still accepted alone', () => {
+    await TestHarness.runTest(SUITE, 'a prompt larger than the whole cap is refused, not admitted', () => {
       const queue = new OutboundPromptQueue({ maxEntries: 8, maxChars: 20 });
 
-      // The evictor stops at the protected entry rather than looping forever, so a single
-      // oversized prompt is still delivered instead of throwing or silently vanishing.
-      const queued = queue.enqueue('z'.repeat(200));
-      TestHarness.assert(queued !== null, 'an oversized prompt must still be held');
-      TestHarness.assertEqual(queue.size, 1, 'it occupies the queue alone');
-      TestHarness.assertEqual(queue.drain().deliver.length, 1, 'it is delivered');
+      // This is the case that made the documented character cap untrue. The evictor protects the
+      // newest entry, so refusing this length check would let a single oversized paste sit in the
+      // buffer at unbounded size while the class still advertised `maxChars`.
+      const outcome = queue.enqueue('z'.repeat(200));
+      TestHarness.assert(!outcome.accepted, 'a prompt that can never fit the cap must be refused');
+      TestHarness.assertEqual(
+        outcome.accepted ? '' : outcome.reason,
+        'TOO_LARGE',
+        'the refusal must be distinguishable so the UI can say "too long" rather than "reconnecting"'
+      );
+      TestHarness.assertEqual(queue.size, 0, 'nothing is held');
+      TestHarness.assertEqual(queue.totalChars, 0, 'the character budget is untouched');
+    })
+  );
+
+  results.push(
+    await TestHarness.runTest(SUITE, 'the character cap holds after an oversized refusal', () => {
+      const queue = new OutboundPromptQueue({ maxEntries: 8, maxChars: 20 });
+
+      queue.enqueue('z'.repeat(200));
+      const ok = queue.enqueue('short');
+      TestHarness.assert(ok.accepted, 'a refused oversized prompt must not poison the queue');
+      TestHarness.assertEqual(queue.size, 1, 'only the acceptable prompt is held');
+      TestHarness.assert(queue.totalChars <= 20, 'held characters stay within the cap');
+    })
+  );
+
+  results.push(
+    await TestHarness.runTest(SUITE, 'a prompt exactly at the cap is still accepted', () => {
+      const queue = new OutboundPromptQueue({ maxEntries: 8, maxChars: 20 });
+
+      const outcome = queue.enqueue('y'.repeat(20));
+      TestHarness.assert(outcome.accepted, 'the cap is inclusive; a turn of exactly maxChars fits');
+      TestHarness.assertEqual(queue.totalChars, 20, 'it is held at full budget');
+    })
+  );
+
+  results.push(
+    await TestHarness.runTest(SUITE, 'a re-queued prompt reuses no state the caller depends on', () => {
+      // The flush path re-enqueues when the verified socket disappears mid-handoff. Local state
+      // was already committed at typing time, so a re-queue must not be observable as a second
+      // turn - it only has to come back out as the same text.
+      const queue = new OutboundPromptQueue();
+      queue.enqueue('recover me', 'conn_1');
+      const first = queue.drain().deliver;
+
+      const outcome = queue.enqueue(first[0].text, first[0].connectionId);
+      TestHarness.assert(outcome.accepted, 'a re-queued prompt must be accepted again');
+      TestHarness.assertEqual(
+        queue.drain().deliver[0].text,
+        'recover me',
+        'the same text comes back out, which is all the flush path relies on'
+      );
     })
   );
 
@@ -211,6 +266,68 @@ export async function runOutboundPromptQueueTests(): Promise<TestResult[]> {
         queue.drain().deliver[0].connectionId,
         'conn_7',
         'a flush log must be able to name the connection the prompt was waiting on'
+      );
+    })
+  );
+
+  results.push(
+    await TestHarness.runTest(SUITE, 'a frozen turn reaches all three local layers', () => {
+      // The bug behind F-11/F-35: `sendTextPrompt` returned from its frozen branch before it
+      // touched the transcript, structured memory, or the conversation runtime. The turn was held
+      // for the provider but was invisible to the user and absent from the runtime, so the agent
+      // answered something the UI had no record of asking. These assertions pin the three writes
+      // that must happen at typing time, before any transport exists.
+      const text = 'My name is Dana and I need a refill on my prescription';
+      const store = new TranscriptStore('sess_frozen', 'aura-salon');
+      const memory = new MemoryManager('sess_frozen', 'aura-salon');
+      const machine = new ConversationMachine();
+
+      store.addMessage('user', text, 'conn_1');
+      machine.processTurn('user', text);
+      for (const fact of extractSessionFactsFromText(text)) {
+        memory.addSessionFact(fact.content, fact.category, 'USER');
+      }
+
+      TestHarness.assertEqual(
+        store.getAll().length,
+        1,
+        'the caller must see their own message while the transport is down'
+      );
+      TestHarness.assertEqual(
+        store.getAll()[0].text,
+        text,
+        'the transcript must hold their words verbatim, not a reconstruction'
+      );
+      TestHarness.assert(
+        machine.getState().entities.customerName?.value === 'Dana',
+        'structured memory must capture the identity even though the turn has not been sent yet'
+      );    })
+  );
+
+  results.push(
+    await TestHarness.runTest(SUITE, 'the queue does not double-commit a turn on flush', () => {
+      // The queue owns provider delivery only. If it also committed local state, a recovered
+      // call would render the caller's message twice - once when typed, once on flush.
+      const text = 'Can I book a haircut tomorrow?';
+      const store = new TranscriptStore('sess_flush', 'aura-salon');
+      const queue = new OutboundPromptQueue();
+
+      store.addMessage('user', text, 'conn_1');
+      queue.enqueue(text, 'conn_1');
+
+      // Stand-in for the flush path: drain and hand each entry to the wire, as the hook does.
+      const { deliver } = queue.drain();
+      for (const entry of deliver) void entry.text;
+
+      TestHarness.assertEqual(
+        store.getAll().length,
+        1,
+        'flushing must not append a second copy of a turn that was already recorded'
+      );
+      TestHarness.assertEqual(
+        queue.size,
+        0,
+        'and the queue is empty afterwards, so it cannot re-deliver on the next drain'
       );
     })
   );

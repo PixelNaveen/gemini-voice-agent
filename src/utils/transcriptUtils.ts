@@ -1,4 +1,5 @@
 import { TranscriptItem } from '../types';
+import { extractCallerName } from '../core/entities/NameExtraction';
 
 /**
  * Sanitizes input text to ensure clean English prose without foreign characters or non-English script artifacts.
@@ -121,20 +122,16 @@ export function extractSessionFactsFromText(text: string): { category: 'fact' | 
 
   const lower = text.toLowerCase();
 
-  // 1. Name Extraction ("my name is Viktor", "I'm Viktor", "this is Viktor", "call me Viktor")
-  const nameMatch = text.match(/(?:my name is|i'm|i am|this is|call me)\s+([A-Za-z][A-Za-z]+(?:\s+[A-Za-z][A-Za-z]+)?)/i);
-  if (nameMatch && nameMatch[1]) {
-    const candidateName = nameMatch[1].trim();
-    // Speech arrives in whatever casing the recogniser produced, so the stop list is
-    // stored lowercase and matched case-insensitively. Compared as-is it only ever
-    // excluded "Aura", never "aura", and stored the agent's own name as the caller's.
-    const excludeList = ['aura', 'hello', 'hi', 'here', 'a', 'the', 'just', 'looking', 'interested', 'ready', 'calling', 'trying', 'fine', 'good'];
-    if (!excludeList.includes(candidateName.toLowerCase())) {
-      extracted.push({
-        category: 'fact',
-        content: `Caller Name: ${candidateName}`,
-      });
-    }
+  // 1. Name Extraction ("my name is Viktor", "call me Viktor")
+  // Shared with the conversation runtime's entity extractor. Two independent name regexes is how
+  // a caller ended up recorded as "looking for" in one layer and "Dana and" in the other, so both
+  // now read the same extractor and cannot drift apart.
+  const callerName = extractCallerName(text);
+  if (callerName) {
+    extracted.push({
+      category: 'fact',
+      content: `Caller Name: ${callerName.value}`,
+    });
   }
 
   // 2. Email Extraction

@@ -939,6 +939,42 @@ export function useVoiceAgent() {
   // ─────────────────────────── Outbound text ───────────────────────────
 
   /**
+   * Records a caller turn in all three local layers.
+   *
+   * This runs the moment the user types, whether or not the transport can carry the turn. That
+   * ordering is the fix for a defect this hook previously had: the frozen path returned early
+   * before any of this executed, so a question typed during an outage reached the provider on
+   * recovery but never reached the transcript, structured memory, or the conversation runtime.
+   * The agent then answered a turn the UI had no record of, the runtime stayed in the wrong state
+   * for the rest of the call, and a fact like "my name is Dana" typed mid-blip was never captured.
+   *
+   * `OutboundPromptQueue` must not repeat this work when it flushes, or the caller would see
+   * their message twice; provider delivery is the queue's only job.
+   */
+  const commitUserTurnLocally = useCallback(
+    (textPrompt: string, connectionId?: string) => {
+      transcriptStoreRef.current.addMessage('user', textPrompt, connectionId);
+      setTranscripts(
+        transcriptStoreRef.current.getAll().map((m) => ({
+          id: m.id,
+          speaker: m.role === 'user' ? 'user' : 'agent',
+          text: m.text,
+          timestamp: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          rawTime: m.timestamp,
+          isFinal: m.isFinal,
+        }))
+      );
+
+      conversationMachineRef.current.processTurn('user', textPrompt);
+
+      for (const item of extractSessionFactsFromText(textPrompt)) {
+        memoryManagerRef.current.addSessionFact(item.content, item.category, 'USER');
+      }
+    },
+    []
+  );
+
+  /**
    * Sends everything that was typed while the transport was down, now that it is verified.
    *
    * Ordering matters: the replacement is only allowed to report success after the handshake has
@@ -949,17 +985,31 @@ export function useVoiceAgent() {
    */
   const flushPendingPrompts = useCallback(() => {
     const { deliver, expired, evicted } = pendingPromptsRef.current.drain();
+    if (!deliver.length && !expired.length && !evicted.length) return;
+
     if (expired.length || evicted.length) {
       console.warn(
         `[Outbound] Discarded ${expired.length} stale and ${evicted.length} overflow prompt(s) during recovery.`
       );
     }
+
+    // A discarded prompt was still a real turn the caller typed, and it is already in their
+    // transcript because local state is committed at typing time. Silence here would leave them
+    // reading their own question with no reply and no explanation.
+    if (expired.length || evicted.length) {
+      const total = expired.length + evicted.length;
+      setApiError(
+        `${total} of your earlier message${total === 1 ? ' was' : 's were'} not sent because the call took too long to recover. Please send ${total === 1 ? 'it' : 'them'} again.`
+      );
+    }
+
     if (!deliver.length) return;
 
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       // Verified transport went away between the handshake and here. Put them back so the next
-      // successful handshake still delivers them rather than losing a turn to a race.
+      // successful handshake still delivers them rather than losing a turn to a race. Re-queueing
+      // does not re-commit local state; the turn was recorded when it was typed.
       for (const entry of deliver) pendingPromptsRef.current.enqueue(entry.text, entry.connectionId);
       return;
     }
@@ -978,14 +1028,25 @@ export function useVoiceAgent() {
       if (!active || !activeCtx || !isSessionActive(activeCtx, active.context)) return;
 
       if (isTurnFrozen()) {
-        // Hold the turn rather than dropping it. The caller sees it queued, and it is delivered
-        // as soon as a replacement socket verifies.
-        const queued = pendingPromptsRef.current.enqueue(textPrompt, active.transport.connectionId || undefined);
-        if (queued) {
+        // Hold the turn rather than dropping it. Local state is committed first so the caller sees
+        // the question immediately, exactly as they would on a healthy transport, and the runtime
+        // and memory stay consistent with what they can see.
+        commitUserTurnLocally(textPrompt, active.transport.connectionId || undefined);
+
+        const outcome = pendingPromptsRef.current.enqueue(
+          textPrompt,
+          active.transport.connectionId || undefined
+        );
+        if (outcome.accepted) {
           console.log(
-            `[Outbound] Transport is recovering; holding prompt #${queued.id} for delivery.`
+            `[Outbound] Transport is recovering; holding prompt #${outcome.entry.id} for delivery.`
           );
           setApiError('Reconnecting - your message will be sent as soon as the call is back.');
+        } else if (outcome.reason === 'TOO_LARGE') {
+          // The turn is in the transcript, but it was never sent. Saying so beats a reconnect
+          // message that will resolve to silence.
+          console.warn('[Outbound] Refused an oversized prompt while recovering.');
+          setApiError('That message is too long to send while reconnecting. Please shorten it.');
         } else {
           setApiError('Still reconnecting. Please try again in a moment.');
         }
@@ -995,23 +1056,7 @@ export function useVoiceAgent() {
       resetSilenceTimer();
       watchdogRef.current?.beginTurn('outbound text prompt');
 
-      transcriptStoreRef.current.addMessage('user', textPrompt, active.transport.connectionId || undefined);
-      setTranscripts(
-        transcriptStoreRef.current.getAll().map((m) => ({
-          id: m.id,
-          speaker: m.role === 'user' ? 'user' : 'agent',
-          text: m.text,
-          timestamp: new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          rawTime: m.timestamp,
-          isFinal: m.isFinal,
-        }))
-      );
-
-      conversationMachineRef.current.processTurn('user', textPrompt);
-
-      for (const item of extractSessionFactsFromText(textPrompt)) {
-        memoryManagerRef.current.addSessionFact(item.content, item.category, 'USER');
-      }
+      commitUserTurnLocally(textPrompt, active.transport.connectionId || undefined);
 
       const ws = wsRef.current;
       if (ws && ws.readyState === WebSocket.OPEN) {
@@ -1020,7 +1065,7 @@ export function useVoiceAgent() {
         setApiError('Transport unavailable. Text was not delivered.');
       }
     },
-    [isTurnFrozen, resetSilenceTimer]
+    [commitUserTurnLocally, isTurnFrozen, resetSilenceTimer]
   );
 
   // ─────────────────────────── Simple controls ───────────────────────────

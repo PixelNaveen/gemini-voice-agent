@@ -14,18 +14,24 @@
  *
  * Design constraints:
  *
- * - **Bounded.** An outage can last minutes, and a caller can keep typing. Without a cap this
- *   queue is an unbounded string buffer keyed on nothing. `maxEntries` and `maxChars` both bound
- *   it, and the *oldest* entries are evicted first, because the most recent question is the one
- *   the user still cares about getting answered.
+ * - **Bounded, absolutely.** An outage can last minutes, and a caller can keep typing. Without a
+ *   cap this queue is an unbounded string buffer keyed on nothing. `maxEntries` and `maxChars`
+ *   both bound it, and the *oldest* entries are evicted first, because the most recent question
+ *   is the one the user still cares about getting answered. The character cap is a hard ceiling:
+ *   a single prompt that could never fit within it is refused at enqueue rather than admitted as
+ *   a special case. The earlier version protected the newest entry from the evictor unconditionally,
+ *   which meant one oversized paste could sit in the buffer far above `maxChars` - the documented
+ *   bound was not the actual bound.
  * - **Expiring.** A question asked three minutes ago during a long outage is no longer what the
  *   user is waiting for; replaying it into a recovered call produces a confusing, stale turn.
  *   Entries older than `ttlMs` are discarded on drain and reported, never silently delivered.
  * - **Session-scoped.** The queue is cleared outright on hard reset, end, and persona switch. A
  *   typed question is bound to the conversation it was typed into; replaying it into a new
  *   persona's session would leak one business's caller detail into another's context.
- * - **Not a transcript.** The caller still sees their text in the transcript as typed. This only
- *   guarantees it reaches the provider.
+ * - **Not a transcript.** This queue carries no view of what the caller sees. The caller commits
+ *   their turn to the transcript, memory, and conversation runtime at the moment they type it, and
+ *   this only guarantees it reaches the provider. Keeping those two concerns separate is what
+ *   lets a prompt be held here without being rendered twice.
  */
 
 export interface QueuedPrompt {
@@ -66,6 +72,13 @@ const DEFAULT_MAX_ENTRIES = 8;
 const DEFAULT_MAX_CHARS = 4_000;
 const DEFAULT_TTL_MS = 30_000;
 
+/** Why a prompt was not taken, so the caller can say something true to the user. */
+export type EnqueueRejection = 'EMPTY' | 'TOO_LARGE';
+
+export type EnqueueOutcome =
+  | { accepted: true; entry: QueuedPrompt }
+  | { accepted: false; reason: EnqueueRejection };
+
 export class OutboundPromptQueue {
   private entries: QueuedPrompt[] = [];
   private chars = 0;
@@ -94,11 +107,22 @@ export class OutboundPromptQueue {
   /**
    * Holds a prompt for later delivery.
    *
-   * Returns the prompt as it was actually stored, or null if it was not worth holding at all -
-   * the caller uses that to tell the user their text was refused rather than queued.
+   * The outcome distinguishes the two ways a prompt can be refused, because they need different
+   * messages to the user: an empty turn is nothing to say about, whereas an oversized one is a
+   * length limit the caller has to act on. Collapsing both into `null` is what previously made
+   * the UI report "still reconnecting" for a message that could never have been held.
+   *
+   * Local state is deliberately *not* committed here. The caller commits the turn to its
+   * transcript, memory, and conversation runtime as soon as the user types, so a held prompt is
+   * already visible to the user; this queue owns only provider delivery.
    */
-  public enqueue(text: string, connectionId?: string): QueuedPrompt | null {
-    if (!text.trim()) return null;
+  public enqueue(text: string, connectionId?: string): EnqueueOutcome {
+    if (!text.trim()) return { accepted: false, reason: 'EMPTY' };
+
+    // A single prompt larger than the entire budget can never satisfy the cap, so admitting it
+    // would either break the bound or leave the evictor with no legal move. Refuse it instead and
+    // let the caller tell the user to shorten the message.
+    if (text.length > this.maxChars) return { accepted: false, reason: 'TOO_LARGE' };
 
     const entry: QueuedPrompt = {
       text,
@@ -110,14 +134,15 @@ export class OutboundPromptQueue {
     this.entries.push(entry);
     this.chars += text.length;
     this.enforceBounds(entry);
-    return entry;
+    return { accepted: true, entry };
   }
 
   /**
    * Drops oldest-first until both caps hold.
    *
    * The newest entry is never the one evicted: if the caller has just typed something, that is
-   * the prompt they expect answered.
+   * the prompt they expect answered. The length check in `enqueue` guarantees this loop always
+   * has a legal move, so it cannot spin.
    */
   private enforceBounds(protectedEntry: QueuedPrompt): void {
     while (this.entries.length > this.maxEntries || this.chars > this.maxChars) {
@@ -143,12 +168,12 @@ export class OutboundPromptQueue {
       else deliver.push(entry);
     }
 
+    // A recovered socket must never be handed a burst of turns at once: the provider would see
+    // several questions as one incoherent message. `enforceBounds` should already have prevented
+    // this, but the check stays because an over-counted queue must not become a flood.
     const evicted: QueuedPrompt[] = [];
-    if (evicted.length === 0 && deliver.length > this.maxEntries) {
-      // Defensive: `enforceBounds` should have prevented this, but an over-counted queue must
-      // never turn into an unbounded burst of turns against a single recovered connection.
-      const overflow = deliver.length - this.maxEntries;
-      evicted.push(...deliver.splice(0, overflow));
+    if (deliver.length > this.maxEntries) {
+      evicted.push(...deliver.splice(0, deliver.length - this.maxEntries));
     }
 
     this.entries = [];

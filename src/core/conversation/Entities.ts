@@ -10,6 +10,7 @@ import {
 } from '../entities';
 import { DateTimeNormalizer } from '../entities/DateTimeNormalizer';
 import { EmailNormalizer } from '../entities/EmailNormalizer';
+import { extractCallerName } from '../entities/NameExtraction';
 import { DependencyResolver } from '../entities/DependencyResolver';
 
 /**
@@ -48,23 +49,23 @@ export function extractEntitiesFromText(
   }
 
   // 3. Caller Name Extraction
-  const nameRegex = /(?:my name is|i am|this is|name'?s|call me)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i;
-  const nameMatch = text.match(nameRegex);
-  if (nameMatch) {
-    const rawName = nameMatch[1].trim();
-    if (!['here', 'calling', 'aura', 'ready', 'back'].includes(rawName.toLowerCase())) {
-      if (updated.customerName && updated.customerName.value.toLowerCase() !== rawName.toLowerCase()) {
-        corrections.push(`customerName: ${updated.customerName.value} -> ${rawName}`);
-      }
-      updated.customerName = updateEntityValue(
-        updated.customerName,
-        rawName,
-        0.95,
-        'CONFIRMED',
-        'USER',
-        nameMatch[0]
-      );
+  // Shared with the session-fact extractor so a booking and the structured memory can never
+  // disagree about who the caller is. This used to be a local regex that captured the next one or
+  // two words unconditionally, which filed callers under "looking for" and "tomorrow".
+  const extractedName = extractCallerName(text);
+  if (extractedName) {
+    const rawName = extractedName.value;
+    if (updated.customerName && updated.customerName.value.toLowerCase() !== rawName.toLowerCase()) {
+      corrections.push(`customerName: ${updated.customerName.value} -> ${rawName}`);
     }
+    updated.customerName = updateEntityValue(
+      updated.customerName,
+      rawName,
+      0.95,
+      'CONFIRMED',
+      'USER',
+      extractedName.matchedText
+    );
   }
 
   // 4. Deterministic Date Normalization

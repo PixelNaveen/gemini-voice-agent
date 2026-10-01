@@ -1109,8 +1109,66 @@ because each is its own failure mode:
 - **Ordered and exactly-once.** Drained oldest-first with stable ids, so a flush log can be tied
   back to what was held.
 
-The newest prompt is never the one evicted, and a single oversized prompt is still delivered rather
-than looping the evictor forever.
+The newest prompt is never the one evicted.
+
+Two further defects surfaced while this was being verified, both in the same code path:
+
+- **A held turn never reached local state.** The frozen branch returned before `addMessage`,
+  `processTurn`, and `addSessionFact` ran, so a question typed during an outage was delivered to
+  the provider on recovery but was absent from the transcript, from structured memory, and from the
+  conversation runtime. The agent then answered a turn the UI had no record of asking, and a fact
+  like "my name is Dana" typed mid-blip was never captured. Local state is now committed at typing
+  time, and the queue is explicitly responsible for provider delivery only, so a flush cannot
+  render the caller's message twice.
+- **The character cap was not actually a cap.** `enforceBounds` protects the newest entry from
+  eviction, so a single oversized paste was admitted above `maxChars` while the class still
+  advertised the limit — an unbounded string buffer reachable from ordinary caller input. A
+  prompt that could never fit is now refused at enqueue, and the refusal is distinguishable
+  (`TOO_LARGE` vs `EMPTY`) so the UI can say "too long to send" instead of a reconnect message
+  that would resolve to silence.
+
+A turn discarded at flush (expired or evicted) is still a turn the caller typed and is still in
+their transcript, so the user is told rather than left reading an unanswered question.
+
+---
+
+### Callers were being recorded under the name "looking for" (2026-10-01)
+
+Found while writing a regression test for the turn-queue fix above, not by the existing suite.
+
+Two regexes independently tried to detect "the caller just gave their name", in
+`core/conversation/Entities.ts` and `utils/transcriptUtils.ts`. Each matched a trigger phrase and
+then took the next one or two words with a character class like `[A-Za-z][A-Za-z]` under the `i`
+flag. Nothing in that pattern distinguishes a name from ordinary sentence furniture, so:
+
+| Caller says | Recorded as |
+| --- | --- |
+| "I am looking for a haircut" | `looking for` |
+| "This is urgent, I need help" | `urgent` |
+| "Call me tomorrow" | `tomorrow` |
+| "I am interested in the deluxe package" | `interested in` |
+| "My name is Dana and I need a refill" | `Dana and` |
+
+`customerName` is what the voice hook writes into structured memory and what a booking is filed
+under, so these strings reached the appointment record and were read back to the caller in
+confirmation as though they were a person. The two layers also disagreed with each other — the
+entity extractor said `Dana and` while the session-fact extractor produced something else — so one
+call could record two different names.
+
+The fix is `core/entities/NameExtraction.ts`, a single extractor used by both call sites:
+
+- **Only unambiguous triggers count.** "My name is", "my name's", and "call me" are what a caller
+  says when volunteering a name. "I am", "I'm", and "this is" open ordinary sentences far more
+  often than they introduce a name, so they are not triggers; "My name is Dana" already covers
+  the case without them.
+- **A name ends at the first word that cannot be part of one.** Conjunctions, pronouns, verbs, and
+  time words terminate the capture, so `Dana and` becomes `Dana` while `Mary Jane Watson` and
+  `jean-luc picard` are still captured in full.
+- **Casing is not the filter.** Speech-to-text casing is unreliable, so `my name is jean-luc` still
+  works; the strong trigger is what makes the capture safe, not capitalisation.
+
+Pinned by 19 tests in `NameExtraction.test.ts`, including that the runtime entity and the session
+fact cannot disagree.
 
 ---
 
