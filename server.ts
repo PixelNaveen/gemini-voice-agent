@@ -1561,11 +1561,37 @@ function isEntrypoint(): boolean {
   }
 }
 
+/**
+ * F-52: whether this process should bind a listener.
+ *
+ * `isEntrypoint()` alone is NOT sufficient, and relying on it was why the deployment returned
+ * `500 FUNCTION_INVOCATION_FAILED` on every single route.
+ *
+ * The check compares `import.meta.url` against `pathToFileURL(process.argv[1])`. On Vercel this
+ * module is bundled by esbuild into one CommonJS file, and the bundler rewrites `import.meta.url`
+ * into a shim derived from `__filename` - the very file that `process.argv[1]` points at. The two
+ * therefore compare EQUAL inside the function, `isEntrypoint()` wrongly answered "yes", and
+ * `startServer()` ran inside a serverless invocation: it bound port 3000 that the platform does
+ * not control and, on any boot problem, called `process.exit(1)`. Every request died at import,
+ * which is exactly the `FUNCTION_INVOCATION_FAILED` this project kept reporting, while the static
+ * build still served a page that looked like a working site with a dead backend.
+ *
+ * The platform tells us directly which host we are on, so we stop inferring it. Vercel sets
+ * `VERCEL=1` on every function invocation, and `PersistenceTopology` already keys off the same
+ * variable. This check is deterministic; `isEntrypoint()` is a heuristic and stays as a fallback
+ * only for the local process.
+ */
+function shouldStartListener(): boolean {
+  // The platform owns the listener here. Never bind, and never exit, inside a function.
+  if (process.env.VERCEL) return false;
+  return isEntrypoint();
+}
+
 process.on('unhandledRejection', (reason) => {
   console.error('[fatal] Unhandled rejection:', reason);
 });
 
-if (isEntrypoint()) {
+if (shouldStartListener()) {
   startServer().catch((err) => {
     console.error('[fatal] Server failed to start:', err);
     process.exit(1);
