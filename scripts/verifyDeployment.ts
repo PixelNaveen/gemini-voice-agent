@@ -182,11 +182,40 @@ async function checkToken(base: string): Promise<void> {
       return;
     }
     if (!relayCookie) {
+      // A deployment with no `AURA_LIVE_TOKEN` is deliberately same-origin only, and the server
+      // says so in the body rather than silently returning 200. Reading that flag is what
+      // separates "correctly configured without a token" from "configured with one and failing to
+      // hand it out", which is the only version of this that is actually broken.
+      //
+      // Reporting the no-token case as a failure was a false alarm: the cookie is *supposed* to be
+      // absent there, and the upgrade step below is the step that proves the relay really works.
+      // A preflight that cries wolf on a healthy deployment trains people to ignore it.
+      let configured: boolean | null = null;
+      try {
+        const parsedBody = JSON.parse(res.body) as { configured?: unknown };
+        if (typeof parsedBody.configured === 'boolean') configured = parsedBody.configured;
+      } catch {
+        /* a non-JSON body is reported as unknown below */
+      }
+
+      if (configured === false) {
+        record({
+          step: '/api/live-token issues the relay cookie',
+          ok: false,
+          informational: true,
+          detail:
+            'deployment is same-origin only (AURA_LIVE_TOKEN is unset), so no cookie is issued. ' +
+            'This is a supported mode, not a fault: /live below is what proves the relay works. ' +
+            'Set AURA_LIVE_TOKEN to require a shared secret.',
+        });
+        return;
+      }
+
       record({
         step: '/api/live-token issues the relay cookie',
         ok: false,
-        detail: `HTTP 200 but no Set-Cookie header (saw ${cookies.length} cookie(s)). ` +
-          'The upgrade will be rejected 401 once AURA_LIVE_TOKEN is set.',
+        detail: `HTTP 200 but no Set-Cookie header (saw ${cookies.length} cookie(s)` +
+          `${configured === null ? ', body not JSON' : ''}). The upgrade will be rejected 401.`,
       });
       return;
     }
