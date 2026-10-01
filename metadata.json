@@ -1,0 +1,6 @@
+{
+  "name": "AURA // Voice AI Agent",
+  "description": "Black and gold dynamic ElevenLabs-inspired real-time voice agent powered by Gemini 3.8 Live.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,93 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck (strict)
+        run: npm run lint
+
+      - name: Unit and integration tests
+        run: npm test
+
+      # SECTION 13: the live origin/token gate is only observable over a real WebSocket
+      # handshake. `isOriginAllowed` and `checkLiveAuth` can both be fully unit-tested and
+      # still be wired to an emitter that never fires, which is exactly how the relay
+      # shipped accepting every cross-origin caller. This step boots the real server and
+      # asserts the status of six handshakes, so that regression cannot return unnoticed.
+      - name: Live relay security gate
+        run: npm run verify:relay
+
+      # api/index.ts is the only code path Vercel actually executes, and it was missing entirely
+      # while vercel.json routed every API path at it. A rewrite also replaces req.url with the
+      # destination, which is how a real upgrade came to 404 before a socket existed - a bug only
+      # reachable through this entrypoint, and therefore invisible to the standalone suite above.
+      - name: Vercel function entrypoint
+        run: npm run verify:vercel
+        env:
+          # Force the ephemeral-platform path so readiness is asserted to report
+          # MULTI_INSTANCE_RISK and refuse traffic, not to silently pass.
+          VERCEL: "1"
+
+      - name: Build
+        run: npm run build
+        env:
+          # The GitHub Actions runner is Linux; this is the Linux build, and passing it is what
+          # tells us a Vercel build will not fail on platform resolution.
+          CI: "true"
+
+  # Runs only when a credential is available. Kept in a separate job so a fork or an
+  # untrusted pull request cannot spend the owner's Gemini quota, and so a transient
+  # provider 503 does not look like a code regression.
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ github.event_name == 'push' && secrets.GEMINI_API_KEY != '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # Proves the key, the model ids, and the SDK agree with each other. The live model
+      # cannot be probed with generateContent at all, so this opens a real WebSocket.
+      - name: Verify live credentials and model reachability
+        run: npm run verify:gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          AURA_LIVE_MODEL: ${{ vars.AURA_LIVE_MODEL }}
+          AURA_TTS_MODEL: ${{ vars.AURA_TTS_MODEL }}
+
+      # The only check that exercises the whole chain at once: client protocol -> origin and
+      # token gate -> frame validation -> prompt authority -> project pool -> Gemini Live
+      # websocket -> greeting audio and transcript back to the browser.
+      - name: Full live-call end-to-end test
+        run: npm run verify:e2e
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          AURA_LIVE_MODEL: ${{ vars.AURA_LIVE_MODEL }}
+          AURA_TTS_MODEL: ${{ vars.AURA_TTS_MODEL }}
+          AURA_PROJECT_CAPACITY: ${{ vars.AURA_PROJECT_CAPACITY }}

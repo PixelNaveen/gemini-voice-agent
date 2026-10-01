@@ -1,0 +1,39 @@
+# Normalize line endings in the repository, not just the working copy.
+#
+# The project is developed on Windows and built on Linux (Vercel, the GitHub Actions runner, and
+# the Docker image). Without this, Git records whatever the contributor's platform produced, and a
+# CRLF file committed from Windows can break a Linux build in ways that are very hard to trace
+# back to a line ending - a shebang that the shell cannot read, or a Dockerfile continuation.
+#
+# `text=auto eol=lf` does both halves: check files into the repository with LF, and check them out
+# on any platform with that platform's native convention. The repository stays canonical, which is
+# what a build actually consumes.
+
+* text=auto eol=lf
+
+# Keep generated bundles out of the normalization rules entirely. They are not edited, and a
+# sourcemap is a single enormous line that some tools choke on if it is rewritten.
+*.map binary
+server.mjs binary
+
+# Shell scripts must never carry a carriage return: it becomes part of the shebang and the file
+# stops being executable. `eol=lf` is enforced, not merely suggested, by adding `text`.
+*.sh text eol=lf
+Dockerfile text eol=lf
+
+# Windows-only tooling. These are not read by the Linux build, so preserve them byte for byte.
+*.ps1 text eol=crlf
+
+# Binary assets must never be touched by the newline filter; doing so corrupts them.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.mp3 binary
+*.wav binary
+*.pcm binary

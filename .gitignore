@@ -1,0 +1,16 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# F-41: the container build bundles `server.ts` to this file. It is generated, never edited.
+server.mjs
+server.mjs.map
+
+# F-20: the local appointment journal. Written at runtime, and it holds caller contact details,
+# so it must never be committed.
+.data/

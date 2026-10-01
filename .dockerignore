@@ -1,0 +1,29 @@
+# F-41: keep the build context small and keep secrets and local state out of the image.
+#
+# `node_modules` is excluded so the image resolves dependencies from `package.json` inside the
+# build stage, which is the only way the layer cache is correct across machines.
+
+node_modules
+dist
+coverage
+build
+
+# The bundled server is produced inside the build stage; a stale local one must not be copied in.
+server.mjs
+server.mjs.map
+
+# Secrets. `.env` and `.env.local` must never be baked into an image layer, where they would
+# survive even a later `RUN rm`. Runtime configuration is injected as environment variables.
+.env
+.env.*
+!.env.example
+
+# F-20: the local appointment journal holds caller contact details.
+.data
+
+.git
+.github
+Dockerfile
+.dockerignore
+README*.md
+*.log
