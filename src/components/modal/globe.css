@@ -372,3 +372,38 @@
   50% { transform: rotateY(270deg) rotateX(270deg) rotateZ(270deg) scale(1.1); }
   100% { transform: rotateY(450deg) rotateX(450deg) rotateZ(450deg); }
 }
+
+/* Additive Interactive Rhythm Glows (Agent Speaking & Listening) */
+.orb.orb-speaking {
+  filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.6))
+    drop-shadow(0 0 24px rgba(52, 211, 153, 0.4)) !important;
+  animation: orb-rhythm-speak 0.45s ease-in-out infinite alternate !important;
+}
+
+.orb.orb-listening {
+  filter: drop-shadow(0 0 14px rgba(59, 130, 246, 0.6))
+    drop-shadow(0 0 24px rgba(96, 165, 250, 0.4)) !important;
+  animation: orb-rhythm-listen 0.55s ease-in-out infinite alternate !important;
+}
+
+@keyframes orb-rhythm-speak {
+  0% {
+    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.5))
+      drop-shadow(0 0 18px rgba(52, 211, 153, 0.3));
+  }
+  100% {
+    filter: drop-shadow(0 0 18px rgba(16, 185, 129, 0.85))
+      drop-shadow(0 0 32px rgba(52, 211, 153, 0.6));
+  }
+}
+
+@keyframes orb-rhythm-listen {
+  0% {
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5))
+      drop-shadow(0 0 18px rgba(96, 165, 250, 0.3));
+  }
+  100% {
+    filter: drop-shadow(0 0 18px rgba(59, 130, 246, 0.85))
+      drop-shadow(0 0 32px rgba(96, 165, 250, 0.6));
+  }
+}

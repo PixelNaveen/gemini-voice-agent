@@ -135,7 +135,7 @@ export const LiveVoiceAgentModal: React.FC<LiveVoiceAgentModalProps> = ({ isOpen
           ) : (
             <div className="h-full flex flex-col items-center justify-between">
               {/* Exact Globe UI Component with continuous transcript bubbles */}
-              <div className="flex-1 w-full flex items-center justify-center">
+              <div className="flex-1 w-full flex items-center justify-center relative min-h-[380px]">
                 <CustomVoiceGlobe
                   status={status}
                   audioLevel={audioLevel}
@@ -148,16 +148,12 @@ export const LiveVoiceAgentModal: React.FC<LiveVoiceAgentModalProps> = ({ isOpen
                 />
               </div>
 
-              {/* Action Bar */}
+              {/* Action Bar / Help Note */}
               {!isCallActive ? (
-                <div className="w-full pt-3 border-t border-stone-200/80 mt-2">
-                  <button
-                    onClick={handleStartCall}
-                    className="w-full py-3.5 px-4 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-sm flex items-center justify-center transition-all gap-2 cursor-pointer shadow-md shadow-emerald-700/20"
-                  >
-                    <Phone className="w-4 h-4" />
-                    <span>Click to Start Voice Call</span>
-                  </button>
+                <div className="w-full pt-3 pb-1 border-t border-stone-200/80 mt-2 text-center">
+                  <p className="text-xs text-stone-500 font-mono tracking-wider uppercase">
+                    Tap to start
+                  </p>
                 </div>
               ) : (
                 <div className="w-full pt-3 grid grid-cols-2 gap-3 border-t border-stone-200/80 mt-2">

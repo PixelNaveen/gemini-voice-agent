@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AgentStatus, TranscriptItem } from '../../types';
 import './globe.css';
 
@@ -21,15 +21,25 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
   isMicMuted,
   transcripts = [],
   onStartCall,
-  isCallActive = true,
+  isCallActive = false,
 }) => {
-  const [isChecked, setIsChecked] = useState(true);
+  const [isChecked, setIsChecked] = useState(isCallActive);
+
+  useEffect(() => {
+    setIsChecked(Boolean(isCallActive));
+  }, [isCallActive]);
 
   const handleOrbClick = () => {
     if (!isCallActive && onStartCall) {
       onStartCall();
     }
   };
+
+  const rhythmClass = isAgentSpeaking
+    ? 'orb-speaking'
+    : isListening
+    ? 'orb-listening'
+    : '';
 
   return (
     <div className="container-vao">
@@ -45,7 +55,12 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
       />
 
       {/* Main Orb Element from globe.html */}
-      <label htmlFor="v.a.o." className="orb" onClick={handleOrbClick} title={isCallActive ? "Toggle Chat Drawer" : "Click to Start Call"}>
+      <label
+        htmlFor="v.a.o."
+        className={`orb ${rhythmClass}`}
+        onClick={handleOrbClick}
+        title={isCallActive ? "Voice Agent Active" : "Tap to start"}
+      >
         <div className="icons">
           <svg
             className="svg"
@@ -119,8 +134,8 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
             <path d="M7.5 18V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
           <p className="text-title">
-            <span>{isAgentSpeaking ? 'Aura' : isListening ? "I'm" : isCallActive ? 'Agent' : 'Click'}</span>
-            <span>{isAgentSpeaking ? 'Speaking...' : isListening ? 'Listening...' : isCallActive ? 'Connected' : 'to Start Call'}</span>
+            <span>{isAgentSpeaking ? 'Aura' : isListening ? "I'm" : isCallActive ? 'Agent' : 'Tap'}</span>
+            <span>{isAgentSpeaking ? 'Speaking...' : isListening ? 'Listening...' : isCallActive ? 'Connected' : 'to start'}</span>
           </p>
         </div>
 
