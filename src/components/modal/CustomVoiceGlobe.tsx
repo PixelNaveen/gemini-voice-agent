@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AgentStatus, TranscriptItem } from '../../types';
 import './globe.css';
 
@@ -24,10 +24,17 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
   isCallActive = false,
 }) => {
   const [isChecked, setIsChecked] = useState(isCallActive);
+  const chatLimitRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsChecked(Boolean(isCallActive));
   }, [isCallActive]);
+
+  useEffect(() => {
+    if (chatLimitRef.current) {
+      chatLimitRef.current.scrollTop = chatLimitRef.current.scrollHeight;
+    }
+  }, [transcripts]);
 
   const handleOrbClick = () => {
     if (!isCallActive && onStartCall) {
@@ -152,7 +159,7 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
         </div>
 
         <div className="container-chat">
-          <div className="container-chat-limit">
+          <div className="container-chat-limit" ref={chatLimitRef}>
             <div className="chats">
               {transcripts.map((t, idx) => (
                 <div key={idx} className={t.speaker === 'user' ? 'chat-user' : 'chat-ia'}>
