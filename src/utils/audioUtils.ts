@@ -234,15 +234,16 @@ export function timeStretch(input: Float32Array, rate: number): Float32Array {
 }
 
 /**
- * Plays an AudioBuffer, optionally speed-adjusted WITHOUT changing pitch.
- * Returns the source (for interruption) and an AnalyserNode for visualizer feedback.
+ * Plays an AudioBuffer, optionally speed-adjusted WITHOUT changing pitch, scheduled at a timeline timestamp.
+ * Returns the source (for interruption), AnalyserNode for visualizer feedback, and buffer duration.
  */
 export function playAudioBuffer(
   ctx: AudioContext,
   buffer: AudioBuffer,
   onEnded?: () => void,
-  speed: number = 1.0
-): { source: AudioBufferSourceNode; analyser: AnalyserNode; rate: number } {
+  speed: number = 1.0,
+  startTime: number = 0
+): { source: AudioBufferSourceNode; analyser: AnalyserNode; rate: number; duration: number } {
   let playable = buffer;
 
   if (Number.isFinite(speed) && speed > 0 && Math.abs(speed - 1) > 1e-3) {
@@ -273,8 +274,9 @@ export function playAudioBuffer(
     source.onended = onEnded;
   }
 
-  source.start(0);
-  return { source, analyser, rate: 1.0 };
+  const startAt = Math.max(0, startTime);
+  source.start(startAt);
+  return { source, analyser, rate: 1.0, duration: playable.duration };
 }
 
 /**

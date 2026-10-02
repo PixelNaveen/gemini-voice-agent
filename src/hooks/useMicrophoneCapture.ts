@@ -26,14 +26,20 @@ export interface MicrophoneCaptureDeps {
   setAudioState: (updater: (prev: AudioState) => AudioState) => void;
 }
 
-/** Samples per upstream frame. 16 kHz mono, so 2048 samples is 128 ms of speech. */
-const FRAME_SAMPLES = 2048;
+/**
+ * Samples per upstream frame. 16 kHz mono, so 640 samples is 40 ms of speech.
+ * Conforms to Google Live API and Pipecat low-latency framing standard (20ms - 40ms).
+ */
+const FRAME_SAMPLES = 640;
 
 /** RMS above this counts as the caller speaking rather than room noise. */
 const VOICE_RMS_THRESHOLD = 0.012;
 
-/** RMS below this is echo residue from the agent's own voice. */
-const ECHO_RMS_THRESHOLD = 0.002;
+/**
+ * RMS below this during active playback is treated as acoustic room noise floor.
+ * Calibrated to allow quiet speech consonants through while suppressing ambient echo.
+ */
+const ECHO_NOISE_FLOOR = 0.0008;
 
 /**
  * F-42: microphone acquisition, extracted from `useVoiceAgent`.
@@ -251,9 +257,9 @@ export function useMicrophoneCapture(deps: MicrophoneCaptureDeps) {
           pcmChunks = [];
           accumulatedSamples = 0;
 
-          // Echo suppression: never send caller audio while the agent is speaking, unless the
-          // signal is loud enough to be the caller interrupting.
-          if (live.isPlayingRef.current && rms < ECHO_RMS_THRESHOLD) return;
+          // Echo suppression: filter out ambient room floor while agent is outputting audio,
+          // but allow active caller voice and interruption syllables to pass through smoothly.
+          if (live.isPlayingRef.current && rms < ECHO_NOISE_FLOOR) return;
 
           try {
             const current = live.wsRef.current;

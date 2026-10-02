@@ -1048,16 +1048,21 @@ let activeInstructionOverride: string | null = null;
             });
           }
 
-          // Audio output chunks
-          const audioPart = message.serverContent?.modelTurn?.parts?.find((p: any) => p.inlineData?.data);
-          if (audioPart?.inlineData?.data) {
-            metrics.trackAudio('out');
-            sendToClient({
-              type: 'audio',
-              connectionId: activeConnectionId,
-              data: audioPart.inlineData.data,
-              mimeType: audioPart.inlineData.mimeType,
-            });
+          // Audio output chunks: iterate over ALL parts in the event so that multi-part payloads
+          // (or simultaneous audio fragments) are never dropped.
+          const parts = message.serverContent?.modelTurn?.parts;
+          if (Array.isArray(parts)) {
+            for (const part of parts) {
+              if (part?.inlineData?.data) {
+                metrics.trackAudio('out');
+                sendToClient({
+                  type: 'audio',
+                  connectionId: activeConnectionId,
+                  data: part.inlineData.data,
+                  mimeType: part.inlineData.mimeType,
+                });
+              }
+            }
           }
 
           // Text transcription
