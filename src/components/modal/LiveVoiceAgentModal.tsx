@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, PhoneOff, Mic, MicOff, X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Sparkles, PhoneOff, Phone, Mic, MicOff, X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useVoiceAgent } from '../../hooks/useVoiceAgent';
 import { ALL_PERSONAS } from '../../personas';
 import { IndustryPreset } from '../../types';
@@ -13,6 +13,7 @@ interface LiveVoiceAgentModalProps {
 export const LiveVoiceAgentModal: React.FC<LiveVoiceAgentModalProps> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState<'selector' | 'call'>('selector');
   const [selectedPreset, setSelectedPreset] = useState<IndustryPreset>(ALL_PERSONAS[0]);
+  const [isCallActive, setIsCallActive] = useState<boolean>(false);
 
   const {
     status,
@@ -29,21 +30,29 @@ export const LiveVoiceAgentModal: React.FC<LiveVoiceAgentModalProps> = ({ isOpen
   useEffect(() => {
     if (!isOpen) {
       setStep('selector');
+      setIsCallActive(false);
       void endSession();
     }
   }, [isOpen]);
 
-  const handleStartCall = () => {
-    void startSession(selectedPreset);
+  const handleGoToStep2 = () => {
     setStep('call');
+    setIsCallActive(false);
+  };
+
+  const handleStartCall = () => {
+    setIsCallActive(true);
+    void startSession(selectedPreset);
   };
 
   const handleClose = () => {
+    setIsCallActive(false);
     void endSession();
     onClose();
   };
 
   const handleBackToSelector = () => {
+    setIsCallActive(false);
     void endSession();
     setStep('selector');
   };
@@ -63,7 +72,7 @@ export const LiveVoiceAgentModal: React.FC<LiveVoiceAgentModalProps> = ({ isOpen
             {step === 'call' && (
               <button
                 onClick={handleBackToSelector}
-                className="p-1.5 -ml-1 text-stone-500 hover:text-stone-900 rounded-lg hover:bg-stone-200/60 transition-colors"
+                className="p-1.5 -ml-1 text-stone-500 hover:text-stone-900 rounded-lg hover:bg-stone-200/60 transition-colors cursor-pointer"
                 title="Change Persona"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -116,16 +125,16 @@ export const LiveVoiceAgentModal: React.FC<LiveVoiceAgentModalProps> = ({ isOpen
 
               <div className="pt-3 sticky bottom-0 bg-white">
                 <button
-                  onClick={handleStartCall}
+                  onClick={handleGoToStep2}
                   className="w-full py-3.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-emerald-700/20"
                 >
-                  Start Live Call with {selectedPreset.name} <ArrowRight className="w-4 h-4" />
+                  Continue with {selectedPreset.name} <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-between">
-              {/* Exact Globe UI component with continuous transcript bubbles */}
+              {/* Exact Globe UI Component with continuous transcript bubbles */}
               <div className="flex-1 w-full flex items-center justify-center">
                 <CustomVoiceGlobe
                   status={status}
@@ -133,32 +142,46 @@ export const LiveVoiceAgentModal: React.FC<LiveVoiceAgentModalProps> = ({ isOpen
                   isAgentSpeaking={isAgentSpeaking}
                   isListening={isListening}
                   isMicMuted={isMicMuted}
-                  transcripts={transcripts}
+                  transcripts={isCallActive ? transcripts : []}
+                  onStartCall={handleStartCall}
+                  isCallActive={isCallActive}
                 />
               </div>
 
-              {/* Action Bar: Mute Mic & End Call */}
-              <div className="w-full pt-3 grid grid-cols-2 gap-3 border-t border-stone-200/80 mt-2">
-                <button
-                  onClick={toggleMic}
-                  className={`py-3 px-4 rounded-xl flex items-center justify-center transition-all font-medium text-xs gap-2 cursor-pointer ${
-                    isMicMuted
-                      ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
-                      : 'bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300'
-                  }`}
-                >
-                  {isMicMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                  <span>{isMicMuted ? 'Unmute Mic' : 'Mute Mic'}</span>
-                </button>
+              {/* Action Bar */}
+              {!isCallActive ? (
+                <div className="w-full pt-3 border-t border-stone-200/80 mt-2">
+                  <button
+                    onClick={handleStartCall}
+                    className="w-full py-3.5 px-4 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-sm flex items-center justify-center transition-all gap-2 cursor-pointer shadow-md shadow-emerald-700/20"
+                  >
+                    <Phone className="w-4 h-4" />
+                    <span>Click to Start Voice Call</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full pt-3 grid grid-cols-2 gap-3 border-t border-stone-200/80 mt-2">
+                  <button
+                    onClick={toggleMic}
+                    className={`py-3 px-4 rounded-xl flex items-center justify-center transition-all font-medium text-xs gap-2 cursor-pointer ${
+                      isMicMuted
+                        ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                        : 'bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300'
+                    }`}
+                  >
+                    {isMicMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                    <span>{isMicMuted ? 'Unmute Mic' : 'Mute Mic'}</span>
+                  </button>
 
-                <button
-                  onClick={handleClose}
-                  className="py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center transition-all gap-2 cursor-pointer shadow-sm"
-                >
-                  <PhoneOff className="w-4 h-4" />
-                  <span>End Call</span>
-                </button>
-              </div>
+                  <button
+                    onClick={handleClose}
+                    className="py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center transition-all gap-2 cursor-pointer shadow-sm"
+                  >
+                    <PhoneOff className="w-4 h-4" />
+                    <span>End Call</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

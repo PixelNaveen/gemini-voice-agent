@@ -9,6 +9,8 @@ interface CustomVoiceGlobeProps {
   isListening: boolean;
   isMicMuted?: boolean;
   transcripts?: TranscriptItem[];
+  onStartCall?: () => void;
+  isCallActive?: boolean;
 }
 
 export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
@@ -18,8 +20,16 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
   isListening,
   isMicMuted,
   transcripts = [],
+  onStartCall,
+  isCallActive = true,
 }) => {
   const [isChecked, setIsChecked] = useState(true);
+
+  const handleOrbClick = () => {
+    if (!isCallActive && onStartCall) {
+      onStartCall();
+    }
+  };
 
   return (
     <div className="container-vao">
@@ -35,7 +45,7 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
       />
 
       {/* Main Orb Element from globe.html */}
-      <label htmlFor="v.a.o." className="orb" title="Toggle Chat Drawer">
+      <label htmlFor="v.a.o." className="orb" onClick={handleOrbClick} title={isCallActive ? "Toggle Chat Drawer" : "Click to Start Call"}>
         <div className="icons">
           <svg
             className="svg"
@@ -109,25 +119,19 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
             <path d="M7.5 18V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
           <p className="text-title">
-            <span>{isAgentSpeaking ? 'Aura' : "I'm"}</span>
-            <span>{isAgentSpeaking ? 'Speaking...' : isListening ? 'Listening...' : 'Connected'}</span>
+            <span>{isAgentSpeaking ? 'Aura' : isListening ? "I'm" : isCallActive ? 'Agent' : 'Click'}</span>
+            <span>{isAgentSpeaking ? 'Speaking...' : isListening ? 'Listening...' : isCallActive ? 'Connected' : 'to Start Call'}</span>
           </p>
         </div>
 
         <div className="container-chat">
           <div className="container-chat-limit">
             <div className="chats">
-              {transcripts.length === 0 ? (
-                <div className="chat-ia">
-                  <p>Hello! I am ready. Say anything to start the conversation.</p>
+              {transcripts.map((t, idx) => (
+                <div key={idx} className={t.speaker === 'user' ? 'chat-user' : 'chat-ia'}>
+                  <p>{t.text}</p>
                 </div>
-              ) : (
-                transcripts.map((t, idx) => (
-                  <div key={idx} className={t.speaker === 'user' ? 'chat-user' : 'chat-ia'}>
-                    <p>{t.text}</p>
-                  </div>
-                ))
-              )}
+              ))}
             </div>
           </div>
         </div>

@@ -25,14 +25,42 @@ export class TranscriptStore {
     connectionId?: string,
     isFinal = true
   ): TranscriptMessage {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      return this.messages[this.messages.length - 1] ?? {
+        id: `msg_${Date.now()}`,
+        sessionId: this.sessionId,
+        personaId: this.personaId,
+        role,
+        text: '',
+        timestamp: Date.now(),
+        isFinal,
+      };
+    }
+
+    const last = this.messages[this.messages.length - 1];
+    const now = Date.now();
+
+    // Stream Aggregation: If the last message was from the same speaker within the active turn (< 3.5s),
+    // append the text chunk into the same unified message bubble rather than creating duplicate bubbles per word.
+    if (last && last.role === role && (now - last.timestamp) < 3500) {
+      if (trimmed.startsWith(last.text)) {
+        last.text = trimmed;
+      } else if (!last.text.includes(trimmed)) {
+        last.text = last.text ? `${last.text} ${trimmed}` : trimmed;
+      }
+      last.timestamp = now;
+      return last;
+    }
+
     const msg: TranscriptMessage = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      id: `msg_${now}_${Math.random().toString(36).substring(2, 6)}`,
       sessionId: this.sessionId,
       personaId: this.personaId,
       connectionId,
       role,
-      text: text.trim(),
-      timestamp: Date.now(),
+      text: trimmed,
+      timestamp: now,
       isFinal,
     };
     this.messages.push(msg);
