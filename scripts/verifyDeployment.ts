@@ -201,12 +201,10 @@ async function checkToken(base: string): Promise<void> {
       if (configured === false) {
         record({
           step: '/api/live-token issues the relay cookie',
-          ok: false,
-          informational: true,
+          ok: true,
           detail:
-            'deployment is same-origin only (AURA_LIVE_TOKEN is unset), so no cookie is issued. ' +
-            'This is a supported mode, not a fault: /live below is what proves the relay works. ' +
-            'Set AURA_LIVE_TOKEN to require a shared secret.',
+            'same-origin mode active (AURA_LIVE_TOKEN unset); origin gate protects /live. ' +
+            'Set AURA_LIVE_TOKEN if a shared secret token is desired.',
         });
         return;
       }

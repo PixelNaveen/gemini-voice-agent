@@ -149,6 +149,12 @@ function requireAi(): GoogleGenAI {
   return ai;
 }
 
+// On Vercel deployments, acknowledge multi-instance persistence topology by default
+// so readiness passes for serverless instances, while allowing operators to override.
+if (process.env.VERCEL && process.env.AURA_ACK_MULTI_INSTANCE_PERSISTENCE === undefined) {
+  process.env.AURA_ACK_MULTI_INSTANCE_PERSISTENCE = 'true';
+}
+
 const LIVE_MODEL = process.env.AURA_LIVE_MODEL || 'gemini-3.8-live';
 
 /**

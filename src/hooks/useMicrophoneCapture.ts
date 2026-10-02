@@ -27,10 +27,10 @@ export interface MicrophoneCaptureDeps {
 }
 
 /**
- * Samples per upstream frame. 16 kHz mono, so 640 samples is 40 ms of speech.
- * Conforms to Google Live API and Pipecat low-latency framing standard (20ms - 40ms).
+ * Samples per upstream frame. 16 kHz mono, so 320 samples is 20 ms of speech.
+ * Conforms to Google Live API ultra-low latency framing standard (20ms per chunk).
  */
-const FRAME_SAMPLES = 640;
+const FRAME_SAMPLES = 320;
 
 /** RMS above this counts as the caller speaking rather than room noise. */
 const VOICE_RMS_THRESHOLD = 0.012;
