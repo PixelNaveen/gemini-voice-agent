@@ -377,6 +377,19 @@ export function useVoiceAgent() {
     };
   }, []);
 
+  // Periodic heartbeat to keep WebSocket connection and intermediate proxies/NAT gateways alive
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const ws = wsRef.current;
+      if (ws && ws.readyState === WebSocket.OPEN && transportStatus === 'CONNECTED') {
+        try {
+          ws.send(JSON.stringify({ type: 'ping' }));
+        } catch (_) {}
+      }
+    }, 10_000);
+    return () => clearInterval(interval);
+  }, [transportStatus]);
+
 
   // ─────────────────────────── Playback ───────────────────────────
   //

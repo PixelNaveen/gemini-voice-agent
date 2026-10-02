@@ -263,9 +263,12 @@ export class RecoveryManager {
     };
     this.recoveringSession = activeSession;
 
-    const baseDelay = category === 'VALIDATED_RETRY' ? 2000 : 1000;
-    const exponentialDelay = Math.min(baseDelay * Math.pow(2, this.attemptCount - 1), 6000);
-    const jitter = Math.floor(Math.random() * 400);
+    // Fast-path reconnect: When a valid session resumption handle is available, attempt the initial
+    // recovery immediately (80-120ms) rather than waiting >1.2s, preserving conversation flow.
+    const isFastResume = mode === 'RESUME' && this.attemptCount === 1;
+    const baseDelay = isFastResume ? 80 : (category === 'VALIDATED_RETRY' ? 2000 : 800);
+    const exponentialDelay = isFastResume ? 80 : Math.min(baseDelay * Math.pow(2, this.attemptCount - 1), 5000);
+    const jitter = isFastResume ? Math.floor(Math.random() * 40) : Math.floor(Math.random() * 250);
     const delayMs = exponentialDelay + jitter;
 
     this.state = 'SCHEDULED';
