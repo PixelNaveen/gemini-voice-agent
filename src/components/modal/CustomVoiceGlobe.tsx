@@ -1,5 +1,6 @@
-import React from 'react';
-import { AgentStatus } from '../../types';
+import React, { useState } from 'react';
+import { AgentStatus, TranscriptItem } from '../../types';
+import './globe.css';
 
 interface CustomVoiceGlobeProps {
   status: AgentStatus;
@@ -7,6 +8,7 @@ interface CustomVoiceGlobeProps {
   isAgentSpeaking: boolean;
   isListening: boolean;
   isMicMuted?: boolean;
+  transcripts?: TranscriptItem[];
 }
 
 export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
@@ -15,94 +17,126 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
   isAgentSpeaking,
   isListening,
   isMicMuted,
+  transcripts = [],
 }) => {
-  // Compute dynamic scale based on audio volume
-  const scale = isAgentSpeaking
-    ? 1 + Math.min(0.35, audioLevel * 0.9)
-    : isListening
-      ? 1 + Math.min(0.2, audioLevel * 0.5)
-      : 1;
-
-  const glowColor = isAgentSpeaking
-    ? 'rgba(16, 185, 129, 0.45)' // Emerald glow when speaking
-    : isListening
-      ? 'rgba(59, 130, 246, 0.45)' // Blue glow when listening
-      : 'rgba(245, 158, 11, 0.35)'; // Amber gold when idle/connecting
+  const [isChecked, setIsChecked] = useState(true);
 
   return (
-    <div className="container-vao py-4 flex flex-col items-center justify-center relative select-none">
-      {/* Dynamic Background Aura Glow */}
-      <div
-        className="absolute w-44 h-44 rounded-full blur-3xl transition-all duration-300 pointer-events-none -z-10"
-        style={{
-          backgroundColor: glowColor,
-          transform: `scale(${scale * 1.3})`,
-        }}
+    <div className="container-vao">
+      {/* Interactive Toggle Checkbox from globe.html */}
+      <input
+        type="checkbox"
+        className="input-orb"
+        id="v.a.o."
+        name="v.a.o."
+        checked={isChecked}
+        onChange={(e) => setIsChecked(e.target.checked)}
+        style={{ display: 'none' }}
       />
 
-      {/* Main Interactive Orb Body */}
-      <div
-        className="relative w-28 h-28 flex items-center justify-center transition-transform duration-100 ease-out"
-        style={{ transform: `scale(${scale})` }}
-      >
-        {/* Animated Lines Waveform Mask */}
-        <div className="container-lines-globe" />
+      {/* Main Orb Element from globe.html */}
+      <label htmlFor="v.a.o." className="orb">
+        <div className="icons">
+          <svg
+            className="svg"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+          >
+            <g className="close">
+              <path
+                fill="currentColor"
+                d="M18.3 5.71a.996.996 0 0 0-1.41 0L12 10.59L7.11 5.7A.996.996 0 1 0 5.7 7.11L10.59 12L5.7 16.89a.996.996 0 1 0 1.41 1.41L12 13.41l4.89 4.89a.996.996 0 1 0 1.41-1.41L13.41 12l4.89-4.89c.38-.38.38-1.02 0-1.4"
+              />
+            </g>
+            <g fill="none" className="mic">
+              <rect
+                width="8"
+                height="13"
+                x="8"
+                y="2"
+                fill="currentColor"
+                rx="4"
+              />
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 11a7 7 0 1 0 14 0m-7 10v-2"
+              />
+            </g>
+          </svg>
+        </div>
 
-        {/* 3D Orbiting Gyroscopic Rings */}
-        <div className="container-rings-globe" />
+        <div className="ball">
+          <div className="container-lines" />
+          <div className="container-rings" />
+        </div>
 
-        {/* Central Core Ball */}
-        <div
-          className={`w-20 h-20 rounded-full flex items-center justify-center shadow-2xl transition-colors duration-500 ${
-            isAgentSpeaking
-              ? 'bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-300 shadow-emerald-500/50'
-              : isListening
-                ? 'bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 shadow-blue-500/50'
-                : 'bg-gradient-to-tr from-amber-600 via-yellow-500 to-amber-300 shadow-amber-500/50'
-          }`}
-        >
-          {/* Inner Central Sound Wave Icon */}
-          <div className="flex items-center gap-1">
-            {[40, 75, 100, 60, 30].map((heightPct, idx) => {
-              const dynamicHeight = isAgentSpeaking || isListening
-                ? Math.max(10, heightPct * (0.4 + audioLevel * 1.5))
-                : heightPct * 0.35;
-              return (
-                <div
-                  key={idx}
-                  className="w-1 rounded-full bg-white transition-all duration-75"
-                  style={{ height: `${Math.min(32, dynamicHeight)}px` }}
-                />
-              );
-            })}
+        <svg style={{ pointerEvents: 'none', position: 'absolute', width: 0, height: 0 }}>
+          <filter id="gooey">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="6" />
+            <feColorMatrix
+              values="1 0 0 0 0
+              0 1 0 0 0 
+              0 0 1 0 0
+              0 0 0 20 -10"
+            />
+          </filter>
+        </svg>
+      </label>
+
+      {/* Expandable Chat AI Container from globe.html */}
+      <div className="container-chat-ia">
+        <div className="container-title">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M20.5346 6.34625L20.3501 6.7707C20.3213 6.83981 20.2727 6.89885 20.2103 6.94038C20.148 6.98191 20.0748 7.00407 19.9999 7.00407C19.925 7.00407 19.8518 6.98191 19.7895 6.94038C19.7272 6.89885 19.6785 6.83981 19.6497 6.7707L19.4652 6.34625C19.1409 5.59538 18.5469 4.99334 17.8004 4.65894L17.2312 4.40472C17.1622 4.37296 17.1037 4.32206 17.0627 4.25806C17.0217 4.19406 16.9999 4.11965 16.9999 4.04364C16.9999 3.96763 17.0217 3.89322 17.0627 3.82922C17.1037 3.76522 17.1622 3.71432 17.2312 3.68256L17.7689 3.44334C18.5341 3.09941 19.1383 2.47511 19.457 1.69904L19.6475 1.24084C19.6753 1.16987 19.7239 1.10893 19.7869 1.06598C19.8499 1.02303 19.9244 1.00006 20.0007 1.00006C20.0769 1.00006 20.1514 1.02303 20.2144 1.06598C20.2774 1.00893 20.326 1.16987 20.3539 1.24084L20.5436 1.69829C20.8619 2.47451 21.4658 3.09908 22.2309 3.44334L22.7693 3.68331C22.8382 3.71516 22.8965 3.76605 22.9373 3.82997C22.9782 3.89389 22.9999 3.96816 22.9999 4.04402C22.9999 4.11987 22.9782 4.19414 22.9373 4.25806C22.8965 4.32198 22.8382 4.37287 22.7693 4.40472L22.1994 4.65819C21.4531 4.99293 20.8594 5.59523 20.5353 6.34625"
+              fill="currentColor"
+            />
+            <path d="M3 14V10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M21 14V10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M16.5 18V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M12 22V2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M7.5 18V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          <p className="text-title">
+            <span>{isAgentSpeaking ? 'Aura' : "I'm"}</span>
+            <span>{isAgentSpeaking ? 'Speaking...' : isListening ? 'Listening...' : 'Connected'}</span>
+          </p>
+        </div>
+
+        <div className="container-chat">
+          <div className="container-chat-limit">
+            <div className="chats">
+              {transcripts.length === 0 ? (
+                <div className="chat-ia">
+                  <p>
+                    <span>Hello!</span> <span>I</span> <span>am</span> <span>ready.</span> <span>Say</span> <span>anything</span> <span>to</span> <span>start!</span>
+                  </p>
+                </div>
+              ) : (
+                transcripts.map((t, idx) => (
+                  <div key={idx} className={t.speaker === 'user' ? 'chat-user' : 'chat-ia'}>
+                    <p>
+                      {t.text.split(' ').map((word, wIdx) => (
+                        <span key={wIdx}>{word}</span>
+                      ))}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* State Caption Indicator */}
-      <div className="mt-4 flex items-center gap-2 px-3 py-1 rounded-full bg-stone-900/80 border border-stone-800 backdrop-blur-md shadow-sm">
-        <span
-          className={`w-2 h-2 rounded-full ${
-            isAgentSpeaking
-              ? 'bg-emerald-400 animate-pulse'
-              : isListening
-                ? 'bg-blue-400 animate-pulse'
-                : status === 'connecting'
-                  ? 'bg-amber-400 animate-ping'
-                  : 'bg-stone-500'
-          }`}
-        />
-        <span className="text-xs font-mono font-medium text-stone-200 uppercase tracking-wider">
-          {isAgentSpeaking
-            ? 'Aura is speaking...'
-            : isListening
-              ? 'Listening to you...'
-              : isMicMuted
-                ? 'Microphone muted'
-                : status === 'connecting'
-                  ? 'Connecting to Gemini Live...'
-                  : 'Call Active'}
-        </span>
       </div>
     </div>
   );

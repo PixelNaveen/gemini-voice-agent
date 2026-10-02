@@ -99,6 +99,7 @@ export const LiveVoiceAgentModal: React.FC<LiveVoiceAgentModalProps> = ({ isOpen
                 isAgentSpeaking={isAgentSpeaking}
                 isListening={isListening}
                 isMicMuted={isMicMuted}
+                transcripts={transcripts}
               />
               
               <div className="w-full flex-1 mt-4 bg-stone-900 rounded-xl p-4 font-mono text-xs text-stone-300 overflow-y-auto space-y-2 max-h-48 border border-stone-800">
@@ -114,26 +115,22 @@ export const LiveVoiceAgentModal: React.FC<LiveVoiceAgentModalProps> = ({ isOpen
                 )}
               </div>
 
-              <div className="w-full pt-4 grid grid-cols-3 gap-3">
+              {/* Action Bar: Mute Mic and End Call */}
+              <div className="w-full pt-4 grid grid-cols-2 gap-4">
                 <button
                   onClick={toggleMic}
-                  className={`p-3 rounded-xl flex items-center justify-center transition-colors font-mono text-xs gap-2 ${
-                    isMicMuted ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'bg-stone-800 hover:bg-stone-700 text-stone-200'
+                  className={`p-3.5 rounded-xl flex items-center justify-center transition-all font-mono text-sm gap-2 font-medium cursor-pointer ${
+                    isMicMuted
+                      ? 'bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30'
+                      : 'bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700'
                   }`}
                 >
                   {isMicMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                  <span>{isMicMuted ? 'Unmute' : 'Mute'}</span>
-                </button>
-                <button
-                  onClick={interruptAgent}
-                  className="p-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 flex items-center justify-center transition-colors font-mono text-xs gap-2"
-                >
-                  <Repeat className="w-4 h-4" />
-                  <span>Interrupt</span>
+                  <span>{isMicMuted ? 'Unmute Mic' : 'Mute Mic'}</span>
                 </button>
                 <button
                   onClick={handleClose}
-                  className="p-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold flex items-center justify-center transition-colors font-mono text-xs gap-2"
+                  className="p-3.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold flex items-center justify-center transition-all font-mono text-sm gap-2 cursor-pointer shadow-lg shadow-red-900/30"
                 >
                   <PhoneOff className="w-4 h-4" />
                   <span>End Call</span>
