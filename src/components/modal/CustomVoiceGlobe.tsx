@@ -35,11 +35,13 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
     }
   };
 
-  const rhythmClass = isAgentSpeaking
-    ? 'orb-speaking'
-    : isListening
-    ? 'orb-listening'
-    : '';
+  const voiceBeatScale = isCallActive
+    ? isAgentSpeaking
+      ? 1.0 + Math.min(0.24, Math.max(0.06, audioLevel * 0.45))
+      : isListening
+      ? 1.0 + Math.min(0.18, Math.max(0.04, audioLevel * 0.35))
+      : 1.0
+    : 1.0;
 
   return (
     <div className="container-vao">
@@ -57,7 +59,7 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
       {/* Main Orb Element from globe.html */}
       <label
         htmlFor="v.a.o."
-        className={`orb ${rhythmClass}`}
+        className="orb"
         onClick={handleOrbClick}
         title={isCallActive ? "Voice Agent Active" : "Tap to start"}
       >
@@ -95,7 +97,17 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
           </svg>
         </div>
 
-        <div className="ball">
+        <div
+          className="ball"
+          style={
+            isCallActive && (isAgentSpeaking || isListening)
+              ? {
+                  transform: `scale(${voiceBeatScale.toFixed(3)})`,
+                  transition: 'transform 0.08s cubic-bezier(0.25, 1, 0.5, 1)',
+                }
+              : undefined
+          }
+        >
           <div className="container-lines" />
           <div className="container-rings" />
         </div>
