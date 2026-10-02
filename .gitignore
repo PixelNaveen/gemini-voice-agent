@@ -19,3 +19,6 @@ server.mjs.map
 # F-20: the local appointment journal. Written at runtime, and it holds caller contact details,
 # so it must never be committed.
 .data/
+
+# Temporary reference folder for merge
+receptionist-site/
