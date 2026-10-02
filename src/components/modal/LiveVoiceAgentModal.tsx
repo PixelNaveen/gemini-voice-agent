@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, PhoneOff, Mic, MicOff, Settings, X, Repeat, ArrowRight } from 'lucide-react';
+import { Sparkles, PhoneOff, Mic, MicOff, X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useVoiceAgent } from '../../hooks/useVoiceAgent';
 import { ALL_PERSONAS } from '../../personas';
-import { IndustryPreset, TranscriptItem } from '../../types';
+import { IndustryPreset } from '../../types';
 import { CustomVoiceGlobe } from './CustomVoiceGlobe';
 
 interface LiveVoiceAgentModalProps {
@@ -23,7 +23,6 @@ export const LiveVoiceAgentModal: React.FC<LiveVoiceAgentModalProps> = ({ isOpen
     toggleMic,
     isAgentSpeaking,
     isListening,
-    interruptAgent,
     transcripts,
   } = useVoiceAgent();
 
@@ -44,93 +43,117 @@ export const LiveVoiceAgentModal: React.FC<LiveVoiceAgentModalProps> = ({ isOpen
     onClose();
   };
 
+  const handleBackToSelector = () => {
+    void endSession();
+    setStep('selector');
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={handleClose} />
+      {/* Semi-transparent Light Backdrop */}
+      <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-md transition-opacity" onClick={handleClose} />
       
-      <div className="relative w-full max-w-2xl bg-stone-950 border border-amber-500/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[600px]">
+      {/* Premium Light Card Modal */}
+      <div className="relative w-full max-w-md bg-white border border-stone-200/90 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[590px] text-stone-900 animate-float-subtle">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-800">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-stone-200/80 bg-[#FBF9F8]">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-400" />
-            <h2 className="text-sm font-bold tracking-wider uppercase text-white font-mono">
-              {step === 'selector' ? 'Select Business Persona' : `Aura Live Agent — ${selectedPreset.businessName}`}
+            {step === 'call' && (
+              <button
+                onClick={handleBackToSelector}
+                className="p-1.5 -ml-1 text-stone-500 hover:text-stone-900 rounded-lg hover:bg-stone-200/60 transition-colors"
+                title="Change Persona"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
+            <Sparkles className="w-4 h-4 text-emerald-600" />
+            <h2 className="text-xs font-bold tracking-wider uppercase text-stone-900 font-mono">
+              {step === 'selector' ? 'Select Business' : selectedPreset.businessName}
             </h2>
           </div>
-          <button onClick={handleClose} className="text-stone-400 hover:text-white transition-colors">
-            <X className="w-5 h-5" />
+          <button
+            onClick={handleClose}
+            className="p-1 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-200/60 transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-stone-800">
+        {/* Content Body */}
+        <div className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-stone-300">
           {step === 'selector' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {ALL_PERSONAS.map((preset: IndustryPreset) => (
-                <button
-                  key={preset.id}
-                  onClick={() => setSelectedPreset(preset)}
-                  className={`p-4 rounded-xl border-2 transition-all text-left group ${
-                    selectedPreset.id === preset.id
-                      ? 'border-emerald-500 bg-emerald-500/10'
-                      : 'border-stone-800 bg-stone-900 hover:border-stone-600'
-                  }`}
-                >
-                  <div className="font-bold text-white mb-1 group-hover:text-emerald-300 transition-colors">{preset.businessName}</div>
-                  <div className="text-xs text-stone-400 font-mono italic">{preset.badge}</div>
-                </button>
-              ))}
-              <div className="col-span-full pt-4">
+            <div className="flex flex-col gap-2.5">
+              <p className="text-xs text-stone-500 mb-1">
+                Choose an industry persona to start your live voice conversation:
+              </p>
+              {ALL_PERSONAS.map((preset: IndustryPreset) => {
+                const isSelected = selectedPreset.id === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    onClick={() => setSelectedPreset(preset)}
+                    className={`p-3 rounded-xl border transition-all text-left group cursor-pointer ${
+                      isSelected
+                        ? 'border-emerald-600 bg-emerald-50/80 ring-2 ring-emerald-500/20 shadow-sm'
+                        : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50/60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-0.5">
+                      <div className={`font-semibold text-sm transition-colors ${isSelected ? 'text-emerald-950' : 'text-stone-900'}`}>
+                        {preset.businessName}
+                      </div>
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${isSelected ? 'bg-emerald-200/60 text-emerald-800' : 'bg-stone-100 text-stone-500'}`}>
+                        {preset.badge}
+                      </span>
+                    </div>
+                    <div className="text-xs text-stone-500 line-clamp-1">{preset.description}</div>
+                  </button>
+                );
+              })}
+
+              <div className="pt-3 sticky bottom-0 bg-white">
                 <button
                   onClick={handleStartCall}
-                  className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-lg shadow-emerald-900/30"
+                  className="w-full py-3.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-emerald-700/20"
                 >
-                  Connect to {selectedPreset.businessName} <ArrowRight className="w-4 h-4" />
+                  Start Live Call with {selectedPreset.name} <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-between">
-              <CustomVoiceGlobe
-                status={status}
-                audioLevel={audioLevel}
-                isAgentSpeaking={isAgentSpeaking}
-                isListening={isListening}
-                isMicMuted={isMicMuted}
-                transcripts={transcripts}
-              />
-              
-              <div className="w-full flex-1 mt-4 bg-stone-900 rounded-xl p-4 font-mono text-xs text-stone-300 overflow-y-auto space-y-2 max-h-48 border border-stone-800">
-                {transcripts.length === 0 ? (
-                  <div className="text-stone-500 italic text-center py-4">Waiting for voice input...</div>
-                ) : (
-                  transcripts.map((t: TranscriptItem, i: number) => (
-                    <div key={i} className={t.speaker === 'user' ? 'text-blue-300' : 'text-emerald-300'}>
-                      <span className="opacity-50 font-bold">{t.speaker === 'user' ? 'YOU' : 'AGENT'}: </span>
-                      {t.text}
-                    </div>
-                  ))
-                )}
+              {/* Exact Globe UI component with continuous transcript bubbles */}
+              <div className="flex-1 w-full flex items-center justify-center">
+                <CustomVoiceGlobe
+                  status={status}
+                  audioLevel={audioLevel}
+                  isAgentSpeaking={isAgentSpeaking}
+                  isListening={isListening}
+                  isMicMuted={isMicMuted}
+                  transcripts={transcripts}
+                />
               </div>
 
-              {/* Action Bar: Mute Mic and End Call */}
-              <div className="w-full pt-4 grid grid-cols-2 gap-4">
+              {/* Action Bar: Mute Mic & End Call */}
+              <div className="w-full pt-3 grid grid-cols-2 gap-3 border-t border-stone-200/80 mt-2">
                 <button
                   onClick={toggleMic}
-                  className={`p-3.5 rounded-xl flex items-center justify-center transition-all font-mono text-sm gap-2 font-medium cursor-pointer ${
+                  className={`py-3 px-4 rounded-xl flex items-center justify-center transition-all font-medium text-xs gap-2 cursor-pointer ${
                     isMicMuted
-                      ? 'bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30'
-                      : 'bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700'
+                      ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                      : 'bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300'
                   }`}
                 >
                   {isMicMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                   <span>{isMicMuted ? 'Unmute Mic' : 'Mute Mic'}</span>
                 </button>
+
                 <button
                   onClick={handleClose}
-                  className="p-3.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold flex items-center justify-center transition-all font-mono text-sm gap-2 cursor-pointer shadow-lg shadow-red-900/30"
+                  className="py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center transition-all gap-2 cursor-pointer shadow-sm"
                 >
                   <PhoneOff className="w-4 h-4" />
                   <span>End Call</span>

@@ -35,7 +35,7 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
       />
 
       {/* Main Orb Element from globe.html */}
-      <label htmlFor="v.a.o." className="orb">
+      <label htmlFor="v.a.o." className="orb" title="Toggle Chat Drawer">
         <div className="icons">
           <svg
             className="svg"
@@ -88,7 +88,7 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
         </svg>
       </label>
 
-      {/* Expandable Chat AI Container from globe.html */}
+      {/* Expandable Chat AI Container with Light Theme */}
       <div className="container-chat-ia">
         <div className="container-title">
           <svg
@@ -119,18 +119,12 @@ export const CustomVoiceGlobe: React.FC<CustomVoiceGlobeProps> = ({
             <div className="chats">
               {transcripts.length === 0 ? (
                 <div className="chat-ia">
-                  <p>
-                    <span>Hello!</span> <span>I</span> <span>am</span> <span>ready.</span> <span>Say</span> <span>anything</span> <span>to</span> <span>start!</span>
-                  </p>
+                  <p>Hello! I am ready. Say anything to start the conversation.</p>
                 </div>
               ) : (
                 transcripts.map((t, idx) => (
                   <div key={idx} className={t.speaker === 'user' ? 'chat-user' : 'chat-ia'}>
-                    <p>
-                      {t.text.split(' ').map((word, wIdx) => (
-                        <span key={wIdx}>{word}</span>
-                      ))}
-                    </p>
+                    <p>{t.text}</p>
                   </div>
                 ))
               )}
