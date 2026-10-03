@@ -1,0 +1,31 @@
+# Caddyfile for OCI Free Tier Always-On Voice AI VM
+# Replace :80 with your domain (e.g., yourdomain.com) when DNS is pointed
+
+:80 {
+    # 1. Low-Latency WebSocket Relay Proxy
+    @websockets {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    reverse_proxy @websockets localhost:3000 {
+        flush_interval -1
+        transport http {
+            keepalive 300s
+            keepalive_idle_conns 100
+        }
+    }
+
+    # 2. Dynamic API & Health Routes
+    reverse_proxy /api/* localhost:3000
+    reverse_proxy /health localhost:3000
+    reverse_proxy /ready localhost:3000
+
+    # 3. Static Assets from Vite Build
+    root * ./dist
+    file_server {
+        precompressed zstd gzip
+    }
+
+    # 4. Single-Page Application Client Fallback
+    try_files {path} /index.html
+}

@@ -74,7 +74,8 @@ export class PlaybackManager {
       source.connect(this.audioContext.destination);
 
       const currentTime = this.audioContext.currentTime;
-      const startTime = Math.max(currentTime + 0.025, this.nextPlayTime);
+      const lookahead = this.nextPlayTime > currentTime ? 0.005 : 0.012;
+      const startTime = Math.max(currentTime + lookahead, this.nextPlayTime);
       source.start(startTime);
 
       this.nextPlayTime = startTime + audioBuffer.duration;

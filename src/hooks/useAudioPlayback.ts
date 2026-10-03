@@ -117,8 +117,9 @@ export function useAudioPlayback(deps: AudioPlaybackDeps) {
       d.clearSilenceTimer();
 
       const currentTime = ctx.currentTime;
-      // If the timeline fell behind or was reset, provide a 20ms micro-jitter lookahead.
-      const startTime = Math.max(currentTime + 0.020, nextPlayTimeRef.current);
+      // Adaptive Jitter Lookahead: 5ms on continuous tight stream, 12ms on fresh stream start.
+      const lookahead = nextPlayTimeRef.current > currentTime ? 0.005 : 0.012;
+      const startTime = Math.max(currentTime + lookahead, nextPlayTimeRef.current);
 
       let sourceNode: AudioBufferSourceNode | null = null;
       const { source, analyser, duration } = playAudioBuffer(

@@ -641,6 +641,11 @@ function handleLiveUpgrade(
   }
 
   wss.handleUpgrade(request, socket, head, (ws) => {
+    // Disable Nagle's algorithm and enable keepalive on underlying socket for zero packet delay
+    if (socket && typeof (socket as any).setNoDelay === 'function') {
+      (socket as any).setNoDelay(true);
+      (socket as any).setKeepAlive(true, 30000);
+    }
     wss.emit('connection', ws, request);
   });
 }

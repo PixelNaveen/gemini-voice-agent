@@ -210,8 +210,11 @@ async function main(): Promise<void> {
     });
   });
 
-  await new Promise<void>((resolve) => server.listen(PORT, resolve));
-  const base = `http://127.0.0.1:${PORT}`;
+  await new Promise<void>((resolve) =>
+    server.listen(process.env.AURA_VERCEL_VERIFY_PORT ? Number(process.env.AURA_VERCEL_VERIFY_PORT) : 0, resolve)
+  );
+  const actualPort = (server.address() as any)?.port;
+  const base = `http://127.0.0.1:${actualPort}`;
   const liveToken = process.env.AURA_LIVE_TOKEN || '';
 
   // ── HTTP routes ────────────────────────────────────────────────────────────────
@@ -255,17 +258,17 @@ async function main(): Promise<void> {
   check(!tokenRes.headers.get('content-type')?.includes('json') || true, 'token bootstrap responded', '');
 
   const foreign = await fetch(`${base}/api/live-token`, {
-    headers: { Origin: 'https://evil.example', Host: `127.0.0.1:${PORT}` },
+    headers: { Origin: 'https://evil.example', Host: `127.0.0.1:${actualPort}` },
   });
   check(foreign.status === 403, 'a foreign origin cannot bootstrap the relay token', `HTTP ${foreign.status}`);
 
   // ── WebSocket upgrade through the platform context ─────────────────────────────
   const cookie = setCookie.split(';')[0];
-  const origin = `http://127.0.0.1:${PORT}`;
+  const origin = `http://127.0.0.1:${actualPort}`;
 
   const openSocket = (headers: Record<string, string>): Promise<{ ok: boolean; detail: string }> =>
     new Promise((resolve) => {
-      const ws = new WebSocket(`ws://127.0.0.1:${PORT}/live`, { headers: { Origin: origin, ...headers } });
+      const ws = new WebSocket(`ws://127.0.0.1:${actualPort}/live`, { headers: { Origin: origin, ...headers } });
       const timer = setTimeout(() => {
         ws.terminate();
         resolve({ ok: false, detail: 'timed out waiting for handshake' });
@@ -294,7 +297,7 @@ async function main(): Promise<void> {
   // A rewrite to a non-relay path must not be upgraded.
   const wrongPath = await new Promise<string>((resolve) => {
     const req = http.request({
-      port: PORT,
+      port: actualPort,
       host: '127.0.0.1',
       path: '/not-live',
       headers: {
@@ -318,7 +321,7 @@ async function main(): Promise<void> {
   simulateNoUpgradePrimitives = true;
   const noPrimitives = await new Promise<string>((resolve) => {
     const req = http.request({
-      port: PORT,
+      port: actualPort,
       host: '127.0.0.1',
       path: '/live',
       headers: {
