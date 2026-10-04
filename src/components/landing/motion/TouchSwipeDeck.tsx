@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence, type Variants } from 'motion/react';
-import { ChevronLeft, ChevronRight, Hand, Sparkles } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { motion, useMotionValue, useSpring } from 'motion/react';
+import { ChevronLeft, ChevronRight, Hand } from 'lucide-react';
 import { useTouchDevice } from '../../../hooks/useTouchDevice.ts';
 
 interface TouchSwipeDeckProps {
@@ -18,185 +18,164 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
   showHint = true,
   onIndexChange,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
-  const { isTouch, triggerHaptic } = useTouchDevice();
+  const { triggerHaptic } = useTouchDevice();
 
   const total = children.length;
-  const progressPercent = ((currentIndex + 1) / total) * 100;
 
-  const paginate = (newDirection: number) => {
-    setDirection(newDirection);
-    setCurrentIndex((prev) => {
-      let next = prev + newDirection;
-      if (next < 0) next = total - 1;
-      if (next >= total) next = 0;
-      if (onIndexChange) onIndexChange(next);
-      return next;
-    });
-    triggerHaptic(14);
-  };
+  // Determine items visible per view based on container width (Tablet: 2 cards, Mobile: 1 card)
+  const isTablet = containerWidth >= 640;
+  const itemsPerView = isTablet ? 2 : 1;
+  const maxIndex = Math.max(0, total - itemsPerView);
 
-  const jumpTo = (index: number) => {
-    setDirection(index > currentIndex ? 1 : -1);
-    setCurrentIndex(index);
-    if (onIndexChange) onIndexChange(index);
-    triggerHaptic(10);
-  };
+  // Measure container width responsively
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
 
-  // Silky smooth overlapping cross-fade slide transitions
-  const slideVariants: Variants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? '60%' : '-60%',
-      opacity: 0,
-      scale: 0.95,
-      filter: 'blur(4px)',
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-      scale: 1,
-      filter: 'blur(0px)',
-      transition: {
-        x: {
-          type: 'spring',
-          stiffness: 260,
-          damping: 26,
-          mass: 0.8,
-        },
-        opacity: {
-          duration: 0.35,
-          ease: [0.16, 1, 0.3, 1],
-        },
-        scale: {
-          duration: 0.35,
-          ease: [0.16, 1, 0.3, 1],
-        },
-        filter: {
-          duration: 0.25,
-        },
-      },
+    updateWidth();
+    const ro = new ResizeObserver(updateWidth);
+    ro.observe(containerRef.current);
+    window.addEventListener('resize', updateWidth, { passive: true });
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', updateWidth);
+    };
+  }, []);
+
+  const cardWidth = containerWidth > 0 ? containerWidth / itemsPerView : 0;
+  const targetX = -currentIndex * cardWidth;
+
+  const dragX = useMotionValue(0);
+  const trackX = useSpring(targetX, {
+    stiffness: 280,
+    damping: 28,
+    mass: 0.8,
+  });
+
+  // Keep spring in sync with current index target
+  useEffect(() => {
+    trackX.set(targetX);
+  }, [targetX, trackX]);
+
+  const slideTo = useCallback(
+    (index: number) => {
+      const clamped = Math.max(0, Math.min(index, maxIndex));
+      setCurrentIndex(clamped);
+      if (onIndexChange) onIndexChange(clamped);
+      triggerHaptic(12);
     },
-    exit: (dir: number) => ({
-      zIndex: 0,
-      x: dir > 0 ? '-60%' : '60%',
-      opacity: 0,
-      scale: 0.95,
-      filter: 'blur(4px)',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      transition: {
-        x: {
-          type: 'spring',
-          stiffness: 260,
-          damping: 26,
-          mass: 0.8,
-        },
-        opacity: {
-          duration: 0.28,
-          ease: [0.22, 1, 0.36, 1],
-        },
-        scale: {
-          duration: 0.28,
-          ease: [0.22, 1, 0.36, 1],
-        },
-        filter: {
-          duration: 0.2,
-        },
-      },
-    }),
+    [maxIndex, onIndexChange, triggerHaptic]
+  );
+
+  const paginate = (direction: number) => {
+    slideTo(currentIndex + direction);
   };
+
+  const handleDragEnd = (_: any, info: { offset: { x: number }; velocity: { x: number } }) => {
+    const swipePower = Math.abs(info.offset.x) * info.velocity.x;
+    const swipeThreshold = cardWidth * 0.25;
+
+    if (swipePower < -60 || info.offset.x < -swipeThreshold) {
+      if (currentIndex < maxIndex) paginate(1);
+      else slideTo(maxIndex);
+    } else if (swipePower > 60 || info.offset.x > swipeThreshold) {
+      if (currentIndex > 0) paginate(-1);
+      else slideTo(0);
+    } else {
+      slideTo(currentIndex);
+    }
+  };
+
+  const progressPercent = total > 0 ? ((currentIndex + itemsPerView) / total) * 100 : 0;
 
   return (
-    <div className={`relative w-full select-none overflow-hidden ${className}`}>
-      {/* Visual Interactive Indicator: Top Progress Bar & Badge */}
+    <div ref={containerRef} className={`relative w-full select-none overflow-hidden ${className}`}>
+      {/* Top Reading Progress Bar & Interactive Hint */}
       {showHint && (
         <div className="space-y-2 mb-3">
-          {/* Top subtle progress track bar */}
           <div className="w-full h-1 bg-neutral-200/70 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-emerald-600 rounded-full"
-              initial={{ width: `${(1 / total) * 100}%` }}
-              animate={{ width: `${progressPercent}%` }}
+              animate={{ width: `${Math.min(100, Math.max(10, progressPercent))}%` }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
           </div>
 
-          {/* Swipe indicator row */}
           <div className="flex items-center justify-between text-xs text-neutral-500 font-mono">
             <span className="inline-flex items-center gap-1.5 text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/70 shadow-2xs">
               <Hand className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
-              <span className="font-sans font-medium text-[11px]">Swipe card or tap arrows</span>
+              <span className="font-sans font-medium text-[11px]">
+                {isTablet ? 'Showing 2 cards · Swipe or tap arrows' : 'Swipe card or tap arrows'}
+              </span>
             </span>
             <span className="text-[11px] font-mono text-neutral-600 bg-neutral-100/90 px-2 py-0.5 rounded-md border border-neutral-200/60">
-              {currentIndex + 1} of {total}
+              {currentIndex + 1}
+              {itemsPerView > 1 ? `-${Math.min(total, currentIndex + itemsPerView)}` : ''} of {total}
             </span>
           </div>
         </div>
       )}
 
-      {/* Swipeable Viewport with deceleration momentum & rubber-band elastic bounds */}
-      <div className={`relative ${minHeightClass} flex items-center justify-center`}>
-        <AnimatePresence initial={false} custom={direction}>
+      {/* Continuous Multi-Card Viewport Track */}
+      <div className={`relative w-full overflow-hidden ${minHeightClass} flex items-stretch touch-pan-y`}>
+        {containerWidth > 0 && (
           <motion.div
-            key={currentIndex}
-            custom={direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
+            style={{ x: trackX }}
             drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.22}
-            dragTransition={{
-              bounceStiffness: 280,
-              bounceDamping: 28,
-              power: 0.18,
-              timeConstant: 240,
+            _dragX={dragX}
+            dragConstraints={{
+              left: -maxIndex * cardWidth,
+              right: 0,
             }}
-            onDragEnd={(_, { offset, velocity }) => {
-              const swipe = Math.abs(offset.x) * velocity.x;
-              if (swipe < -70 || offset.x < -45) {
-                paginate(1);
-              } else if (swipe > 70 || offset.x > 45) {
-                paginate(-1);
-              }
-            }}
-            className="w-full cursor-grab active:cursor-grabbing touch-pan-y"
+            dragElastic={0.15}
+            onDragEnd={handleDragEnd}
+            className="flex items-stretch cursor-grab active:cursor-grabbing w-full"
           >
-            {children[currentIndex]}
+            {children.map((child, idx) => (
+              <div
+                key={idx}
+                style={{ width: `${cardWidth}px` }}
+                className="shrink-0 p-1.5 h-full flex flex-col justify-stretch"
+              >
+                {child}
+              </div>
+            ))}
           </motion.div>
-        </AnimatePresence>
+        )}
       </div>
 
-      {/* Touch-Optimized Bottom Controls & Spring Pagination Dots */}
+      {/* Touch-Optimized Bottom Controls & Pagination Dots */}
       <div className="flex items-center justify-between mt-5 pt-4 border-t border-neutral-200/60">
         <button
           onClick={() => paginate(-1)}
+          disabled={currentIndex <= 0}
           aria-label="Previous card"
-          className="p-2.5 rounded-full bg-white border border-neutral-200/90 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-50 shadow-2xs active:scale-90 transition-transform cursor-pointer"
+          className="p-2.5 rounded-full bg-white border border-neutral-200/90 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-50 shadow-2xs active:scale-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
 
         {/* Squishy spring dots with active glow */}
         <div className="flex items-center gap-2">
-          {children.map((_, idx) => (
+          {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
             <button
               key={idx}
-              onClick={() => jumpTo(idx)}
+              onClick={() => slideTo(idx)}
               aria-label={`Jump to slide ${idx + 1}`}
               className="relative p-1.5 focus:outline-hidden cursor-pointer group"
             >
               <motion.div
                 animate={{
                   width: currentIndex === idx ? 28 : 8,
-                  backgroundColor:
-                    currentIndex === idx ? '#059669' : 'rgba(212, 212, 216, 0.9)',
+                  backgroundColor: currentIndex === idx ? '#059669' : 'rgba(212, 212, 216, 0.9)',
                 }}
                 transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 className="h-2 rounded-full group-hover:bg-neutral-400 transition-colors"
@@ -207,8 +186,9 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
 
         <button
           onClick={() => paginate(1)}
+          disabled={currentIndex >= maxIndex}
           aria-label="Next card"
-          className="p-2.5 rounded-full bg-white border border-neutral-200/90 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-50 shadow-2xs active:scale-90 transition-transform cursor-pointer"
+          className="p-2.5 rounded-full bg-white border border-neutral-200/90 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-50 shadow-2xs active:scale-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           <ChevronRight className="w-4 h-4" />
         </button>

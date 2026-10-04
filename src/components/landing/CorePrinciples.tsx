@@ -178,8 +178,8 @@ export const CorePrinciples: React.FC = () => {
           </motion.p>
         </div>
 
-        {/* Mobile Swipable Cards Deck */}
-        <div className="block md:hidden mt-8">
+        {/* Mobile & Tablet Continuous Swipeable Track (1 card on mobile, 2 cards on tablet) */}
+        <div className="block lg:hidden mt-8">
           <TouchSwipeDeck minHeightClass="min-h-[460px]">
             {PRINCIPLES_DATA.map((item) => (
               <PrincipleCard
@@ -199,8 +199,8 @@ export const CorePrinciples: React.FC = () => {
           </TouchSwipeDeck>
         </div>
 
-        {/* Tablet & Desktop Grid: 2 columns on Tablet (md), 3 columns on Desktop (lg) */}
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-8 mt-12 lg:mt-14">
+        {/* Desktop 3-Column Grid (lg+) */}
+        <div className="hidden lg:grid lg:grid-cols-3 gap-5 lg:gap-8 mt-12 lg:mt-14">
           {PRINCIPLES_DATA.map((item, idx) => (
             <PrincipleCard
               key={item.number}
