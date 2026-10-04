@@ -97,26 +97,26 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
 
           {/* Zone 3: Action Buttons & Responsive Mobile/Tablet Access */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-            {/* Primary Call Action Button - Green */}
+            {/* Call Action Button */}
             <ShinyButton
-              variant="primary"
+              variant="secondary"
               onClick={onOpenCallModal}
-              className="px-3.5 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium shadow-sm hover:shadow-md"
+              className="px-3 sm:px-3.5 lg:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium backdrop-blur-md bg-white/80 border border-white/90 shadow-2xs"
             >
-              <Phone className="w-3.5 h-3.5 text-emerald-200 transition-transform group-hover:rotate-12 shrink-0" />
+              <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span className="hidden sm:inline">Talk to Receptionist</span>
               <span className="sm:hidden">Call</span>
             </ShinyButton>
 
-            {/* Experience AI Demo Action Button - Normal Secondary Button */}
+            {/* Experience AI Demo Action Button (Desktop lg+ only) */}
             <div className="hidden lg:block">
               <ShinyButton
-                variant="secondary"
+                variant="primary"
                 onClick={onOpenDemoModal}
-                className="px-3.5 lg:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium backdrop-blur-md bg-white/80 border border-white/90 shadow-2xs hover:bg-white"
+                className="px-3.5 lg:px-4 py-2 text-xs font-medium shadow-md shadow-emerald-900/10"
               >
                 <span>Experience AI</span>
-                <ArrowUpRight className="w-3.5 h-3.5 text-neutral-500 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight className="w-3.5 h-3.5" />
               </ShinyButton>
             </div>
 
