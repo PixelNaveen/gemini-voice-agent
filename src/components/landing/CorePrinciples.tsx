@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Clock, Brain, CalendarCheck, ArrowRight, Check } from 'lucide-react';
+import { Clock, Brain, CalendarCheck, Check } from 'lucide-react';
 import { SpotlightCard } from './motion/SpotlightCard.tsx';
 import { BlurText } from './motion/BlurText.tsx';
 import { AnimatedCounter } from './motion/AnimatedCounter.tsx';
@@ -93,9 +93,6 @@ const PrincipleCard: React.FC<PrincipleCardProps> = ({
               {metricLabel}
             </div>
           </div>
-          <span className="text-xs font-medium text-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-            Explore <ArrowRight className="w-3.5 h-3.5" />
-          </span>
         </div>
       </SpotlightCard>
     </motion.div>
