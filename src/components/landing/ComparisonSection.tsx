@@ -409,7 +409,7 @@ export const ComparisonSection: React.FC = () => {
   return (
     <section id="difference" className="py-24 md:py-32 bg-[#FAF8F5] border-t border-neutral-200/70 select-none relative overflow-hidden">
       {/* Background organic glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[500px] bg-gradient-to-tr from-emerald-100/30 via-rose-50/20 to-transparent blur-3xl pointer-events-none rounded-full" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] max-w-full h-[500px] bg-gradient-to-tr from-emerald-100/30 via-rose-50/20 to-transparent blur-3xl pointer-events-none rounded-full" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}

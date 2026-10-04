@@ -1,6 +1,6 @@
 {
   "id": "coolbreeze-hvac",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "identity": {
     "name": "AURA",
     "role": "HVAC Emergency Dispatcher",
@@ -24,62 +24,442 @@
     }
   },
   "services": [
-    { "id": "ac-diagnostic", "name": "AC System Diagnostic & Troubleshooting", "durationMinutes": 60, "category": "Cooling" },
-    { "id": "furnace-tuneup", "name": "Annual Furnace Safety Tune-Up", "durationMinutes": 60, "category": "Heating" },
-    { "id": "emergency-repair", "name": "Emergency Heating/Cooling Response", "durationMinutes": 90, "category": "Emergency" },
-    { "id": "filter-replacement", "name": "HVAC Filter & Air Quality Service", "durationMinutes": 30, "category": "Air Quality" }
-  ],
-  "pricing": {
-    "currency": "USD",
-    "services": {
-      "AC System Diagnostic & Troubleshooting": 89,
-      "Annual Furnace Safety Tune-Up": 119,
-      "Emergency Heating/Cooling Response": 149,
-      "HVAC Filter & Air Quality Service": 65
+    {
+      "id": "ac-diagnostic",
+      "name": "AC System Diagnostic & Troubleshooting",
+      "category": "Cooling",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 89,
+      "description": "Technician diagnostic visit for cooling problems.",
+      "bookable": true,
+      "aliases": [
+        "ac",
+        "air conditioner",
+        "not cooling",
+        "no cold air",
+        "ac not working"
+      ]
+    },
+    {
+      "id": "furnace-tuneup",
+      "name": "Annual Furnace Safety Tune-Up",
+      "category": "Heating",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 119,
+      "description": "Annual furnace inspection and tune-up.",
+      "bookable": true,
+      "aliases": [
+        "furnace",
+        "tune-up",
+        "tune up",
+        "heating maintenance"
+      ]
+    },
+    {
+      "id": "emergency-repair",
+      "name": "Emergency Heating/Cooling Response",
+      "category": "Emergency",
+      "durationMinutes": 90,
+      "priceType": "fixed",
+      "price": 149,
+      "description": "Priority emergency visit. Repairs quoted on site.",
+      "bookable": true,
+      "availableOutsideHours": true,
+      "aliases": [
+        "emergency",
+        "no heat",
+        "no ac",
+        "urgent"
+      ]
+    },
+    {
+      "id": "filter-replacement",
+      "name": "HVAC Filter & Air Quality Service",
+      "category": "Air Quality",
+      "durationMinutes": 30,
+      "priceType": "fixed",
+      "price": 65,
+      "description": "Filter replacement and air quality check.",
+      "bookable": true,
+      "aliases": [
+        "filter",
+        "filter change",
+        "air quality"
+      ]
+    },
+    {
+      "id": "ac-tuneup",
+      "name": "Seasonal A/C Tune-Up",
+      "category": "Cooling",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 109,
+      "description": "Pre-season cooling inspection and tune-up.",
+      "bookable": true,
+      "aliases": [
+        "ac tune up",
+        "ac maintenance",
+        "cooling tune-up",
+        "air conditioner tune up"
+      ]
+    },
+    {
+      "id": "thermostat",
+      "name": "Thermostat Installation",
+      "category": "Controls",
+      "durationMinutes": 60,
+      "priceType": "starting_at",
+      "price": 129,
+      "description": "Install a new or smart thermostat. Price depends on the model.",
+      "bookable": true,
+      "aliases": [
+        "thermostat",
+        "smart thermostat",
+        "nest",
+        "new thermostat"
+      ]
+    },
+    {
+      "id": "duct-cleaning",
+      "name": "Air Duct Cleaning",
+      "category": "Air Quality",
+      "durationMinutes": 120,
+      "priceType": "starting_at",
+      "price": 349,
+      "description": "Whole-home duct cleaning. Final price depends on home size.",
+      "bookable": true,
+      "aliases": [
+        "duct cleaning",
+        "ducts",
+        "clean my ducts",
+        "vents"
+      ]
+    },
+    {
+      "id": "iaq",
+      "name": "Indoor Air Quality Assessment",
+      "category": "Air Quality",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 79,
+      "description": "Air quality testing and recommendations.",
+      "bookable": true,
+      "aliases": [
+        "air quality",
+        "allergies",
+        "dust",
+        "indoor air"
+      ]
+    },
+    {
+      "id": "co-inspection",
+      "name": "Carbon Monoxide Safety Inspection",
+      "category": "Heating",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 89,
+      "description": "Combustion and carbon monoxide safety check.",
+      "bookable": true,
+      "aliases": [
+        "carbon monoxide inspection",
+        "co check",
+        "safety inspection",
+        "co detector check"
+      ]
+    },
+    {
+      "id": "system-estimate",
+      "name": "New System Estimate",
+      "category": "Sales",
+      "durationMinutes": 60,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "On-site estimate for replacing your heating or cooling system.",
+      "bookable": true,
+      "aliases": [
+        "new system",
+        "replace my ac",
+        "replace my furnace",
+        "estimate",
+        "new furnace",
+        "new air conditioner"
+      ]
     }
-  },
+  ],
+  "resources": [
+    {
+      "id": "tech-tom",
+      "name": "Tom",
+      "type": "technician",
+      "title": "Lead Technician",
+      "serviceIds": [
+        "ac-diagnostic",
+        "furnace-tuneup",
+        "filter-replacement",
+        "ac-tuneup",
+        "thermostat",
+        "duct-cleaning",
+        "iaq",
+        "co-inspection",
+        "system-estimate"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "tech-luis",
+      "name": "Luis",
+      "type": "technician",
+      "title": "Technician",
+      "serviceIds": [
+        "ac-diagnostic",
+        "furnace-tuneup",
+        "filter-replacement",
+        "ac-tuneup",
+        "thermostat",
+        "iaq",
+        "co-inspection",
+        "system-estimate"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "oncall",
+      "name": "On-Call Tech",
+      "type": "technician",
+      "title": "Emergency on-call technician",
+      "serviceIds": [
+        "emergency-repair"
+      ],
+      "capacity": 1
+    }
+  ],
   "hours": {
     "schedule": {
-      "monday": { "intervals": [{ "open": "07:00", "close": "20:00" }] },
-      "tuesday": { "intervals": [{ "open": "07:00", "close": "20:00" }] },
-      "wednesday": { "intervals": [{ "open": "07:00", "close": "20:00" }] },
-      "thursday": { "intervals": [{ "open": "07:00", "close": "20:00" }] },
-      "friday": { "intervals": [{ "open": "07:00", "close": "20:00" }] },
-      "saturday": { "intervals": [{ "open": "08:00", "close": "18:00" }] },
-      "sunday": { "intervals": [{ "open": "08:00", "close": "16:00" }] }
+      "monday": {
+        "intervals": [
+          {
+            "open": "07:00",
+            "close": "20:00"
+          }
+        ]
+      },
+      "tuesday": {
+        "intervals": [
+          {
+            "open": "07:00",
+            "close": "20:00"
+          }
+        ]
+      },
+      "wednesday": {
+        "intervals": [
+          {
+            "open": "07:00",
+            "close": "20:00"
+          }
+        ]
+      },
+      "thursday": {
+        "intervals": [
+          {
+            "open": "07:00",
+            "close": "20:00"
+          }
+        ]
+      },
+      "friday": {
+        "intervals": [
+          {
+            "open": "07:00",
+            "close": "20:00"
+          }
+        ]
+      },
+      "saturday": {
+        "intervals": [
+          {
+            "open": "08:00",
+            "close": "18:00"
+          }
+        ]
+      },
+      "sunday": {
+        "intervals": [
+          {
+            "open": "08:00",
+            "close": "16:00"
+          }
+        ]
+      }
+    },
+    "holidays": [],
+    "emergencyHours": {
+      "alwaysOn": true,
+      "serviceIds": [
+        "emergency-repair"
+      ],
+      "note": "Emergency dispatch is available 24/7. Routine service follows regular hours."
     }
   },
   "policies": {
-    "cancellation": { "minimumNoticeHours": 4 },
-    "rescheduling": { "allowed": true }
+    "cancellation": {
+      "minimumNoticeHours": 4
+    },
+    "rescheduling": {
+      "allowed": true,
+      "minimumNoticeHours": 2
+    }
   },
+  "faqs": [
+    {
+      "q": "Do you offer 24/7 emergency service?",
+      "a": "Yes, emergency dispatch is available around the clock. Routine appointments follow regular hours."
+    },
+    {
+      "q": "What does the diagnostic fee cover?",
+      "a": "The technician visit and diagnosis. Any repair is quoted before work starts."
+    },
+    {
+      "q": "Do you service commercial properties?",
+      "a": "Yes, residential and commercial."
+    },
+    {
+      "q": "How often should a furnace be tuned up?",
+      "a": "Once a year, before heating season."
+    },
+    {
+      "q": "Can you tell me what's wrong with my system?",
+      "a": "I can't diagnose it by phone. A technician will."
+    },
+    {
+      "q": "What areas do you serve?",
+      "a": "I'd confirm your address with dispatch. Tell me your area and I'll note it."
+    }
+  ],
+  "seededBusy": [
+    {
+      "resourceId": "tech-tom",
+      "days": [
+        "monday",
+        "wednesday"
+      ],
+      "start": "09:00",
+      "end": "12:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "tech-luis",
+      "days": [
+        "friday"
+      ],
+      "start": "13:00",
+      "end": "16:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "tech-tom",
+      "days": [
+        "saturday"
+      ],
+      "start": "08:00",
+      "end": "11:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "tech-luis",
+      "days": [
+        "tuesday"
+      ],
+      "start": "10:00",
+      "end": "11:30",
+      "label": "Booked"
+    }
+  ],
   "contactPolicy": {
-    "required": ["service", "date", "time", "name", "email", "phone"],
-    "optional": ["location"],
+    "required": [
+      "service",
+      "date",
+      "time",
+      "name",
+      "email"
+    ],
+    "optional": [
+      "phone",
+      "serviceAddress"
+    ],
     "collectNameEarly": false,
     "verifyEmail": true,
     "spellWhenLowConfidence": true
   },
   "booking": {
     "enabled": true,
-    "requiredEntities": ["service", "date", "time", "customerName", "email", "phone"],
+    "requiredEntities": [
+      "service",
+      "date",
+      "time",
+      "customerName",
+      "email"
+    ],
     "allowRescheduling": true,
     "allowCancellation": true,
     "confirmationRequired": true,
-    "minNoticeHours": 2,
+    "minLeadHours": 2,
     "maxAdvanceDays": 30,
-    "bufferMinutes": 30
+    "bufferMinutes": 30,
+    "confirmationEmail": "automatic",
+    "lookupBy": [
+      "confirmationCode",
+      "sessionBooking"
+    ]
   },
   "escalation": {
     "enabled": true,
-    "triggers": ["gas_leak_smell", "carbon_monoxide_alarm", "sub_zero_freeze_no_heat"],
-    "emergencyTransfer": true,
-    "defaultDepartment": "Emergency HVAC On-Call Dispatch"
+    "triggers": [
+      {
+        "id": "gas_leak_smell",
+        "description": "Gas smell",
+        "detectKeywords": [
+          "smell gas",
+          "gas leak",
+          "rotten egg"
+        ],
+        "action": "call_911",
+        "scriptedLine": "Please leave the building right now and call 911 from outside. Don't use switches or phones inside."
+      },
+      {
+        "id": "carbon_monoxide_alarm",
+        "description": "CO alarm",
+        "detectKeywords": [
+          "carbon monoxide",
+          "co alarm",
+          "co detector"
+        ],
+        "action": "call_911",
+        "scriptedLine": "Please get everyone outside into fresh air and call 911 right now."
+      },
+      {
+        "id": "sub_zero_freeze_no_heat",
+        "description": "No heat in freezing weather",
+        "detectKeywords": [
+          "no heat",
+          "freezing",
+          "furnace is out"
+        ],
+        "action": "book_emergency_service"
+      }
+    ]
   },
   "knowledge": {
     "businessFacts": true,
-    "externalSearch": { "enabled": true, "strictBusinessAuthority": true },
-    "sources": ["business-config", "hvac-diagnostic-rates"]
+    "externalSearch": {
+      "enabled": false,
+      "strictBusinessAuthority": true
+    },
+    "sources": [
+      "business-config"
+    ]
   },
   "conversationStyle": {
     "tone": "concise",
@@ -88,16 +468,17 @@
     "useBusinessName": true,
     "greetingPhrase": "CoolBreeze Heating & Air 24/7 Dispatch. How can we help your comfort today?"
   },
+  "greetingPrompt": "CoolBreeze Heating & Air 24/7 Dispatch. How can we help your comfort today?",
   "tools": {
     "allowed": [
       "checkAvailability",
+      "findAlternativeTimes",
       "createAppointment",
-      "cancelAppointment",
+      "lookupAppointment",
       "rescheduleAppointment",
+      "cancelAppointment",
       "getBusinessHours",
-      "getServicePrice",
-      "sendConfirmation",
-      "transferCall"
+      "getServiceInfo"
     ]
   },
   "safety": {
@@ -106,6 +487,41 @@
     "diagnosis": false,
     "financialCommitments": false
   },
-  "systemPrompt": "You are AURA, the fast and reliable dispatch coordinator for CoolBreeze Heating & Air Conditioning. Schedule service technicians for AC diagnostics, furnace tune-ups, and repairs. If caller smells gas or reports a carbon monoxide alarm, immediately instruct them to evacuate and offer emergency dispatch transfer. Greet only on call start. Be direct and concise.",
-  "greetingPrompt": "CoolBreeze Heating & Air 24/7 Dispatch. How can we help your heating or AC today?"
+  "systemPrompt": "You are AURA, the fast, reliable dispatcher for CoolBreeze Heating & Air Conditioning. Schedule technicians for diagnostics, tune-ups and repairs. Never diagnose by phone. If the caller smells gas or a carbon monoxide alarm is sounding, tell them to leave the building and call 911 immediately, and do not continue booking. Collect service, date, time, name and email. Be direct. Greet only at call start.",
+  "personality": {
+    "traits": [
+      "calm under pressure",
+      "fast",
+      "practical",
+      "reassuring"
+    ],
+    "energy": 6,
+    "humor": "none",
+    "slangTier": 2,
+    "register": {
+      "acknowledgements": [
+        "Got it.",
+        "Okay.",
+        "Understood.",
+        "No problem.",
+        "Sure."
+      ],
+      "avoid": [
+        "chill",
+        "no biggie",
+        "it's probably nothing"
+      ]
+    },
+    "emotionPlaybook": {
+      "uncomfortable_heat_or_cold": "'That sounds miserable. Let's get someone out to you.' No jokes.",
+      "safety_risk": "Safety first, immediately: leave the building, call 911. Stop booking.",
+      "vulnerable_person_at_home": "If an infant, elderly or ill person is at home with no heat or cooling, treat as an emergency request.",
+      "price_worry": "Give the listed fee, say repairs are quoted before work starts.",
+      "wants_diagnosis": "'I can't diagnose it by phone, but a technician will.'"
+    },
+    "speechRhythm": {
+      "maxSentencesPerTurn": 2,
+      "fillerBudgetPerCall": 3
+    }
+  }
 }

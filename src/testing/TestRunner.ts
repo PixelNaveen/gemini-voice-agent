@@ -19,6 +19,9 @@ import { runFunctionCallingTests } from './unit/FunctionCalling.test';
 import { runBookingConcurrencyTests } from './integration/BookingConcurrency.test';
 import { runTenantIsolationTests } from './integration/TenantIsolation.test';
 import { runObservabilityTests } from './unit/Observability.test';
+import { runPersonaV2EnhancementsTests } from './unit/PersonaV2Enhancements.test';
+import { runPersonaScenariosTests } from './unit/PersonaScenarios.test';
+import { runN8nClientTests } from './unit/N8nClient.test';
 
 export interface FullTestReport {
   timestamp: number;
@@ -57,6 +60,9 @@ export class TestRunner {
       { name: 'Unit: Honest Observability & Error Routing (F-21/F-22)', fn: runObservabilityTests },
       { name: 'Integration: Booking Idempotency & Concurrency', fn: runBookingConcurrencyTests },
       { name: 'Integration: Tenant Isolation & Cache Boundary', fn: runTenantIsolationTests },
+      { name: 'Unit: Persona V2 Schema & Engine Enhancements', fn: runPersonaV2EnhancementsTests },
+      { name: 'Unit: Persona Scenario Deterministic Verification', fn: runPersonaScenariosTests },
+      { name: 'Unit: n8n Client & Live Webhook Adapter', fn: runN8nClientTests },
     ];
 
     const suites: TestSuiteResult[] = [];

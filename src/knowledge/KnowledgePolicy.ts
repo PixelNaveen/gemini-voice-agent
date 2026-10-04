@@ -42,7 +42,7 @@ export class KnowledgePolicy {
     //    not have that permission quietly widened by an unrelated flag such as
     //    `diagnosis`; the previous `medicalAdvice && diagnosis` condition let a persona
     //    that enabled exactly one of the two opt out of the guardrail for both.
-    if (!persona.safety.medicalAdvice) {
+    if (!(persona.safety as any)?.medicalAdvice) {
       if (OUT_OF_SCOPE_QUERY_KEYWORDS.some((needle) => lower.includes(needle))) {
         return {
           status: 'OUT_OF_SCOPE',
@@ -54,7 +54,7 @@ export class KnowledgePolicy {
     }
 
     // 2. Legal scope guardrail.
-    if (!persona.safety.legalAdvice) {
+    if (!(persona.safety as any)?.legalAdvice) {
       if (LEGAL_QUERY_KEYWORDS.some((needle) => lower.includes(needle))) {
         return {
           status: 'OUT_OF_SCOPE',

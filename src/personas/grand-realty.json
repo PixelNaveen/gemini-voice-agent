@@ -1,6 +1,6 @@
 {
   "id": "grand-realty",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "identity": {
     "name": "AURA",
     "role": "Real Estate Concierge",
@@ -24,62 +24,389 @@
     }
   },
   "services": [
-    { "id": "property-tour", "name": "Private Property Tour", "durationMinutes": 60, "category": "Showings" },
-    { "id": "seller-valuation", "name": "Comparative Home Valuation", "durationMinutes": 45, "category": "Consulting" },
-    { "id": "buyer-consultation", "name": "First-Time Buyer Advisory", "durationMinutes": 60, "category": "Advisory" },
-    { "id": "penthouse-viewing", "name": "Exclusive Penthouse Showing", "durationMinutes": 90, "category": "Showings" }
-  ],
-  "pricing": {
-    "currency": "USD",
-    "services": {
-      "Private Property Tour": "Complimentary",
-      "Comparative Home Valuation": "Complimentary",
-      "First-Time Buyer Advisory": "Complimentary",
-      "Exclusive Penthouse Showing": "Proof of Funds Required"
+    {
+      "id": "property-tour",
+      "name": "Private Property Tour",
+      "category": "Showings",
+      "durationMinutes": 60,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "Private guided tour of a property.",
+      "bookable": true,
+      "aliases": [
+        "tour",
+        "showing",
+        "view a home",
+        "see a property"
+      ]
+    },
+    {
+      "id": "seller-valuation",
+      "name": "Comparative Home Valuation",
+      "category": "Consulting",
+      "durationMinutes": 45,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "Market-based valuation of your home.",
+      "bookable": true,
+      "aliases": [
+        "valuation",
+        "appraisal",
+        "sell my home",
+        "list my home",
+        "what my home is worth"
+      ]
+    },
+    {
+      "id": "buyer-consultation",
+      "name": "First-Time Buyer Advisory",
+      "category": "Advisory",
+      "durationMinutes": 60,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "Buyer process walkthrough and search planning.",
+      "bookable": true,
+      "aliases": [
+        "first-time buyer",
+        "buyer consultation",
+        "thinking about buying",
+        "buying advice"
+      ]
+    },
+    {
+      "id": "penthouse-viewing",
+      "name": "Exclusive Penthouse Showing",
+      "category": "Showings",
+      "durationMinutes": 90,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "Private penthouse showing.",
+      "bookable": true,
+      "priceNote": "Proof of funds required before the showing.",
+      "aliases": [
+        "penthouse",
+        "luxury showing"
+      ],
+      "prepNote": "Proof of funds is required before the showing."
+    },
+    {
+      "id": "open-house-preview",
+      "name": "Open House Preview",
+      "category": "Showings",
+      "durationMinutes": 45,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "Early look at an upcoming open house.",
+      "bookable": true,
+      "aliases": [
+        "open house",
+        "preview",
+        "early look"
+      ]
+    },
+    {
+      "id": "rental-consult",
+      "name": "Rental & Lease Consultation",
+      "category": "Advisory",
+      "durationMinutes": 45,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "Guidance for renters looking for a luxury lease.",
+      "bookable": true,
+      "aliases": [
+        "rent",
+        "rental",
+        "lease",
+        "renting"
+      ]
+    },
+    {
+      "id": "investment-consult",
+      "name": "Investment Property Consultation",
+      "category": "Advisory",
+      "durationMinutes": 60,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "Discuss investment property goals and strategy.",
+      "bookable": true,
+      "aliases": [
+        "investment",
+        "investment property",
+        "rental property",
+        "investor"
+      ]
+    },
+    {
+      "id": "listing-strategy",
+      "name": "Listing & Staging Strategy Session",
+      "category": "Consulting",
+      "durationMinutes": 60,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "Plan your listing, staging and marketing approach.",
+      "bookable": true,
+      "aliases": [
+        "staging",
+        "listing strategy",
+        "prepare to list",
+        "get my home ready"
+      ]
     }
-  },
+  ],
+  "resources": [
+    {
+      "id": "victoria",
+      "name": "Victoria Hale",
+      "type": "staff",
+      "title": "Senior Broker",
+      "serviceIds": [
+        "penthouse-viewing",
+        "property-tour",
+        "investment-consult",
+        "open-house-preview"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "daniel",
+      "name": "Daniel Ortiz",
+      "type": "staff",
+      "title": "Buyer's Agent",
+      "serviceIds": [
+        "buyer-consultation",
+        "property-tour",
+        "rental-consult",
+        "investment-consult"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "mei",
+      "name": "Mei Tanaka",
+      "type": "staff",
+      "title": "Listing Agent",
+      "serviceIds": [
+        "seller-valuation",
+        "property-tour",
+        "listing-strategy",
+        "open-house-preview"
+      ],
+      "capacity": 1
+    }
+  ],
   "hours": {
     "schedule": {
-      "monday": { "intervals": [{ "open": "09:00", "close": "19:00" }] },
-      "tuesday": { "intervals": [{ "open": "09:00", "close": "19:00" }] },
-      "wednesday": { "intervals": [{ "open": "09:00", "close": "19:00" }] },
-      "thursday": { "intervals": [{ "open": "09:00", "close": "19:00" }] },
-      "friday": { "intervals": [{ "open": "09:00", "close": "19:00" }] },
-      "saturday": { "intervals": [{ "open": "10:00", "close": "17:00" }] },
-      "sunday": { "intervals": [{ "open": "11:00", "close": "16:00" }] }
-    }
+      "monday": {
+        "intervals": [
+          {
+            "open": "09:00",
+            "close": "19:00"
+          }
+        ]
+      },
+      "tuesday": {
+        "intervals": [
+          {
+            "open": "09:00",
+            "close": "19:00"
+          }
+        ]
+      },
+      "wednesday": {
+        "intervals": [
+          {
+            "open": "09:00",
+            "close": "19:00"
+          }
+        ]
+      },
+      "thursday": {
+        "intervals": [
+          {
+            "open": "09:00",
+            "close": "19:00"
+          }
+        ]
+      },
+      "friday": {
+        "intervals": [
+          {
+            "open": "09:00",
+            "close": "19:00"
+          }
+        ]
+      },
+      "saturday": {
+        "intervals": [
+          {
+            "open": "10:00",
+            "close": "17:00"
+          }
+        ]
+      },
+      "sunday": {
+        "intervals": [
+          {
+            "open": "11:00",
+            "close": "16:00"
+          }
+        ]
+      }
+    },
+    "holidays": []
   },
   "policies": {
-    "cancellation": { "minimumNoticeHours": 6 },
-    "rescheduling": { "allowed": true }
+    "cancellation": {
+      "minimumNoticeHours": 6
+    },
+    "rescheduling": {
+      "allowed": true,
+      "minimumNoticeHours": 3
+    }
   },
+  "faqs": [
+    {
+      "q": "Can you tell me which properties are available?",
+      "a": "I don't have live listings on this line. An agent will share current options during your consultation or tour."
+    },
+    {
+      "q": "Is there a fee for a valuation?",
+      "a": "No, valuations and buyer advisory sessions are complimentary."
+    },
+    {
+      "q": "What do I need for a penthouse showing?",
+      "a": "Proof of funds is required before the showing."
+    },
+    {
+      "q": "Do you work with first-time buyers?",
+      "a": "Yes, we offer a First-Time Buyer Advisory session."
+    },
+    {
+      "q": "Can I see more than one property in a tour?",
+      "a": "Yes. Tell the agent which properties and they will plan a route."
+    },
+    {
+      "q": "Can I get a price estimate for my home?",
+      "a": "Our valuation session provides a market-based estimate. I can't quote a value by phone."
+    }
+  ],
+  "seededBusy": [
+    {
+      "resourceId": "victoria",
+      "days": [
+        "saturday"
+      ],
+      "start": "10:00",
+      "end": "13:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "daniel",
+      "days": [
+        "wednesday"
+      ],
+      "start": "14:00",
+      "end": "16:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "mei",
+      "days": [
+        "friday"
+      ],
+      "start": "11:00",
+      "end": "13:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "victoria",
+      "days": [
+        "tuesday"
+      ],
+      "start": "15:00",
+      "end": "17:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "daniel",
+      "days": [
+        "sunday"
+      ],
+      "start": "11:00",
+      "end": "13:00",
+      "label": "Booked"
+    }
+  ],
   "contactPolicy": {
-    "required": ["service", "date", "time", "name", "email", "phone"],
-    "optional": ["location"],
+    "required": [
+      "service",
+      "date",
+      "time",
+      "name",
+      "email"
+    ],
+    "optional": [
+      "phone",
+      "propertyInterest"
+    ],
     "collectNameEarly": false,
     "verifyEmail": true,
     "spellWhenLowConfidence": true
   },
   "booking": {
     "enabled": true,
-    "requiredEntities": ["service", "date", "time", "customerName", "email", "phone"],
+    "requiredEntities": [
+      "service",
+      "date",
+      "time",
+      "customerName",
+      "email"
+    ],
     "allowRescheduling": true,
     "allowCancellation": true,
     "confirmationRequired": true,
-    "minNoticeHours": 4,
+    "minLeadHours": 4,
     "maxAdvanceDays": 30,
-    "bufferMinutes": 30
+    "bufferMinutes": 30,
+    "confirmationEmail": "automatic",
+    "lookupBy": [
+      "confirmationCode",
+      "sessionBooking"
+    ]
   },
   "escalation": {
     "enabled": true,
-    "triggers": ["multi_million_offer", "urgent_closing_question"],
-    "emergencyTransfer": true,
-    "defaultDepartment": "Principal Broker"
+    "triggers": [
+      {
+        "id": "multi_million_offer",
+        "description": "Caller wants to make a large offer",
+        "detectKeywords": [
+          "make an offer",
+          "offer on"
+        ],
+        "action": "give_business_phone"
+      },
+      {
+        "id": "urgent_closing_question",
+        "description": "Closing or contract question",
+        "detectKeywords": [
+          "closing",
+          "contract question",
+          "escrow"
+        ],
+        "action": "give_business_phone"
+      }
+    ]
   },
   "knowledge": {
     "businessFacts": true,
-    "externalSearch": { "enabled": true, "strictBusinessAuthority": true },
-    "sources": ["business-config", "property-listings"]
+    "externalSearch": {
+      "enabled": false,
+      "strictBusinessAuthority": true
+    },
+    "sources": [
+      "business-config"
+    ]
   },
   "conversationStyle": {
     "tone": "warm",
@@ -88,16 +415,17 @@
     "useBusinessName": true,
     "greetingPhrase": "Welcome to Grand Horizon Real Estate. How may I assist your property search today?"
   },
+  "greetingPrompt": "Welcome to Grand Horizon Real Estate. How may I assist your property search today?",
   "tools": {
     "allowed": [
       "checkAvailability",
+      "findAlternativeTimes",
       "createAppointment",
-      "cancelAppointment",
+      "lookupAppointment",
       "rescheduleAppointment",
+      "cancelAppointment",
       "getBusinessHours",
-      "getServicePrice",
-      "sendConfirmation",
-      "transferCall"
+      "getServiceInfo"
     ]
   },
   "safety": {
@@ -106,6 +434,40 @@
     "diagnosis": false,
     "financialCommitments": false
   },
-  "systemPrompt": "You are AURA, the distinguished front-desk concierge for Grand Horizon Luxury Real Estate. Assist prospective buyers and sellers with private tours, penthouse showings, and valuations. Greet only on call start. Be polished, articulate, and concise.",
-  "greetingPrompt": "Welcome to Grand Horizon Luxury Real Estate. How may I assist your property search today?"
+  "systemPrompt": "You are AURA, the distinguished concierge for Grand Horizon Luxury Real Estate. Help buyers and sellers book tours, penthouse showings, valuations and advisory sessions. You have no listings data and never quote property prices or valuations. If a caller is unsure about buying, ask light questions about timeline and goals, then offer a consultation. Collect service, date, time, name and email. Greet only at call start.",
+  "personality": {
+    "traits": [
+      "polished",
+      "consultative",
+      "patient",
+      "discreet"
+    ],
+    "energy": 5,
+    "humor": "none",
+    "slangTier": 1,
+    "register": {
+      "acknowledgements": [
+        "Certainly.",
+        "Of course.",
+        "Absolutely.",
+        "Wonderful.",
+        "I understand."
+      ],
+      "avoid": [
+        "no pressure, but hurry",
+        "once in a lifetime",
+        "guaranteed return"
+      ]
+    },
+    "emotionPlaybook": {
+      "unsure_about_buying": "'Completely understandable, no pressure.' Ask at most two light questions (timeline, area), then offer the complimentary advisory.",
+      "emotional_seller": "For inherited or family homes: 'That's a big decision.' A valuation is only information, no obligation.",
+      "high_net_worth": "Discreet and efficient. Do not ask about finances beyond the proof-of-funds requirement.",
+      "impatient": "Offer the earliest tour slot."
+    },
+    "speechRhythm": {
+      "maxSentencesPerTurn": 2,
+      "fillerBudgetPerCall": 3
+    }
+  }
 }

@@ -12,11 +12,12 @@ export const DEFAULT_TENANT: TenantContext = {
   status: 'ACTIVE',
   allowedPersonas: [
     'aura-salon',
+    'apex-dental',
     'torque-motors',
-    'dr-clarke-dental',
-    'pro-flow-hvac',
-    'summit-law',
-    'apex-physio',
+    'grand-realty',
+    'vanguard-law',
+    'bistro-dining',
+    'coolbreeze-hvac',
   ],
   createdAt: 1700000000000,
 };

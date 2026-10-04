@@ -1,6 +1,6 @@
 {
   "id": "aura-salon",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "identity": {
     "name": "AURA",
     "role": "Salon Receptionist",
@@ -24,78 +24,524 @@
     }
   },
   "services": [
-    { "id": "haircut", "name": "Signature Precision Haircut", "durationMinutes": 45, "category": "Hair" },
-    { "id": "blowout", "name": "Luxury Blowout & Style", "durationMinutes": 45, "category": "Hair" },
-    { "id": "balayage", "name": "Custom Balayage & Gloss", "durationMinutes": 150, "category": "Color" },
-    { "id": "full-color", "name": "Full Single-Process Color", "durationMinutes": 90, "category": "Color" },
-    { "id": "hydrafacial", "name": "Deluxe HydraFacial Treatment", "durationMinutes": 60, "category": "Skincare" },
-    { "id": "manicure", "name": "Gel Manicure", "durationMinutes": 40, "category": "Nails" },
-    { "id": "pedicure", "name": "Spa Pedicure", "durationMinutes": 50, "category": "Nails" }
-  ],
-  "pricing": {
-    "currency": "USD",
-    "services": {
-      "Signature Precision Haircut": 65,
-      "Luxury Blowout & Style": 45,
-      "Custom Balayage & Gloss": 185,
-      "Full Single-Process Color": 120,
-      "Deluxe HydraFacial Treatment": 150,
-      "Gel Manicure": 40,
-      "Spa Pedicure": 55
+    {
+      "id": "haircut",
+      "name": "Signature Precision Haircut",
+      "category": "Hair",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 65,
+      "description": "Consultation, precision cut and finish.",
+      "bookable": true,
+      "aliases": [
+        "haircut",
+        "cut",
+        "trim",
+        "hair cut"
+      ]
     },
-    "discounts": [
-      {
-        "id": "multi-service-bundle",
-        "type": "percentage",
-        "value": 10,
-        "condition": { "minimumServices": 2 }
-      }
-    ]
-  },
+    {
+      "id": "blowout",
+      "name": "Luxury Blowout & Style",
+      "category": "Hair",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 45,
+      "description": "Wash, blowout and styling.",
+      "bookable": true,
+      "aliases": [
+        "blowout",
+        "blow dry",
+        "blow-dry",
+        "styling"
+      ]
+    },
+    {
+      "id": "balayage",
+      "name": "Custom Balayage & Gloss",
+      "category": "Color",
+      "durationMinutes": 150,
+      "priceType": "starting_at",
+      "price": 185,
+      "description": "Hand-painted color with a gloss finish. Final price depends on length and thickness.",
+      "bookable": true,
+      "aliases": [
+        "balayage",
+        "highlights",
+        "ombre",
+        "gloss",
+        "color",
+        "colour"
+      ],
+      "prepNote": "Come with dry, unstyled hair. The colorist does a quick consultation first."
+    },
+    {
+      "id": "full-color",
+      "name": "Full Single-Process Color",
+      "category": "Color",
+      "durationMinutes": 90,
+      "priceType": "fixed",
+      "price": 120,
+      "description": "All-over single-process color.",
+      "bookable": true,
+      "aliases": [
+        "full color",
+        "single process",
+        "dye",
+        "color",
+        "colour"
+      ]
+    },
+    {
+      "id": "hydrafacial",
+      "name": "Deluxe HydraFacial Treatment",
+      "category": "Skincare",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 150,
+      "description": "Cleansing, exfoliation, extraction and hydration.",
+      "bookable": true,
+      "aliases": [
+        "facial",
+        "hydrafacial",
+        "skin treatment"
+      ]
+    },
+    {
+      "id": "manicure",
+      "name": "Gel Manicure",
+      "category": "Nails",
+      "durationMinutes": 40,
+      "priceType": "fixed",
+      "price": 40,
+      "description": "Shape, cuticle care and gel polish.",
+      "bookable": true,
+      "aliases": [
+        "manicure",
+        "mani",
+        "nails",
+        "gel nails"
+      ],
+      "prepNote": "Arrive with bare nails if you can."
+    },
+    {
+      "id": "pedicure",
+      "name": "Spa Pedicure",
+      "category": "Nails",
+      "durationMinutes": 50,
+      "priceType": "fixed",
+      "price": 55,
+      "description": "Soak, scrub, massage and polish.",
+      "bookable": true,
+      "aliases": [
+        "pedicure",
+        "pedi",
+        "toes"
+      ]
+    },
+    {
+      "id": "kids-cut",
+      "name": "Kids' Haircut",
+      "category": "Hair",
+      "durationMinutes": 30,
+      "priceType": "fixed",
+      "price": 35,
+      "description": "Haircut for children 12 and under.",
+      "bookable": true,
+      "aliases": [
+        "kids haircut",
+        "child haircut",
+        "my son's haircut",
+        "my daughter's haircut"
+      ]
+    },
+    {
+      "id": "root-touchup",
+      "name": "Root Touch-Up",
+      "category": "Color",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 85,
+      "description": "Color refresh on regrowth only.",
+      "bookable": true,
+      "aliases": [
+        "root touch up",
+        "roots",
+        "grey coverage",
+        "gray coverage"
+      ]
+    },
+    {
+      "id": "deep-conditioning",
+      "name": "Deep Conditioning Treatment",
+      "category": "Hair",
+      "durationMinutes": 30,
+      "priceType": "fixed",
+      "price": 40,
+      "description": "Intensive moisture treatment.",
+      "bookable": true,
+      "aliases": [
+        "deep conditioning",
+        "conditioning",
+        "hair mask",
+        "treatment"
+      ]
+    },
+    {
+      "id": "updo",
+      "name": "Special Occasion Updo",
+      "category": "Hair",
+      "durationMinutes": 60,
+      "priceType": "starting_at",
+      "price": 95,
+      "description": "Formal styling for weddings, proms and events. Final price depends on length and complexity.",
+      "bookable": true,
+      "aliases": [
+        "updo",
+        "wedding hair",
+        "prom hair",
+        "event styling",
+        "formal style"
+      ]
+    },
+    {
+      "id": "express-facial",
+      "name": "Express Facial",
+      "category": "Skincare",
+      "durationMinutes": 30,
+      "priceType": "fixed",
+      "price": 85,
+      "description": "Quick cleanse, exfoliation and hydration.",
+      "bookable": true,
+      "aliases": [
+        "express facial",
+        "quick facial",
+        "lunchtime facial"
+      ]
+    },
+    {
+      "id": "brow-shaping",
+      "name": "Brow Shaping",
+      "category": "Skincare",
+      "durationMinutes": 20,
+      "priceType": "fixed",
+      "price": 30,
+      "description": "Brow shaping and tidy.",
+      "bookable": true,
+      "aliases": [
+        "brows",
+        "eyebrows",
+        "brow wax",
+        "brow shaping"
+      ]
+    },
+    {
+      "id": "makeup",
+      "name": "Makeup Application",
+      "category": "Skincare",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 90,
+      "description": "Professional makeup application.",
+      "bookable": true,
+      "aliases": [
+        "makeup",
+        "make-up",
+        "makeup application",
+        "event makeup"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "marcus",
+      "name": "Marcus",
+      "type": "staff",
+      "title": "Senior Stylist",
+      "serviceIds": [
+        "haircut",
+        "blowout",
+        "kids-cut",
+        "deep-conditioning",
+        "updo"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "sofia",
+      "name": "Sofia",
+      "type": "staff",
+      "title": "Master Colorist",
+      "serviceIds": [
+        "balayage",
+        "full-color",
+        "blowout",
+        "root-touchup",
+        "deep-conditioning",
+        "updo"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "elena",
+      "name": "Elena",
+      "type": "staff",
+      "title": "Esthetician",
+      "serviceIds": [
+        "hydrafacial",
+        "express-facial",
+        "brow-shaping",
+        "makeup"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "priya",
+      "name": "Priya",
+      "type": "staff",
+      "title": "Nail Technician",
+      "serviceIds": [
+        "manicure",
+        "pedicure"
+      ],
+      "capacity": 1
+    }
+  ],
+  "discounts": [
+    {
+      "id": "multi-service-bundle",
+      "type": "percentage",
+      "value": 10,
+      "condition": {
+        "minimumServices": 2
+      },
+      "note": "10% off when booking two or more services in one visit."
+    }
+  ],
   "hours": {
     "schedule": {
-      "monday": { "intervals": [{ "open": "09:00", "close": "19:00" }] },
-      "tuesday": { "intervals": [{ "open": "09:00", "close": "19:00" }] },
-      "wednesday": { "intervals": [{ "open": "09:00", "close": "19:00" }] },
-      "thursday": { "intervals": [{ "open": "09:00", "close": "20:00" }] },
-      "friday": { "intervals": [{ "open": "09:00", "close": "20:00" }] },
-      "saturday": { "intervals": [{ "open": "09:00", "close": "18:00" }] },
-      "sunday": { "intervals": [], "closed": true }
+      "monday": {
+        "intervals": [
+          {
+            "open": "09:00",
+            "close": "19:00"
+          }
+        ]
+      },
+      "tuesday": {
+        "intervals": [
+          {
+            "open": "09:00",
+            "close": "19:00"
+          }
+        ]
+      },
+      "wednesday": {
+        "intervals": [
+          {
+            "open": "09:00",
+            "close": "19:00"
+          }
+        ]
+      },
+      "thursday": {
+        "intervals": [
+          {
+            "open": "09:00",
+            "close": "20:00"
+          }
+        ]
+      },
+      "friday": {
+        "intervals": [
+          {
+            "open": "09:00",
+            "close": "20:00"
+          }
+        ]
+      },
+      "saturday": {
+        "intervals": [
+          {
+            "open": "09:00",
+            "close": "18:00"
+          }
+        ]
+      },
+      "sunday": {
+        "intervals": [],
+        "closed": true
+      }
     },
     "holidays": []
   },
   "policies": {
-    "cancellation": { "minimumNoticeHours": 24, "fee": "50% deposit forfeiture on no-shows" },
-    "rescheduling": { "allowed": true, "minimumNoticeHours": 4 },
-    "lateArrival": { "allowedMinutes": 15 }
+    "cancellation": {
+      "minimumNoticeHours": 24,
+      "fee": "Late cancellations and no-shows are charged 50% of the service price."
+    },
+    "rescheduling": {
+      "allowed": true,
+      "minimumNoticeHours": 4
+    },
+    "lateArrival": {
+      "allowedMinutes": 15
+    }
   },
+  "faqs": [
+    {
+      "q": "Do you take walk-ins?",
+      "a": "Walk-ins are welcome when a stylist is free, but booking guarantees your time."
+    },
+    {
+      "q": "How long does balayage take?",
+      "a": "Plan on about two and a half hours."
+    },
+    {
+      "q": "Do you offer a discount for multiple services?",
+      "a": "Yes, 10% off when you book two or more services in one visit."
+    },
+    {
+      "q": "Is parking available?",
+      "a": "There is no private lot. Public garages are on Lexington and East 41st Street."
+    },
+    {
+      "q": "Can I request a specific stylist?",
+      "a": "Yes, and I can check that stylist's availability for you."
+    },
+    {
+      "q": "What if I'm running late?",
+      "a": "We hold your slot for up to 15 minutes. After that we may need to shorten or reschedule."
+    }
+  ],
+  "seededBusy": [
+    {
+      "resourceId": "marcus",
+      "days": [
+        "friday"
+      ],
+      "start": "14:00",
+      "end": "16:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "sofia",
+      "days": [
+        "saturday"
+      ],
+      "start": "10:00",
+      "end": "14:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "elena",
+      "days": [
+        "thursday"
+      ],
+      "start": "15:00",
+      "end": "17:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "priya",
+      "days": [
+        "tuesday"
+      ],
+      "start": "11:00",
+      "end": "13:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "marcus",
+      "days": [
+        "wednesday"
+      ],
+      "start": "10:00",
+      "end": "11:30",
+      "label": "Booked"
+    }
+  ],
   "contactPolicy": {
-    "required": ["service", "date", "time", "name", "email"],
-    "optional": ["phone"],
+    "required": [
+      "service",
+      "date",
+      "time",
+      "name",
+      "email"
+    ],
+    "optional": [
+      "phone",
+      "staffPreference"
+    ],
     "collectNameEarly": false,
     "verifyEmail": true,
     "spellWhenLowConfidence": true
   },
   "booking": {
     "enabled": true,
-    "requiredEntities": ["service", "date", "time", "customerName", "email"],
+    "requiredEntities": [
+      "service",
+      "date",
+      "time",
+      "customerName",
+      "email"
+    ],
     "allowRescheduling": true,
     "allowCancellation": true,
     "confirmationRequired": true,
-    "minNoticeHours": 2,
+    "minLeadHours": 2,
     "maxAdvanceDays": 60,
-    "bufferMinutes": 15
+    "bufferMinutes": 15,
+    "confirmationEmail": "automatic",
+    "lookupBy": [
+      "confirmationCode",
+      "sessionBooking"
+    ]
   },
   "escalation": {
     "enabled": true,
-    "triggers": ["customer_requests_human", "color_correction_complaint", "vip_booking"],
-    "emergencyTransfer": false,
-    "defaultDepartment": "Salon Manager"
+    "triggers": [
+      {
+        "id": "customer_requests_human",
+        "description": "Caller asks for a person",
+        "detectKeywords": [
+          "speak to a manager",
+          "real person",
+          "human"
+        ],
+        "action": "give_business_phone"
+      },
+      {
+        "id": "color_correction_complaint",
+        "description": "Unhappy with previous color",
+        "detectKeywords": [
+          "color correction",
+          "hair came out wrong",
+          "fix my color"
+        ],
+        "action": "give_business_phone"
+      },
+      {
+        "id": "vip_booking",
+        "description": "Large party or bridal booking",
+        "detectKeywords": [
+          "bridal party",
+          "wedding party",
+          "group of"
+        ],
+        "action": "take_message"
+      }
+    ]
   },
   "knowledge": {
     "businessFacts": true,
-    "externalSearch": { "enabled": true, "strictBusinessAuthority": true },
-    "sources": ["business-config", "salon-service-menu"]
+    "externalSearch": {
+      "enabled": false,
+      "strictBusinessAuthority": true
+    },
+    "sources": [
+      "business-config"
+    ]
   },
   "conversationStyle": {
     "tone": "warm",
@@ -104,16 +550,17 @@
     "useBusinessName": true,
     "greetingPhrase": "Thank you for calling AURA Luxury Salon. How may I pamper you today?"
   },
+  "greetingPrompt": "Thank you for calling AURA Luxury Salon. How may I pamper you today?",
   "tools": {
     "allowed": [
       "checkAvailability",
+      "findAlternativeTimes",
       "createAppointment",
-      "cancelAppointment",
+      "lookupAppointment",
       "rescheduleAppointment",
+      "cancelAppointment",
       "getBusinessHours",
-      "getServicePrice",
-      "sendConfirmation",
-      "transferCall"
+      "getServiceInfo"
     ]
   },
   "safety": {
@@ -122,6 +569,43 @@
     "diagnosis": false,
     "financialCommitments": false
   },
-  "systemPrompt": "You are AURA, the warm, upscale front-desk receptionist for AURA Luxury Hair & Beauty Salon. Answer questions on haircuts, balayage, facials, pricing, and availability directly. When a caller wants an appointment, collect service, date, time, caller name, and email step-by-step. Greet only on call start. Be ultra-concise (1-2 sentences maximum).",
-  "greetingPrompt": "Thank you for calling AURA Luxury Salon. How may I assist you today?"
+  "systemPrompt": "You are AURA, the warm, upscale front-desk receptionist for AURA Luxury Hair & Beauty Salon. Answer questions about services, pricing and availability directly using only business data. Book appointments by collecting service, date, time, then name and email. Keep replies to one or two short sentences. Greet only at call start.",
+  "personality": {
+    "traits": [
+      "warm",
+      "polished",
+      "quietly enthusiastic",
+      "attentive"
+    ],
+    "energy": 6,
+    "humor": "light",
+    "slangTier": 2,
+    "register": {
+      "acknowledgements": [
+        "Absolutely.",
+        "Of course.",
+        "Lovely.",
+        "Perfect.",
+        "Sure thing."
+      ],
+      "avoid": [
+        "girl",
+        "queen",
+        "babe",
+        "honey",
+        "omg"
+      ]
+    },
+    "emotionPlaybook": {
+      "excited": "Match the energy briefly: 'Oh, congratulations, let's make it special.'",
+      "nervous_about_change": "Normalize it: 'That's a big change, and it's normal to feel unsure. The stylist will go over it with you first.' Never promise results.",
+      "unhappy_with_previous_service": "Apologize once, do not blame anyone, give the manager number. Never promise a free fix.",
+      "rushed": "Skip small talk, offer the soonest real slot.",
+      "price_shock": "Acknowledge it, then offer a lighter option from the menu without pushing."
+    },
+    "speechRhythm": {
+      "maxSentencesPerTurn": 2,
+      "fillerBudgetPerCall": 3
+    }
+  }
 }

@@ -14,7 +14,7 @@ export class PersonaService {
       services: p.services.map((s) => ({
         name: s.name,
         durationMinutes: s.durationMinutes,
-        price: typeof p.pricing.services[s.name] === 'number' ? Number(p.pricing.services[s.name]) : undefined,
+        price: typeof s.price === 'number' ? s.price : undefined,
       })),
       workingHours: '09:00 - 18:00',
     }));
@@ -37,7 +37,7 @@ export class PersonaService {
       services: p.services.map((s) => ({
         name: s.name,
         durationMinutes: s.durationMinutes,
-        price: typeof p.pricing.services[s.name] === 'number' ? Number(p.pricing.services[s.name]) : undefined,
+        price: typeof s.price === 'number' ? s.price : undefined,
       })),
       workingHours: '09:00 - 18:00',
     };

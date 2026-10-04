@@ -79,7 +79,10 @@ export function mapToIndustryPreset(p: any): IndustryPreset {
     badge: badgeMap[p.id] || 'Service',
     description: p.identity.description,
     systemPrompt: p.systemPrompt || `You are AURA for ${p.identity.businessName}.`,
-    greetingPrompt: p.greetingPrompt || `Thank you for calling ${p.identity.businessName}. How may I help you?`,
+    greetingPrompt:
+      p.conversationStyle?.greetingPhrase ||
+      p.greetingPrompt ||
+      `Thank you for calling ${p.identity.businessName}. How may I help you?`,
     sampleQueries: queryMap[p.id] || ['What are your hours?', 'How can I book an appointment?'],
   };
 }

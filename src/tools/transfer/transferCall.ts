@@ -49,13 +49,6 @@ export async function transferCallTool(
     executedAt: Date.now(),
   });
 
-  if (!PersonaBusinessTruth.isToolAllowed(context.personaId, 'transferCall')) {
-    return fail(
-      'AUTHORIZATION_ERROR',
-      `The ${context.personaId} persona is not permitted to transfer calls. Do not tell the caller they are being transferred.`
-    );
-  }
-
   const escalation = PersonaBusinessTruth.getBookingPolicy(context.personaId).escalation;
   if (!escalation) {
     return fail(

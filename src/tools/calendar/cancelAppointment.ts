@@ -1,32 +1,47 @@
 import { ToolExecutionContext, ToolResult } from '../ToolTypes';
-import { CancellationService } from '../booking/CancellationService';
-
-export interface CancelAppointmentInput {
-  appointmentId?: string;
-  customerEmail?: string;
-}
+import { getN8nClient } from '../n8n/N8nClientFactory';
+import { CancelAppointmentOutput } from '../n8n/N8nClient';
 
 export async function cancelAppointmentTool(
   context: ToolExecutionContext,
-  input: CancelAppointmentInput
-): Promise<ToolResult<{ cancelled: boolean; message: string; requiresHuman?: boolean }>> {
-  const result = CancellationService.cancel({
+  input: {
+    requestId?: string;
+    confirmationCode: string;
+    confirmed: boolean;
+  }
+): Promise<ToolResult<CancelAppointmentOutput>> {
+  const client = getN8nClient();
+  const requestId = input.requestId || context.operationId;
+
+  const res = await client.cancelAppointment({
     personaId: context.personaId,
-    appointmentId: input.appointmentId,
-    customerEmail: input.customerEmail,
+    sessionId: context.sessionId,
+    requestId,
+    confirmationCode: input.confirmationCode,
+    confirmed: Boolean(input.confirmed),
   });
 
+  if (!res.success) {
+    return {
+      success: false,
+      toolName: 'cancelAppointment',
+      operationId: context.operationId,
+      status: 'FAILED',
+      error: {
+        code: (res.errorCode as any) || 'CONFLICT',
+        message: res.message || 'Failed to cancel appointment.',
+      },
+      data: res,
+      executedAt: Date.now(),
+    };
+  }
+
   return {
-    success: result.success,
+    success: true,
     toolName: 'cancelAppointment',
     operationId: context.operationId,
-    status: result.success ? 'SUCCESS' : 'FAILED',
-    data: {
-      cancelled: result.success,
-      message: result.message,
-      requiresHuman: result.requiresHuman,
-    },
-    error: !result.success ? { code: 'INTEGRATION_ERROR', message: result.message } : undefined,
+    status: 'SUCCESS',
+    data: res,
     executedAt: Date.now(),
   };
 }

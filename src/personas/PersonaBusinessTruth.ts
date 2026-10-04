@@ -1,48 +1,87 @@
 import { PersonaRegistry } from './PersonaRegistry';
 import { getHolidayName } from '../core/time/FederalHolidays';
-import type { PersonaDefinition } from './schema/persona.types';
+import type {
+  PersonaDefinition,
+  ServiceItem,
+  PriceType,
+  BusinessHoursInterval,
+  EscalationTrigger,
+} from './schema/persona.types';
 
-export interface BusinessHoursInterval {
-  open: string;
-  close: string;
-}
+export { BusinessHoursInterval };
 
 export interface BusinessHoursAnswer {
-  /** Local calendar date in the business timezone, e.g. "2026-09-29". */
   localDate: string;
-  /** Local weekday name, e.g. "Monday". */
   localDay: string;
-  /** Human readable local time, e.g. "14:32". */
   localTime: string;
   timezone: string;
   isOpen: boolean;
-  /** Present only when the business is open. */
   currentInterval: BusinessHoursInterval | null;
-  /** Empty array means closed all day. */
   today: BusinessHoursInterval[];
-  /** Lower-cased weekday keys -> intervals, for the full week. */
   week: Record<string, BusinessHoursInterval[]>;
   closedToday: boolean;
   holiday: boolean;
-  /**
-   * Why the business is closed, when it is a holiday or a declared closure.
-   *
-   * F-36: the answer used to be a bare `holiday: true`, so the agent could only tell a caller it
-   * was closed. Naming the holiday is what lets it reschedule the caller to the next open day.
-   */
   holidayName?: string;
-  /** Set when the requested persona id is unknown and the fallback persona is used. */
   personaFallbackUsed?: boolean;
+  emergencyHours?: {
+    alwaysOn: boolean;
+    serviceIds?: string[];
+    note?: string;
+  };
 }
+
+export interface ServiceInfoFound {
+  found: true;
+  ambiguous: false;
+  service: ServiceItem;
+  serviceId: string;
+  serviceName: string;
+  priceType: PriceType;
+  price: number | null;
+  priceNote?: string;
+  spokenPrice: string;
+  prepNote?: string;
+  durationMinutes: number;
+  bookable: boolean;
+  currency: string;
+  personaId: string;
+}
+
+export interface ServiceInfoAmbiguous {
+  found: false;
+  ambiguous: true;
+  query: string;
+  options: ServiceItem[];
+  message: string;
+  personaId: string;
+}
+
+export interface ServiceInfoNotFound {
+  found: false;
+  ambiguous: false;
+  query: string;
+  personaId: string;
+  availableServices: Array<{
+    id: string;
+    name: string;
+    priceType: PriceType;
+    price: number | null;
+    priceNote?: string;
+  }>;
+}
+
+export type ServiceInfoAnswer =
+  | ServiceInfoFound
+  | ServiceInfoAmbiguous
+  | ServiceInfoNotFound;
 
 export interface ServicePriceAnswer {
   serviceName: string;
-  /** null when the persona has no authoritative price for this service. */
   price: number | null;
+  priceType?: PriceType;
   currency: string;
-  /** True when `price` came from a real persona price rather than a guess. */
   authoritative: boolean;
-  /** Services the persona does publish prices for, when a lookup fails. */
+  spokenPrice?: string;
   availableServices?: Array<{ name: string; price: number }>;
   personaId: string;
 }
@@ -78,27 +117,12 @@ const DAY_LABELS: Record<DayKey, string> = {
   saturday: 'Saturday',
 };
 
-/** The shape of a single day's schedule as stored in a persona definition. */
 interface DayScheduleLike {
   intervals?: BusinessHoursInterval[];
   closed?: boolean;
 }
 
-/**
- * SERVER-AUTHORITATIVE BUSINESS TRUTH
- *
- * Every price, schedule and contact detail the agent states to a caller must come from
- * here. The previous implementation returned hardcoded, incorrect values (a "9 to 5"
- * schedule for businesses that open at 07:30 or are closed on Sundays, and a fixed
- * "Oil Change $45" for every industry), which meant the agent confidently told callers
- * the wrong thing. When a fact is genuinely unknown this service returns `null` /
- * `authoritative: false` so the caller reports "I don't have that" rather than guessing.
- *
- * All time reasoning is performed in the BUSINESS timezone, never the server's local
- * timezone, which is a different bug the hardcoded version also had.
- */
 export class PersonaBusinessTruth {
-  /** Resolves a persona, flagging when the id was unknown and a fallback was used. */
   public static resolve(personaId: string): { persona: PersonaDefinition; fallbackUsed: boolean } {
     const known = PersonaRegistry.list().some((p) => p.id === personaId);
     if (known) {
@@ -107,9 +131,6 @@ export class PersonaBusinessTruth {
     return { persona: PersonaRegistry.get(personaId), fallbackUsed: true };
   }
 
-  /**
-   * Wall-clock fields for a business timezone at a given instant.
-   */
   private static localFields(timezone: string, at: Date): { date: string; day: DayKey; time: string; minutes: number } {
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,
@@ -129,7 +150,6 @@ export class PersonaBusinessTruth {
     const year = pick('year');
     const month = pick('month');
     const dayOfMonth = pick('day');
-    // Intl renders midnight as "24" in some environments; normalise it.
     const rawHour = pick('hour');
     const hour = rawHour === '24' ? '00' : rawHour;
     const minute = pick('minute');
@@ -146,19 +166,39 @@ export class PersonaBusinessTruth {
     };
   }
 
-  private static toMinutes(hhmm: string): number {
-    const match = /^(\d{1,2}):(\d{2})$/.exec((hhmm || '').trim());
+  public static toMinutes(hhmm: string, isClose = false): number {
+    const trimmed = (hhmm || '').trim();
+    if (trimmed === '24:00') return 1440;
+    if (trimmed === '00:00') return isClose ? 1440 : 0;
+
+    const match = /^(\d{1,2}):(\d{2})$/.exec(trimmed);
     if (!match) return Number.NaN;
     return Number(match[1]) * 60 + Number(match[2]);
   }
 
+  public static formatSpokenPrice(service: ServiceItem): string {
+    const note = service.priceNote ? ` (${service.priceNote})` : '';
+    switch (service.priceType) {
+      case 'complimentary':
+        return 'complimentary (no charge)';
+      case 'menu_based':
+        return service.priceNote || 'a la carte / menu based (no set price)';
+      case 'quote_required':
+        return service.priceNote
+          ? `quoted upon consultation${note}`
+          : 'quoted upon consultation';
+      case 'starting_at':
+        return service.price !== null
+          ? `starts at $${service.price}${note}`
+          : `starts at a variable rate${note}`;
+      case 'fixed':
+      default:
+        return service.price !== null ? `$${service.price}${note}` : `variable${note}`;
+    }
+  }
+
   /**
    * Authoritative answer for "what are your hours / are you open right now".
-   *
-   * Never guesses. Closed days come straight from the persona definition; holidays are computed
-   * from the real calendar plus the persona's own extra closures. F-36: this used to read a
-   * hardcoded `holidays` array containing only 2026 dates, so a caller asking about 2027 was
-   * told the business was open on Christmas.
    */
   public static getBusinessHours(personaId: string, at: Date = new Date()): BusinessHoursAnswer {
     const { persona, fallbackUsed } = PersonaBusinessTruth.resolve(personaId);
@@ -184,18 +224,21 @@ export class PersonaBusinessTruth {
     const currentInterval =
       !isHoliday && today.length > 0
         ? today.find((i) => {
-            const open = PersonaBusinessTruth.toMinutes(i.open);
-            const close = PersonaBusinessTruth.toMinutes(i.close);
+            const open = PersonaBusinessTruth.toMinutes(i.open, false);
+            let close = PersonaBusinessTruth.toMinutes(i.close, true);
+            if (close <= open) close += 1440;
             return Number.isFinite(open) && Number.isFinite(close) && minutes >= open && minutes < close;
           }) ?? null
         : null;
+
+    const emergencyHours = persona.hours?.emergencyHours;
 
     return {
       localDate: date,
       localDay: DAY_LABELS[day],
       localTime: time,
       timezone,
-      isOpen: currentInterval !== null,
+      isOpen: currentInterval !== null || Boolean(emergencyHours?.alwaysOn),
       currentInterval,
       today,
       week,
@@ -203,61 +246,168 @@ export class PersonaBusinessTruth {
       holiday: isHoliday,
       ...(holidayName ? { holidayName } : {}),
       ...(fallbackUsed ? { personaFallbackUsed: true } : {}),
+      ...(emergencyHours ? { emergencyHours } : {}),
     };
   }
 
   /**
-   * Authoritative answer for a service price.
-   * Returns `price: null` when the persona publishes no price, so the agent asks rather
-   * than quoting a fabricated number.
+   * Authoritative lookup for service info and pricing in schema v2.0.0.
+   * Matches service names and aliases case-insensitively, handling ambiguity cleanly.
    */
-  public static getServicePrice(personaId: string, serviceName: string): ServicePriceAnswer {
+  public static getServiceInfo(personaId: string, query: string): ServiceInfoAnswer {
     const { persona } = PersonaBusinessTruth.resolve(personaId);
-    const currency = persona.pricing?.currency ?? 'USD';
+    const services = persona.services ?? [];
+    const needle = (query || '').trim().toLowerCase();
 
-    // pricing.services is typed `number | string`. Only genuinely numeric entries are
-    // quotable; a non-numeric value must never be coerced into a fake price.
-    const table: Record<string, number> = {};
-    for (const [name, raw] of Object.entries(persona.pricing?.services ?? {})) {
-      const value = typeof raw === 'number' ? raw : Number(String(raw).replace(/[^0-9.\-]/g, ''));
-      if (Number.isFinite(value)) {
-        table[name] = value;
+    if (!needle) {
+      return {
+        found: false,
+        ambiguous: false,
+        query: '',
+        personaId: persona.id,
+        availableServices: services.map((s) => ({
+          id: s.id,
+          name: s.name,
+          priceType: s.priceType,
+          price: s.price,
+          priceNote: s.priceNote,
+        })),
+      };
+    }
+
+    // 1. Exact match on service name or exact alias
+    const exactMatches: ServiceItem[] = [];
+    for (const s of services) {
+      if (s.name.toLowerCase() === needle) {
+        exactMatches.push(s);
+        continue;
+      }
+      if (s.aliases && s.aliases.some((a) => a.toLowerCase() === needle)) {
+        exactMatches.push(s);
       }
     }
 
-    const availableServices = Object.entries(table).map(([name, price]) => ({ name, price }));
-    const needle = (serviceName || '').trim().toLowerCase();
+    if (exactMatches.length === 1) {
+      const match = exactMatches[0];
+      return {
+        found: true,
+        ambiguous: false,
+        service: match,
+        serviceId: match.id,
+        serviceName: match.name,
+        priceType: match.priceType,
+        price: match.price,
+        priceNote: match.priceNote,
+        spokenPrice: PersonaBusinessTruth.formatSpokenPrice(match),
+        prepNote: match.prepNote,
+        durationMinutes: match.durationMinutes,
+        bookable: match.bookable,
+        currency: 'USD',
+        personaId: persona.id,
+      };
+    }
 
-    if (needle) {
-      // Exact (case-insensitive) match first.
-      for (const [name, price] of Object.entries(table)) {
-        if (name.toLowerCase() === needle) {
-          return { serviceName: name, price, currency, authoritative: true, personaId: persona.id };
-        }
+    if (exactMatches.length > 1) {
+      const names = exactMatches.map((s) => s.name).join(', ');
+      return {
+        found: false,
+        ambiguous: true,
+        query,
+        options: exactMatches,
+        message: `We offer multiple options for "${query}": ${names}. Which one would you like details on?`,
+        personaId: persona.id,
+      };
+    }
+
+    // 2. Partial / word matches
+    const partialMatches: ServiceItem[] = [];
+    for (const s of services) {
+      const sName = s.name.toLowerCase();
+      const inName = sName.includes(needle) || needle.includes(sName);
+      const inAlias = (s.aliases ?? []).some((a) => {
+        const aLower = a.toLowerCase();
+        return aLower.includes(needle) || needle.includes(aLower);
+      });
+      if (inName || inAlias) {
+        partialMatches.push(s);
       }
-      // Then a contains match, which handles conversational phrasing like
-      // "how much is an oil change" against "Full Synthetic Oil Change".
-      const partial = availableServices.find(
-        (s) => s.name.toLowerCase().includes(needle) || needle.includes(s.name.toLowerCase())
-      );
-      if (partial) {
-        return {
-          serviceName: partial.name,
-          price: partial.price,
-          currency,
-          authoritative: true,
-          personaId: persona.id,
-        };
-      }
+    }
+
+    if (partialMatches.length === 1) {
+      const match = partialMatches[0];
+      return {
+        found: true,
+        ambiguous: false,
+        service: match,
+        serviceId: match.id,
+        serviceName: match.name,
+        priceType: match.priceType,
+        price: match.price,
+        priceNote: match.priceNote,
+        spokenPrice: PersonaBusinessTruth.formatSpokenPrice(match),
+        prepNote: match.prepNote,
+        durationMinutes: match.durationMinutes,
+        bookable: match.bookable,
+        currency: 'USD',
+        personaId: persona.id,
+      };
+    }
+
+    if (partialMatches.length > 1) {
+      const names = partialMatches.map((s) => s.name).join(', ');
+      return {
+        found: false,
+        ambiguous: true,
+        query,
+        options: partialMatches,
+        message: `We have a few options related to "${query}": ${names}. Which one did you have in mind?`,
+        personaId: persona.id,
+      };
     }
 
     return {
+      found: false,
+      ambiguous: false,
+      query,
+      personaId: persona.id,
+      availableServices: services.map((s) => ({
+        id: s.id,
+        name: s.name,
+        priceType: s.priceType,
+        price: s.price,
+        priceNote: s.priceNote,
+      })),
+    };
+  }
+
+  /**
+   * Backwards-compatible wrapper around getServiceInfo.
+   */
+  public static getServicePrice(personaId: string, serviceName: string): ServicePriceAnswer {
+    const info = PersonaBusinessTruth.getServiceInfo(personaId, serviceName);
+    const { persona } = PersonaBusinessTruth.resolve(personaId);
+    if (info.found) {
+      return {
+        serviceName: info.serviceName,
+        price: info.price,
+        priceType: info.priceType,
+        spokenPrice: info.spokenPrice,
+        currency: 'USD',
+        authoritative: true,
+        personaId: persona.id,
+      };
+    }
+    const available = (persona.services ?? []).map((s) => ({
+      name: s.name,
+      price: s.price ?? 0,
+    }));
+    return {
       serviceName: (serviceName || '').trim(),
       price: null,
-      currency,
+      currency: 'USD',
       authoritative: false,
       personaId: persona.id,
-      availableServices,
+      availableServices: available,
     };
   }
 
@@ -270,13 +420,12 @@ export class PersonaBusinessTruth {
       phone: contact?.phone ?? '',
       email: contact?.email ?? '',
       website: contact?.website ?? '',
-      address: loc ? `${loc.address}, ${loc.city}, ${loc.state} ${loc.postalCode}` : '',
+      address: loc ? `${loc.address}, ${loc.city}, ${loc.state ? loc.state + ' ' : ''}${loc.postalCode ?? ''}`.trim() : '',
       timezone: persona.business?.timezone ?? 'UTC',
     };
   }
 
-  /** Service catalogue with durations, used for availability questions. */
-  public static listServices(personaId: string) {
+  public static listServices(personaId: string): ServiceItem[] {
     const { persona } = PersonaBusinessTruth.resolve(personaId);
     return persona.services ?? [];
   }
@@ -292,7 +441,8 @@ export class PersonaBusinessTruth {
       enabled: persona.booking?.enabled ?? false,
       requiredEntities: persona.booking?.requiredEntities ?? [],
       confirmationRequired: persona.booking?.confirmationRequired ?? true,
-      minNoticeHours: persona.booking?.minNoticeHours ?? 0,
+      minLeadHours: persona.booking?.minLeadHours ?? (persona.booking as any)?.minNoticeHours ?? 0,
+      minNoticeHours: persona.booking?.minLeadHours ?? (persona.booking as any)?.minNoticeHours ?? 0,
       maxAdvanceDays: persona.booking?.maxAdvanceDays ?? 0,
       bufferMinutes: persona.booking?.bufferMinutes ?? 0,
       escalation: persona.escalation?.enabled
@@ -306,13 +456,7 @@ export class PersonaBusinessTruth {
   }
 
   /**
-   * Cross-persona consistency audit. Returns human-readable problems so a broken price
-   * table or a service with no entry is caught at startup rather than on a live call.
-   *
-   * `isToolImplemented` is injected rather than imported so this module stays independent
-   * of the tool layer. The decision of which tools actually exist belongs to ToolGateway,
-   * which owns the handler registry; consulting a hand-maintained list here is exactly how
-   * the two drifted apart in the first place.
+   * Cross-persona consistency audit for Schema v2.0.0.
    */
   public static auditRegistry(isToolImplemented?: (toolName: string) => boolean): string[] {
     const problems: string[] = [];
@@ -337,18 +481,53 @@ export class PersonaBusinessTruth {
         }
       }
 
-      const prices = persona.pricing?.services ?? {};
-      for (const service of persona.services ?? []) {
-        if (!(service.name in prices)) {
+      // Services validation
+      const seenServiceIds = new Set<string>();
+      const declaredServices = persona.services ?? [];
+
+      for (const service of declaredServices) {
+        if (seenServiceIds.has(service.id)) {
+          problems.push(`${label}: duplicate service id "${service.id}"`);
+        }
+        seenServiceIds.add(service.id);
+
+        if (!service.aliases || service.aliases.length === 0) {
+          problems.push(`${label}: service "${service.name}" (${service.id}) has no aliases`);
+        }
+
+        const hasResource = (persona.resources ?? []).some((r) =>
+          r.serviceIds.includes(service.id)
+        );
+        if (!hasResource) {
           problems.push(
-            `${label}: service "${service.name}" has no entry in pricing.services ` +
-              `(the agent would be unable to quote it)`
+            `${label}: service "${service.name}" (${service.id}) has no capable resource in resources[]`
           );
         }
       }
-      for (const priceName of Object.keys(prices)) {
-        if (!(persona.services ?? []).some((s) => s.name === priceName)) {
-          problems.push(`${label}: pricing.services contains "${priceName}" which is not a declared service`);
+
+      // Resources validation
+      for (const resource of persona.resources ?? []) {
+        for (const sId of resource.serviceIds) {
+          if (!seenServiceIds.has(sId)) {
+            problems.push(
+              `${label}: resource "${resource.name}" (${resource.id}) references unknown serviceId "${sId}"`
+            );
+          }
+        }
+      }
+
+      // SeededBusy validation
+      for (const busy of persona.seededBusy ?? []) {
+        const resourceExists = (persona.resources ?? []).some((r) => r.id === busy.resourceId);
+        if (!resourceExists) {
+          problems.push(`${label}: seededBusy references unknown resourceId "${busy.resourceId}"`);
+        }
+      }
+
+      // Escalation triggers validation
+      for (const trigger of persona.escalation?.triggers ?? []) {
+        if (typeof trigger !== 'object' || !trigger.id || !trigger.action) {
+          problems.push(`${label}: escalation trigger is not a valid object with id and action`);
         }
       }
 

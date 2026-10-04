@@ -155,7 +155,14 @@ if (process.env.VERCEL && process.env.AURA_ACK_MULTI_INSTANCE_PERSISTENCE === un
   process.env.AURA_ACK_MULTI_INSTANCE_PERSISTENCE = 'true';
 }
 
-const LIVE_MODEL = process.env.AURA_LIVE_MODEL || 'gemini-3.8-live';
+const liveModelEnv = (process.env.GEMINI_LIVE_MODEL || process.env.AURA_LIVE_MODEL)?.trim();
+if (!liveModelEnv) {
+  const problem =
+    'GEMINI_LIVE_MODEL is not set. A live model name is required (e.g. GEMINI_LIVE_MODEL=gemini-3.8-live).';
+  bootProblems.push(problem);
+  console.error(`[boot] ${problem}`);
+}
+const LIVE_MODEL = liveModelEnv || 'gemini-3.8-live';
 
 /**
  * F-16: how long to wait for the provider's `setupComplete` before sending the greeting

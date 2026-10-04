@@ -389,9 +389,9 @@ export const IndustryShowcase: React.FC = () => {
   const [selectedCase, setSelectedCase] = useState<IndustryItem | null>(null);
 
   return (
-    <section id="industries" className="py-24 md:py-32 bg-white border-t border-neutral-200/60 relative overflow-visible">
+    <section id="industries" className="py-24 md:py-32 bg-white border-t border-neutral-200/60 relative overflow-hidden">
       {/* Subtle organic light accent behind cards */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-gradient-to-tr from-emerald-100/30 via-neutral-100/30 to-transparent blur-3xl pointer-events-none rounded-full" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] max-w-full h-[500px] bg-gradient-to-tr from-emerald-100/30 via-neutral-100/30 to-transparent blur-3xl pointer-events-none rounded-full" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header - Consistent alignment & margins across sections */}

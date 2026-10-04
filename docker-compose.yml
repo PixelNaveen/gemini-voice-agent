@@ -1,0 +1,60 @@
+services:
+  aura-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aura-voice-agent
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_LIVE_MODEL=${GEMINI_LIVE_MODEL:-gemini-3.8-live}
+      - AURA_LIVE_TOKEN=${AURA_LIVE_TOKEN}
+      - AURA_DATA_DIR=/app/.data
+      - AURA_PERSISTENCE_TOPOLOGY=SINGLE_INSTANCE
+      - N8N_MODE=${N8N_MODE:-mock}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://n8n:5678/webhook}
+      - N8N_WEBHOOK_SECRET=${N8N_WEBHOOK_SECRET}
+    volumes:
+      - aura-data:/app/.data
+    networks:
+      - aura-network
+    depends_on:
+      - n8n
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: aura-n8n
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=${N8N_PUBLIC_WEBHOOK_URL:-http://localhost:5678/}
+      - EXECUTIONS_PROCESS=main
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=none
+      - EXECUTIONS_DATA_SAVE_ON_ERROR=all
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=72
+      - N8N_METRICS=false
+      - N8N_DIAGNOSTICS_ENABLED=false
+    volumes:
+      - n8n-data:/home/node/.n8n
+    networks:
+      - aura-network
+
+networks:
+  aura-network:
+    driver: bridge
+
+volumes:
+  aura-data:
+    driver: local
+  n8n-data:
+    driver: local

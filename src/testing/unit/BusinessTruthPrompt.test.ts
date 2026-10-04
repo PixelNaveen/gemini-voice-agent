@@ -291,7 +291,7 @@ export async function runBusinessTruthTests(): Promise<TestResult[]> {
       TestHarness.assertEqual(exact.authoritative, true, 'A declared service resolves authoritatively');
       TestHarness.assertEqual(
         exact.price,
-        persona.pricing.services[first.name],
+        first.price ?? (persona as any).pricing?.services?.[first.name],
         'The price matches the persona price table'
       );
 

@@ -1,6 +1,6 @@
 {
   "id": "apex-dental",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "identity": {
     "name": "AURA",
     "role": "Dental Front Desk Coordinator",
@@ -24,68 +24,434 @@
     }
   },
   "services": [
-    { "id": "cleaning", "name": "Dental Cleaning & Checkup", "durationMinutes": 60, "category": "Preventive" },
-    { "id": "exam", "name": "Comprehensive Exam & Digital X-Rays", "durationMinutes": 30, "category": "Diagnostic" },
-    { "id": "filling", "name": "Tooth-Colored Composite Filling", "durationMinutes": 60, "category": "Restorative" },
-    { "id": "whitening", "name": "In-Office Laser Teeth Whitening", "durationMinutes": 75, "category": "Cosmetic" },
-    { "id": "root-canal", "name": "Root Canal Therapy", "durationMinutes": 90, "category": "Endodontics" },
-    { "id": "emergency-exam", "name": "Emergency Toothache Exam", "durationMinutes": 30, "category": "Emergency" }
-  ],
-  "pricing": {
-    "currency": "USD",
-    "services": {
-      "Dental Cleaning & Checkup": 120,
-      "Comprehensive Exam & Digital X-Rays": 95,
-      "Tooth-Colored Composite Filling": 175,
-      "In-Office Laser Teeth Whitening": 299,
-      "Root Canal Therapy": 750,
-      "Emergency Toothache Exam": 110
+    {
+      "id": "cleaning",
+      "name": "Dental Cleaning & Checkup",
+      "category": "Preventive",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 120,
+      "description": "Professional cleaning and checkup.",
+      "bookable": true,
+      "aliases": [
+        "cleaning",
+        "checkup",
+        "check-up",
+        "teeth cleaning",
+        "hygiene"
+      ],
+      "prepNote": "Bring a photo ID and your insurance card if you have one."
+    },
+    {
+      "id": "exam",
+      "name": "Comprehensive Exam & Digital X-Rays",
+      "category": "Diagnostic",
+      "durationMinutes": 30,
+      "priceType": "fixed",
+      "price": 95,
+      "description": "Full exam with digital X-rays.",
+      "bookable": true,
+      "aliases": [
+        "exam",
+        "x-rays",
+        "xrays",
+        "new patient"
+      ],
+      "prepNote": "Bring a photo ID, insurance card if you have one, and a list of current medications."
+    },
+    {
+      "id": "filling",
+      "name": "Tooth-Colored Composite Filling",
+      "category": "Restorative",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 175,
+      "description": "Tooth-colored filling, priced per tooth.",
+      "bookable": true,
+      "priceNote": "per tooth",
+      "aliases": [
+        "filling",
+        "cavity"
+      ]
+    },
+    {
+      "id": "whitening",
+      "name": "In-Office Laser Teeth Whitening",
+      "category": "Cosmetic",
+      "durationMinutes": 75,
+      "priceType": "fixed",
+      "price": 299,
+      "description": "Single-visit in-office whitening.",
+      "bookable": true,
+      "aliases": [
+        "whitening",
+        "teeth whitening",
+        "bleaching"
+      ]
+    },
+    {
+      "id": "root-canal",
+      "name": "Root Canal Therapy",
+      "category": "Endodontics",
+      "durationMinutes": 90,
+      "priceType": "starting_at",
+      "price": 750,
+      "description": "Final cost depends on the tooth and is confirmed after examination.",
+      "bookable": true,
+      "aliases": [
+        "root canal"
+      ]
+    },
+    {
+      "id": "emergency-exam",
+      "name": "Emergency Toothache Exam",
+      "category": "Emergency",
+      "durationMinutes": 30,
+      "priceType": "fixed",
+      "price": 110,
+      "description": "Same-day pain evaluation when available.",
+      "bookable": true,
+      "aliases": [
+        "toothache",
+        "tooth pain",
+        "emergency",
+        "chipped tooth",
+        "broken tooth"
+      ]
+    },
+    {
+      "id": "kids-cleaning",
+      "name": "Children's Cleaning & Exam",
+      "category": "Preventive",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 100,
+      "description": "Cleaning and exam for children under 13.",
+      "bookable": true,
+      "aliases": [
+        "kids cleaning",
+        "child cleaning",
+        "my son's teeth",
+        "my daughter's teeth",
+        "children's dentist"
+      ]
+    },
+    {
+      "id": "invisalign-consult",
+      "name": "Clear Aligner Consultation",
+      "category": "Cosmetic",
+      "durationMinutes": 45,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "Consultation about clear aligners and straightening options.",
+      "bookable": true,
+      "aliases": [
+        "invisalign",
+        "clear aligners",
+        "braces",
+        "straighten my teeth",
+        "straightening"
+      ]
+    },
+    {
+      "id": "implant-consult",
+      "name": "Dental Implant Consultation",
+      "category": "Restorative",
+      "durationMinutes": 45,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "Consultation about replacing missing teeth with implants.",
+      "bookable": true,
+      "aliases": [
+        "implant",
+        "implants",
+        "missing tooth",
+        "replace a tooth"
+      ]
+    },
+    {
+      "id": "gum-evaluation",
+      "name": "Gum Health Evaluation",
+      "category": "Preventive",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 130,
+      "description": "Evaluation of gum health and measurements.",
+      "bookable": true,
+      "aliases": [
+        "gum",
+        "gums",
+        "bleeding gums",
+        "gum disease",
+        "periodontal"
+      ]
     }
-  },
+  ],
+  "resources": [
+    {
+      "id": "dr-rivera",
+      "name": "Dr. Rivera",
+      "type": "staff",
+      "title": "General Dentist",
+      "serviceIds": [
+        "exam",
+        "filling",
+        "root-canal",
+        "emergency-exam",
+        "implant-consult",
+        "gum-evaluation"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "dr-chen",
+      "name": "Dr. Chen",
+      "type": "staff",
+      "title": "Cosmetic Dentist",
+      "serviceIds": [
+        "exam",
+        "filling",
+        "whitening",
+        "emergency-exam",
+        "invisalign-consult"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "hana",
+      "name": "Hana",
+      "type": "staff",
+      "title": "Dental Hygienist",
+      "serviceIds": [
+        "cleaning",
+        "kids-cleaning"
+      ],
+      "capacity": 1
+    }
+  ],
   "hours": {
     "schedule": {
-      "monday": { "intervals": [{ "open": "08:00", "close": "17:00" }] },
-      "tuesday": { "intervals": [{ "open": "08:00", "close": "17:00" }] },
-      "wednesday": { "intervals": [{ "open": "08:00", "close": "17:00" }] },
-      "thursday": { "intervals": [{ "open": "08:00", "close": "17:00" }] },
-      "friday": { "intervals": [{ "open": "08:00", "close": "15:00" }] },
-      "saturday": { "intervals": [], "closed": true },
-      "sunday": { "intervals": [], "closed": true }
+      "monday": {
+        "intervals": [
+          {
+            "open": "08:00",
+            "close": "17:00"
+          }
+        ]
+      },
+      "tuesday": {
+        "intervals": [
+          {
+            "open": "08:00",
+            "close": "17:00"
+          }
+        ]
+      },
+      "wednesday": {
+        "intervals": [
+          {
+            "open": "08:00",
+            "close": "17:00"
+          }
+        ]
+      },
+      "thursday": {
+        "intervals": [
+          {
+            "open": "08:00",
+            "close": "17:00"
+          }
+        ]
+      },
+      "friday": {
+        "intervals": [
+          {
+            "open": "08:00",
+            "close": "15:00"
+          }
+        ]
+      },
+      "saturday": {
+        "intervals": [],
+        "closed": true
+      },
+      "sunday": {
+        "intervals": [],
+        "closed": true
+      }
     },
     "holidays": []
   },
   "policies": {
-    "cancellation": { "minimumNoticeHours": 24, "fee": "$50 short-notice fee" },
-    "rescheduling": { "allowed": true, "minimumNoticeHours": 6 },
-    "lateArrival": { "allowedMinutes": 10 }
+    "cancellation": {
+      "minimumNoticeHours": 24,
+      "fee": "$50 short-notice fee."
+    },
+    "rescheduling": {
+      "allowed": true,
+      "minimumNoticeHours": 6
+    },
+    "lateArrival": {
+      "allowedMinutes": 10
+    }
   },
+  "faqs": [
+    {
+      "q": "Do you accept insurance?",
+      "a": "I can't confirm insurance details here. The front desk can verify your plan at your visit."
+    },
+    {
+      "q": "Do you see children?",
+      "a": "Yes, we are a family practice."
+    },
+    {
+      "q": "What should I bring to a first visit?",
+      "a": "A photo ID, your insurance card if you have one, and a list of current medications."
+    },
+    {
+      "q": "Do you treat dental emergencies?",
+      "a": "We offer emergency toothache exams during office hours. For severe bleeding or facial swelling, call 911 or go to the ER."
+    },
+    {
+      "q": "How long does whitening take?",
+      "a": "About 75 minutes in one visit."
+    },
+    {
+      "q": "What is the late-arrival policy?",
+      "a": "We can hold your slot for 10 minutes."
+    }
+  ],
+  "seededBusy": [
+    {
+      "resourceId": "dr-rivera",
+      "days": [
+        "monday",
+        "wednesday"
+      ],
+      "start": "09:00",
+      "end": "11:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "dr-chen",
+      "days": [
+        "thursday"
+      ],
+      "start": "13:00",
+      "end": "15:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "hana",
+      "days": [
+        "tuesday"
+      ],
+      "start": "10:00",
+      "end": "12:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "hana",
+      "days": [
+        "thursday"
+      ],
+      "start": "09:00",
+      "end": "10:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "dr-rivera",
+      "days": [
+        "friday"
+      ],
+      "start": "08:00",
+      "end": "09:30",
+      "label": "Booked"
+    }
+  ],
   "contactPolicy": {
-    "required": ["service", "date", "time", "name", "email", "phone"],
-    "optional": [],
+    "required": [
+      "service",
+      "date",
+      "time",
+      "name",
+      "email"
+    ],
+    "optional": [
+      "phone"
+    ],
     "collectNameEarly": false,
     "verifyEmail": true,
     "spellWhenLowConfidence": true
   },
   "booking": {
     "enabled": true,
-    "requiredEntities": ["service", "date", "time", "customerName", "email", "phone"],
+    "requiredEntities": [
+      "service",
+      "date",
+      "time",
+      "customerName",
+      "email"
+    ],
     "allowRescheduling": true,
     "allowCancellation": true,
     "confirmationRequired": true,
-    "minNoticeHours": 3,
+    "minLeadHours": 3,
     "maxAdvanceDays": 90,
-    "bufferMinutes": 15
+    "bufferMinutes": 15,
+    "confirmationEmail": "automatic",
+    "lookupBy": [
+      "confirmationCode",
+      "sessionBooking"
+    ]
   },
   "escalation": {
     "enabled": true,
-    "triggers": ["severe_bleeding", "acute_facial_swelling", "trauma_tooth_knockout"],
-    "emergencyTransfer": true,
-    "defaultDepartment": "Emergency On-Call Dentist"
+    "triggers": [
+      {
+        "id": "severe_bleeding",
+        "description": "Heavy bleeding that will not stop",
+        "detectKeywords": [
+          "won't stop bleeding",
+          "heavy bleeding"
+        ],
+        "action": "call_911",
+        "scriptedLine": "If that is severe, please call 911 or go to the nearest emergency room right now."
+      },
+      {
+        "id": "acute_facial_swelling",
+        "description": "Facial swelling or trouble breathing or swallowing",
+        "detectKeywords": [
+          "face is swelling",
+          "swollen face",
+          "can't breathe",
+          "trouble swallowing"
+        ],
+        "action": "call_911",
+        "scriptedLine": "Swelling in the face or trouble breathing needs urgent care. Please call 911 or go to the nearest emergency room."
+      },
+      {
+        "id": "trauma_tooth_knockout",
+        "description": "Tooth knocked out",
+        "detectKeywords": [
+          "knocked out",
+          "tooth fell out",
+          "broke my tooth"
+        ],
+        "action": "give_business_phone",
+        "scriptedLine": "Please call our office right away at the number I'll give you so the dentist can advise you quickly."
+      }
+    ]
   },
   "knowledge": {
     "businessFacts": true,
-    "externalSearch": { "enabled": true, "strictBusinessAuthority": true },
-    "sources": ["business-config", "dental-fee-guide"]
+    "externalSearch": {
+      "enabled": false,
+      "strictBusinessAuthority": true
+    },
+    "sources": [
+      "business-config"
+    ]
   },
   "conversationStyle": {
     "tone": "warm",
@@ -94,24 +460,63 @@
     "useBusinessName": true,
     "greetingPhrase": "Thank you for calling Apex Dental Care. How can we care for your smile today?"
   },
+  "greetingPrompt": "Thank you for calling Apex Dental Care. How can we care for your smile today?",
   "tools": {
     "allowed": [
       "checkAvailability",
+      "findAlternativeTimes",
       "createAppointment",
-      "cancelAppointment",
+      "lookupAppointment",
       "rescheduleAppointment",
+      "cancelAppointment",
       "getBusinessHours",
-      "getServicePrice",
-      "sendConfirmation",
-      "transferCall"
+      "getServiceInfo"
     ]
   },
   "safety": {
     "medicalAdvice": false,
     "legalAdvice": false,
     "diagnosis": false,
-    "financialCommitments": false
+    "financialCommitments": false,
+    "refusalLine": "I can't assess that over the phone, but a dentist can evaluate it. Let me get you an exam."
   },
-  "systemPrompt": "You are AURA, the reassuring front-desk receptionist for Apex Dental Care. Assist patients with dental checkups, cleanings, exams, and emergency appointments. Do not diagnose conditions or prescribe treatments. Collect service, date, time, name, email, and phone. Greet only on call start. Keep answers concise and gentle.",
-  "greetingPrompt": "Thank you for calling Apex Dental Care. How can we help your smile today?"
+  "systemPrompt": "You are AURA, the reassuring front-desk receptionist for Apex Family & Cosmetic Dental Care. Help with checkups, cleanings, exams and emergency appointments. Never diagnose, recommend treatment, or comment on symptoms beyond offering an exam. Collect service, date, time, then name and email. Keep replies short and gentle. Greet only at call start.",
+  "personality": {
+    "traits": [
+      "calm",
+      "reassuring",
+      "unhurried",
+      "kind"
+    ],
+    "energy": 4,
+    "humor": "none",
+    "slangTier": 1,
+    "register": {
+      "acknowledgements": [
+        "Of course.",
+        "Certainly.",
+        "I understand.",
+        "Absolutely.",
+        "Thank you for telling me."
+      ],
+      "avoid": [
+        "no biggie",
+        "gotcha",
+        "yep",
+        "painless",
+        "nothing to worry about"
+      ]
+    },
+    "emotionPlaybook": {
+      "in_pain": "Lead with empathy, then action: 'I'm sorry you're in pain. Let's get you seen as soon as we can.' Never guess the cause.",
+      "dental_anxiety": "Normalize without promising comfort: 'That's very common, and our team is used to it. I can add a note so they know.'",
+      "embarrassed": "'No judgment at all. We see this every day.'",
+      "cost_worry": "Give the listed fee, say treatment costs are reviewed by the dentist before work starts.",
+      "parent_of_child": "Warm and practical; confirm the visit is for a child."
+    },
+    "speechRhythm": {
+      "maxSentencesPerTurn": 2,
+      "fillerBudgetPerCall": 3
+    }
+  }
 }

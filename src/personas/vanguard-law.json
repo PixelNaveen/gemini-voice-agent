@@ -1,6 +1,6 @@
 {
   "id": "vanguard-law",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "identity": {
     "name": "AURA",
     "role": "Legal Intake Coordinator",
@@ -24,61 +24,349 @@
     }
   },
   "services": [
-    { "id": "initial-consultation", "name": "Confidential Initial Legal Consultation", "durationMinutes": 45, "category": "Intake" },
-    { "id": "contract-review", "name": "Commercial Contract Review Session", "durationMinutes": 60, "category": "Corporate" },
-    { "id": "estate-planning", "name": "Estate Planning & Trust Advisory", "durationMinutes": 60, "category": "Private Client" }
-  ],
-  "pricing": {
-    "currency": "USD",
-    "services": {
-      "Confidential Initial Legal Consultation": 250,
-      "Commercial Contract Review Session": 450,
-      "Estate Planning & Trust Advisory": 350
+    {
+      "id": "initial-consultation",
+      "name": "Confidential Initial Legal Consultation",
+      "category": "Intake",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 250,
+      "description": "Confidential first meeting with an attorney.",
+      "bookable": true,
+      "aliases": [
+        "consultation",
+        "legal advice",
+        "talk to a lawyer",
+        "speak to an attorney"
+      ]
+    },
+    {
+      "id": "contract-review",
+      "name": "Commercial Contract Review Session",
+      "category": "Corporate",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 450,
+      "description": "Attorney review of a commercial contract.",
+      "bookable": true,
+      "aliases": [
+        "contract",
+        "agreement",
+        "review a contract"
+      ],
+      "prepNote": "Bring a copy of the contract."
+    },
+    {
+      "id": "estate-planning",
+      "name": "Estate Planning & Trust Advisory",
+      "category": "Private Client",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 350,
+      "description": "Wills, trusts and estate planning advice.",
+      "bookable": true,
+      "aliases": [
+        "will",
+        "trust",
+        "estate",
+        "estate planning"
+      ],
+      "prepNote": "Bring any existing wills or trusts."
+    },
+    {
+      "id": "business-formation",
+      "name": "Business Formation Consultation",
+      "category": "Corporate",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 300,
+      "description": "Discuss forming an LLC or corporation.",
+      "bookable": true,
+      "aliases": [
+        "start a business",
+        "form an llc",
+        "incorporate",
+        "business formation",
+        "llc"
+      ]
+    },
+    {
+      "id": "nda-review",
+      "name": "NDA & Short Contract Review",
+      "category": "Corporate",
+      "durationMinutes": 30,
+      "priceType": "fixed",
+      "price": 200,
+      "description": "Attorney review of a short agreement.",
+      "bookable": true,
+      "aliases": [
+        "nda",
+        "non-disclosure",
+        "short contract",
+        "quick review"
+      ]
+    },
+    {
+      "id": "poa-session",
+      "name": "Power of Attorney & Healthcare Proxy Session",
+      "category": "Private Client",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 300,
+      "description": "Prepare power of attorney and healthcare proxy documents.",
+      "bookable": true,
+      "aliases": [
+        "power of attorney",
+        "healthcare proxy",
+        "health care proxy",
+        "poa"
+      ]
+    },
+    {
+      "id": "estate-update",
+      "name": "Estate Plan Update Review",
+      "category": "Private Client",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 275,
+      "description": "Review and update an existing will or trust.",
+      "bookable": true,
+      "aliases": [
+        "update my will",
+        "update my trust",
+        "review my will",
+        "change my will"
+      ]
     }
-  },
+  ],
+  "resources": [
+    {
+      "id": "a-reed",
+      "name": "Alexander Reed",
+      "type": "staff",
+      "title": "Corporate Attorney",
+      "serviceIds": [
+        "initial-consultation",
+        "contract-review",
+        "business-formation",
+        "nda-review"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "n-brooks",
+      "name": "Natalie Brooks",
+      "type": "staff",
+      "title": "Trusts & Estates Attorney",
+      "serviceIds": [
+        "initial-consultation",
+        "estate-planning",
+        "poa-session",
+        "estate-update"
+      ],
+      "capacity": 1
+    }
+  ],
   "hours": {
     "schedule": {
-      "monday": { "intervals": [{ "open": "08:30", "close": "17:30" }] },
-      "tuesday": { "intervals": [{ "open": "08:30", "close": "17:30" }] },
-      "wednesday": { "intervals": [{ "open": "08:30", "close": "17:30" }] },
-      "thursday": { "intervals": [{ "open": "08:30", "close": "17:30" }] },
-      "friday": { "intervals": [{ "open": "08:30", "close": "16:00" }] },
-      "saturday": { "intervals": [], "closed": true },
-      "sunday": { "intervals": [], "closed": true }
+      "monday": {
+        "intervals": [
+          {
+            "open": "08:30",
+            "close": "17:30"
+          }
+        ]
+      },
+      "tuesday": {
+        "intervals": [
+          {
+            "open": "08:30",
+            "close": "17:30"
+          }
+        ]
+      },
+      "wednesday": {
+        "intervals": [
+          {
+            "open": "08:30",
+            "close": "17:30"
+          }
+        ]
+      },
+      "thursday": {
+        "intervals": [
+          {
+            "open": "08:30",
+            "close": "17:30"
+          }
+        ]
+      },
+      "friday": {
+        "intervals": [
+          {
+            "open": "08:30",
+            "close": "16:00"
+          }
+        ]
+      },
+      "saturday": {
+        "intervals": [],
+        "closed": true
+      },
+      "sunday": {
+        "intervals": [],
+        "closed": true
+      }
     },
     "holidays": []
   },
   "policies": {
-    "cancellation": { "minimumNoticeHours": 24 },
-    "rescheduling": { "allowed": true, "minimumNoticeHours": 12 }
+    "cancellation": {
+      "minimumNoticeHours": 24
+    },
+    "rescheduling": {
+      "allowed": true,
+      "minimumNoticeHours": 12
+    }
   },
+  "faqs": [
+    {
+      "q": "Is the consultation confidential?",
+      "a": "Yes, initial consultations are confidential."
+    },
+    {
+      "q": "Can you tell me if I have a case?",
+      "a": "I can't give legal advice. An attorney can discuss that in a consultation."
+    },
+    {
+      "q": "Which attorney handles contracts?",
+      "a": "Alexander Reed handles commercial contract review."
+    },
+    {
+      "q": "Who handles wills and trusts?",
+      "a": "Natalie Brooks handles estate planning."
+    },
+    {
+      "q": "What should I bring?",
+      "a": "Any relevant documents, such as the contract or existing estate papers."
+    },
+    {
+      "q": "Do you handle criminal cases?",
+      "a": "I'd suggest speaking with the office directly. I can give you the main number."
+    }
+  ],
+  "seededBusy": [
+    {
+      "resourceId": "a-reed",
+      "days": [
+        "tuesday",
+        "thursday"
+      ],
+      "start": "10:00",
+      "end": "12:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "n-brooks",
+      "days": [
+        "wednesday"
+      ],
+      "start": "13:00",
+      "end": "15:30",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "a-reed",
+      "days": [
+        "friday"
+      ],
+      "start": "09:00",
+      "end": "10:30",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "n-brooks",
+      "days": [
+        "monday"
+      ],
+      "start": "09:00",
+      "end": "10:00",
+      "label": "Booked"
+    }
+  ],
   "contactPolicy": {
-    "required": ["service", "date", "time", "name", "email", "phone"],
-    "optional": [],
+    "required": [
+      "service",
+      "date",
+      "time",
+      "name",
+      "email"
+    ],
+    "optional": [
+      "phone"
+    ],
     "collectNameEarly": false,
     "verifyEmail": true,
     "spellWhenLowConfidence": true
   },
   "booking": {
     "enabled": true,
-    "requiredEntities": ["service", "date", "time", "customerName", "email", "phone"],
+    "requiredEntities": [
+      "service",
+      "date",
+      "time",
+      "customerName",
+      "email"
+    ],
     "allowRescheduling": true,
     "allowCancellation": true,
     "confirmationRequired": true,
-    "minNoticeHours": 4,
+    "minLeadHours": 4,
     "maxAdvanceDays": 30,
-    "bufferMinutes": 15
+    "bufferMinutes": 15,
+    "confirmationEmail": "automatic",
+    "lookupBy": [
+      "confirmationCode",
+      "sessionBooking"
+    ]
   },
   "escalation": {
     "enabled": true,
-    "triggers": ["active_litigation_subpoena", "criminal_charge"],
-    "emergencyTransfer": true,
-    "defaultDepartment": "Managing Partner"
+    "triggers": [
+      {
+        "id": "active_litigation_subpoena",
+        "description": "Subpoena or active litigation",
+        "detectKeywords": [
+          "subpoena",
+          "served papers",
+          "being sued",
+          "court date"
+        ],
+        "action": "give_business_phone",
+        "scriptedLine": "This sounds time-sensitive. Please call our office directly so the right person can help promptly."
+      },
+      {
+        "id": "criminal_charge",
+        "description": "Criminal matter",
+        "detectKeywords": [
+          "arrested",
+          "criminal charge",
+          "police"
+        ],
+        "action": "give_business_phone",
+        "scriptedLine": "For a criminal matter please call our office directly. I can give you the number."
+      }
+    ]
   },
   "knowledge": {
     "businessFacts": true,
-    "externalSearch": { "enabled": true, "strictBusinessAuthority": true },
-    "sources": ["business-config", "practice-areas"]
+    "externalSearch": {
+      "enabled": false,
+      "strictBusinessAuthority": true
+    },
+    "sources": [
+      "business-config"
+    ]
   },
   "conversationStyle": {
     "tone": "authoritative",
@@ -87,24 +375,63 @@
     "useBusinessName": true,
     "greetingPhrase": "Good day, you have reached Vanguard Legal Counsel. How may I direct your legal inquiry?"
   },
+  "greetingPrompt": "Good day, you have reached Vanguard Legal Counsel. How may I direct your legal inquiry?",
   "tools": {
     "allowed": [
       "checkAvailability",
+      "findAlternativeTimes",
       "createAppointment",
-      "cancelAppointment",
+      "lookupAppointment",
       "rescheduleAppointment",
+      "cancelAppointment",
       "getBusinessHours",
-      "getServicePrice",
-      "sendConfirmation",
-      "transferCall"
+      "getServiceInfo"
     ]
   },
   "safety": {
     "medicalAdvice": false,
     "legalAdvice": false,
     "diagnosis": false,
-    "financialCommitments": false
+    "financialCommitments": false,
+    "refusalLine": "I can't give legal advice, but an attorney can discuss it in a confidential consultation."
   },
-  "systemPrompt": "You are AURA, the legal intake coordinator for Vanguard Legal Counsel LLC. Assist potential clients with booking confidential consultations. Never provide legal advice, interpretations, or guarantees. Greet only on call start. Maintain strict professional discretion and brevity.",
-  "greetingPrompt": "Good day, you have reached Vanguard Legal Counsel. How may I direct your inquiry today?"
+  "systemPrompt": "You are AURA, the legal intake coordinator for Vanguard Legal Counsel LLC. Help potential clients book confidential consultations. Never give legal advice, interpretations, opinions on a case, or guarantees. Do not ask for case details beyond the type of service. Collect service, date, time, name and email. Maintain discretion and brevity. Greet only at call start.",
+  "personality": {
+    "traits": [
+      "formal",
+      "discreet",
+      "precise",
+      "measured compassion"
+    ],
+    "energy": 3,
+    "humor": "none",
+    "slangTier": 1,
+    "register": {
+      "acknowledgements": [
+        "Certainly.",
+        "Of course.",
+        "I understand.",
+        "Thank you.",
+        "Understood."
+      ],
+      "avoid": [
+        "no worries",
+        "gotcha",
+        "yep",
+        "awesome",
+        "don't worry, you'll win"
+      ]
+    },
+    "emotionPlaybook": {
+      "distressed": "'I'm sorry you're dealing with this.' State plainly you cannot advise on the matter, offer the confidential consultation.",
+      "grieving": "'I'm very sorry for your loss.' Then move gently to scheduling. Do not claim services the firm does not list.",
+      "urgent_deadline": "Give the office number so the right person can respond promptly. Do not assess the urgency yourself.",
+      "afraid_of_cost": "State the consultation fee plainly, no hedging.",
+      "probing_for_advice": "Politely repeat the boundary once, then offer the consultation."
+    },
+    "speechRhythm": {
+      "maxSentencesPerTurn": 2,
+      "fillerBudgetPerCall": 3
+    }
+  }
 }

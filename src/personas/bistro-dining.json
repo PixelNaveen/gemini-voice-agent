@@ -1,6 +1,6 @@
 {
   "id": "bistro-dining",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "identity": {
     "name": "AURA",
     "role": "Maitre D' & Reservation Host",
@@ -24,61 +24,375 @@
     }
   },
   "services": [
-    { "id": "dinner-table", "name": "Main Dining Room Table", "durationMinutes": 90, "category": "Dinner" },
-    { "id": "chef-counter", "name": "Chef's Tasting Counter (7-Course)", "durationMinutes": 120, "category": "Experience" },
-    { "id": "private-room", "name": "Private Wine Cellar Dining", "durationMinutes": 150, "category": "Events" }
-  ],
-  "pricing": {
-    "currency": "USD",
-    "services": {
-      "Main Dining Room Table": "A la carte menu",
-      "Chef's Tasting Counter (7-Course)": 195,
-      "Private Wine Cellar Dining": "Custom curation ($1,500 min)"
+    {
+      "id": "dinner-table",
+      "name": "Main Dining Room Table",
+      "category": "Dinner",
+      "durationMinutes": 90,
+      "priceType": "menu_based",
+      "price": null,
+      "description": "Main dining room, a la carte menu.",
+      "bookable": true,
+      "priceNote": "A la carte menu",
+      "aliases": [
+        "table",
+        "dinner",
+        "reservation",
+        "dining room"
+      ]
+    },
+    {
+      "id": "chef-counter",
+      "name": "Chef's Tasting Counter (7-Course)",
+      "category": "Experience",
+      "durationMinutes": 120,
+      "priceType": "fixed",
+      "price": 195,
+      "description": "Seven-course tasting at the chef's counter.",
+      "bookable": true,
+      "priceNote": "per guest",
+      "aliases": [
+        "tasting",
+        "tasting menu",
+        "chef's counter",
+        "counter"
+      ],
+      "prepNote": "Seating is at the counter. Please tell us about dietary needs when booking."
+    },
+    {
+      "id": "private-room",
+      "name": "Private Wine Cellar Dining",
+      "category": "Events",
+      "durationMinutes": 150,
+      "priceType": "starting_at",
+      "price": 1500,
+      "description": "Private cellar dining with custom curation.",
+      "bookable": true,
+      "priceNote": "$1,500 minimum",
+      "aliases": [
+        "private dining",
+        "wine cellar",
+        "private room",
+        "event"
+      ],
+      "prepNote": "The menu is custom-planned with the manager."
+    },
+    {
+      "id": "bar-lounge",
+      "name": "Bar & Lounge Seating",
+      "category": "Dinner",
+      "durationMinutes": 90,
+      "priceType": "menu_based",
+      "price": null,
+      "description": "Seating at the bar and lounge, bar and small plates menu.",
+      "bookable": true,
+      "aliases": [
+        "bar",
+        "lounge",
+        "drinks",
+        "cocktails",
+        "bar seating"
+      ],
+      "priceNote": "A la carte menu"
+    },
+    {
+      "id": "counter-pairing",
+      "name": "Chef's Counter with Wine Pairing",
+      "category": "Experience",
+      "durationMinutes": 120,
+      "priceType": "fixed",
+      "price": 295,
+      "description": "Seven-course tasting with paired wines.",
+      "bookable": true,
+      "aliases": [
+        "wine pairing",
+        "tasting with wine",
+        "pairing"
+      ],
+      "priceNote": "per guest"
+    },
+    {
+      "id": "group-dining",
+      "name": "Group Dining (6 to 10 Guests)",
+      "category": "Dinner",
+      "durationMinutes": 120,
+      "priceType": "menu_based",
+      "price": null,
+      "description": "Group reservation in the main dining room.",
+      "bookable": true,
+      "aliases": [
+        "group",
+        "large party",
+        "party of eight",
+        "birthday dinner",
+        "team dinner"
+      ],
+      "priceNote": "A la carte menu"
     }
-  },
+  ],
+  "resources": [
+    {
+      "id": "main-dining",
+      "name": "Main Dining Room",
+      "type": "table",
+      "title": "40 seats",
+      "serviceIds": [
+        "dinner-table",
+        "group-dining"
+      ],
+      "capacity": 40,
+      "capacityUnit": "seats"
+    },
+    {
+      "id": "chef-counter",
+      "name": "Chef's Counter",
+      "type": "table",
+      "title": "8 seats",
+      "serviceIds": [
+        "chef-counter",
+        "counter-pairing"
+      ],
+      "capacity": 8,
+      "capacityUnit": "seats"
+    },
+    {
+      "id": "wine-cellar",
+      "name": "Wine Cellar",
+      "type": "table",
+      "title": "12 seats, one party at a time",
+      "serviceIds": [
+        "private-room"
+      ],
+      "capacity": 12,
+      "capacityUnit": "seats"
+    },
+    {
+      "id": "lounge",
+      "name": "Bar & Lounge",
+      "type": "table",
+      "title": "20 seats, bar and lounge",
+      "serviceIds": [
+        "bar-lounge"
+      ],
+      "capacity": 20,
+      "capacityUnit": "seats"
+    }
+  ],
   "hours": {
     "schedule": {
-      "monday": { "intervals": [], "closed": true },
-      "tuesday": { "intervals": [{ "open": "17:00", "close": "23:00" }] },
-      "wednesday": { "intervals": [{ "open": "17:00", "close": "23:00" }] },
-      "thursday": { "intervals": [{ "open": "17:00", "close": "23:00" }] },
-      "friday": { "intervals": [{ "open": "17:00", "close": "00:00" }] },
-      "saturday": { "intervals": [{ "open": "16:30", "close": "00:00" }] },
-      "sunday": { "intervals": [{ "open": "16:30", "close": "22:00" }] }
-    }
+      "monday": {
+        "intervals": [],
+        "closed": true
+      },
+      "tuesday": {
+        "intervals": [
+          {
+            "open": "17:00",
+            "close": "23:00"
+          }
+        ]
+      },
+      "wednesday": {
+        "intervals": [
+          {
+            "open": "17:00",
+            "close": "23:00"
+          }
+        ]
+      },
+      "thursday": {
+        "intervals": [
+          {
+            "open": "17:00",
+            "close": "23:00"
+          }
+        ]
+      },
+      "friday": {
+        "intervals": [
+          {
+            "open": "17:00",
+            "close": "24:00"
+          }
+        ]
+      },
+      "saturday": {
+        "intervals": [
+          {
+            "open": "16:30",
+            "close": "24:00"
+          }
+        ]
+      },
+      "sunday": {
+        "intervals": [
+          {
+            "open": "16:30",
+            "close": "22:00"
+          }
+        ]
+      }
+    },
+    "holidays": []
   },
   "policies": {
-    "cancellation": { "minimumNoticeHours": 12, "fee": "$50 per guest fee for late cancellation on tasting menu" },
-    "rescheduling": { "allowed": true },
-    "lateArrival": { "allowedMinutes": 15 }
+    "cancellation": {
+      "minimumNoticeHours": 12,
+      "fee": "$50 per guest for late cancellation on the tasting menu."
+    },
+    "rescheduling": {
+      "allowed": true,
+      "minimumNoticeHours": 4
+    },
+    "lateArrival": {
+      "allowedMinutes": 15
+    }
   },
+  "faqs": [
+    {
+      "q": "Do you accommodate dietary restrictions?",
+      "a": "Yes, please tell me and I'll add it to your reservation notes. For severe allergies, the manager will confirm with you."
+    },
+    {
+      "q": "What time does the kitchen close?",
+      "a": "Please ask me the day and I'll give you the exact closing hours."
+    },
+    {
+      "q": "How large a party can you seat?",
+      "a": "The main dining room handles most parties. For more than 10 guests, the manager arranges it."
+    },
+    {
+      "q": "Is there a dress code?",
+      "a": "Smart casual is recommended."
+    },
+    {
+      "q": "Is the tasting menu fixed?",
+      "a": "Yes, it is a seven-course chef's menu at $195 per guest."
+    },
+    {
+      "q": "How long do I keep my table if I'm late?",
+      "a": "We hold it for 15 minutes."
+    }
+  ],
+  "seededBusy": [
+    {
+      "resourceId": "chef-counter",
+      "days": [
+        "friday",
+        "saturday"
+      ],
+      "start": "19:00",
+      "end": "21:00",
+      "label": "Fully booked"
+    },
+    {
+      "resourceId": "main-dining",
+      "days": [
+        "friday",
+        "saturday"
+      ],
+      "start": "19:00",
+      "end": "21:00",
+      "label": "Mostly full",
+      "seatsTaken": 34
+    },
+    {
+      "resourceId": "wine-cellar",
+      "days": [
+        "saturday"
+      ],
+      "start": "18:00",
+      "end": "21:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "chef-counter",
+      "days": [
+        "thursday"
+      ],
+      "start": "19:30",
+      "end": "21:30",
+      "label": "Booked"
+    }
+  ],
   "contactPolicy": {
-    "required": ["date", "time", "partySize", "name", "email", "phone"],
-    "optional": ["specialRequest"],
+    "required": [
+      "date",
+      "time",
+      "partySize",
+      "name",
+      "email"
+    ],
+    "optional": [
+      "phone",
+      "specialRequest",
+      "service"
+    ],
     "collectNameEarly": false,
     "verifyEmail": true,
     "spellWhenLowConfidence": true
   },
   "booking": {
     "enabled": true,
-    "requiredEntities": ["date", "time", "partySize", "customerName", "email", "phone"],
+    "requiredEntities": [
+      "date",
+      "time",
+      "partySize",
+      "customerName",
+      "email"
+    ],
     "allowRescheduling": true,
     "allowCancellation": true,
     "confirmationRequired": true,
-    "minNoticeHours": 2,
+    "minLeadHours": 2,
     "maxAdvanceDays": 30,
-    "bufferMinutes": 15
+    "bufferMinutes": 15,
+    "confirmationEmail": "automatic",
+    "lookupBy": [
+      "confirmationCode",
+      "sessionBooking"
+    ],
+    "partySize": {
+      "min": 1,
+      "max": 10
+    }
   },
   "escalation": {
     "enabled": true,
-    "triggers": ["large_event_over_10", "dietary_anaphylaxis"],
-    "emergencyTransfer": false,
-    "defaultDepartment": "General Manager & Sommelier"
+    "triggers": [
+      {
+        "id": "large_event_over_10",
+        "description": "Party larger than 10",
+        "detectKeywords": [
+          "party of 11",
+          "more than 10",
+          "large event",
+          "private event"
+        ],
+        "action": "give_business_phone"
+      },
+      {
+        "id": "dietary_anaphylaxis",
+        "description": "Severe allergy",
+        "detectKeywords": [
+          "anaphylaxis",
+          "severe allergy",
+          "epipen"
+        ],
+        "action": "give_business_phone",
+        "scriptedLine": "For a severe allergy, the manager will confirm with you directly so we can keep you safe."
+      }
+    ]
   },
   "knowledge": {
     "businessFacts": true,
-    "externalSearch": { "enabled": true, "strictBusinessAuthority": true },
-    "sources": ["business-config", "seasonal-menu"]
+    "externalSearch": {
+      "enabled": false,
+      "strictBusinessAuthority": true
+    },
+    "sources": [
+      "business-config"
+    ]
   },
   "conversationStyle": {
     "tone": "warm",
@@ -87,16 +401,17 @@
     "useBusinessName": true,
     "greetingPhrase": "Good evening, Lumina Fine Dining. How may we host your evening?"
   },
+  "greetingPrompt": "Good evening, Lumina Fine Dining. How may we host your evening?",
   "tools": {
     "allowed": [
       "checkAvailability",
+      "findAlternativeTimes",
       "createAppointment",
-      "cancelAppointment",
+      "lookupAppointment",
       "rescheduleAppointment",
+      "cancelAppointment",
       "getBusinessHours",
-      "getServicePrice",
-      "sendConfirmation",
-      "transferCall"
+      "getServiceInfo"
     ]
   },
   "safety": {
@@ -105,6 +420,41 @@
     "diagnosis": false,
     "financialCommitments": false
   },
-  "systemPrompt": "You are AURA, the gracious reservation host for Lumina Fine Dining. Assist guests with table reservations, chef tasting counter bookings, party size, and dietary inquiries. Always collect party size along with date, time, name, email, and phone. Greet only on call start. Keep tone refined and concise.",
-  "greetingPrompt": "Good evening, Lumina Fine Dining. How may we host your table today?"
+  "systemPrompt": "You are AURA, the gracious reservation host for Lumina Fine Dining & Wine Bar. Help guests reserve tables, the chef's counter and the wine cellar. Collect party size with date, time, name and email, plus any dietary note. Never promise allergen safety. Keep tone refined and concise. Greet only at call start.",
+  "personality": {
+    "traits": [
+      "gracious",
+      "warm",
+      "hospitable",
+      "unhurried"
+    ],
+    "energy": 6,
+    "humor": "light",
+    "slangTier": 2,
+    "register": {
+      "acknowledgements": [
+        "Wonderful.",
+        "Absolutely.",
+        "Of course.",
+        "Perfect.",
+        "Lovely."
+      ],
+      "avoid": [
+        "foodie",
+        "yummy",
+        "dude"
+      ]
+    },
+    "emotionPlaybook": {
+      "celebration": "'Congratulations!' Add the occasion to the reservation notes.",
+      "disappointed_no_table": "Apologize briefly and offer the nearest real alternatives (time, day, or seating area).",
+      "allergy_concern": "Take it seriously, never promise allergen safety, give the manager number for severe allergies.",
+      "running_late": "State the 15-minute hold, offer to reschedule.",
+      "large_group": "Warm but clear: over 10 guests goes to the manager."
+    },
+    "speechRhythm": {
+      "maxSentencesPerTurn": 2,
+      "fillerBudgetPerCall": 3
+    }
+  }
 }

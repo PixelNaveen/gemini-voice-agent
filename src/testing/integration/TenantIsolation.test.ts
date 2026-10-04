@@ -2,9 +2,11 @@ import { TestHarness, TestResult } from '../TestHarness';
 import { CustomerRepository } from '../../persistence/repositories/CustomerRepository';
 import { TenantCache } from '../../persistence/cache/Cache';
 import { CacheKey } from '../../persistence/cache/CacheKey';
+import { MockN8nClient } from '../../tools/n8n/MockN8nClient';
 
 export async function runTenantIsolationTests(): Promise<TestResult[]> {
   const results: TestResult[] = [];
+  const mockClient = MockN8nClient.getInstance();
 
   // Test 1: Cross-tenant customer privacy
   results.push(
@@ -51,6 +53,41 @@ export async function runTenantIsolationTests(): Promise<TestResult[]> {
       TenantCache.clearTenant('tenant_aura_salon');
       TestHarness.assert(TenantCache.get<{ name: string }>(keyA) === null, 'Tenant A cache cleared');
       TestHarness.assert(TenantCache.get<{ name: string }>(keyB) !== null, 'Tenant B cache untouched');
+    })
+  );
+
+  // Test 3: Persona booking isolation & cross-persona boundary
+  results.push(
+    await TestHarness.runTest('TenantIsolation', 'Enforces strict persona-level booking and seededBusy isolation', async () => {
+      mockClient.clear();
+
+      // Create booking in aura-salon
+      const bookingSalon = await mockClient.createAppointment({
+        personaId: 'aura-salon',
+        sessionId: 'sess_salon_1',
+        requestId: 'req_salon_iso_1',
+        serviceId: 'haircut',
+        date: '2026-10-12',
+        start: '11:00',
+        customerName: 'Alice Salon',
+        email: 'alice@example.com',
+      });
+      TestHarness.assert(bookingSalon.success === true, 'Salon booking succeeded');
+      const salonCode = bookingSalon.confirmationCode!;
+
+      // Lookup from apex-dental using salon's confirmation code -> must NOT be found
+      const lookupFromDental = await mockClient.lookupAppointment({
+        personaId: 'apex-dental',
+        confirmationCode: salonCode,
+      });
+      TestHarness.assert(lookupFromDental.found === false, 'Salon booking must not be found in apex-dental scope');
+
+      // Lookup from aura-salon -> found
+      const lookupFromSalon = await mockClient.lookupAppointment({
+        personaId: 'aura-salon',
+        confirmationCode: salonCode,
+      });
+      TestHarness.assert(lookupFromSalon.found === true, 'Salon booking must be found in aura-salon scope');
     })
   );
 

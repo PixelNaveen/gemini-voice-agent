@@ -319,9 +319,10 @@ export async function runAuthorityHardeningTests(): Promise<TestResult[]> {
         auto.missingRequired.includes('vehicleInfo'),
         'The auto shop must be asked for a vehicle description'
       );
-      TestHarness.assert(
+      TestHarness.assertEqual(
         auto.missingRequired.includes('phone'),
-        'The auto shop requires a phone number, so the agent must ask for one'
+        false,
+        'The auto shop treats phone as optional in v2'
       );
 
       const dining = MissingInfoResolver.analyze({}, 'bistro-dining', 'BOOKING');

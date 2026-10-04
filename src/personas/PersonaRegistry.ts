@@ -1,4 +1,4 @@
-import { PersonaDefinition, RuntimePersonaContext } from './schema/persona.types';
+import { PersonaDefinition } from './schema/persona.types';
 import { PersonaValidator } from './schema/persona.validator';
 
 import auraSalonRaw from './aura-salon.json';
@@ -19,6 +19,20 @@ const RAW_PERSONAS = [
   coolbreezeHvacRaw,
 ];
 
+function deepFreeze<T>(obj: T): T {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  Object.freeze(obj);
+  for (const key of Object.keys(obj as any)) {
+    const val = (obj as any)[key];
+    if (val && typeof val === 'object' && !Object.isFrozen(val)) {
+      deepFreeze(val);
+    }
+  }
+  return obj;
+}
+
 export class PersonaRegistry {
   private static personas: Map<string, PersonaDefinition> = new Map();
   private static initialized = false;
@@ -32,8 +46,8 @@ export class PersonaRegistry {
         console.error(`[PersonaRegistry] Validation failed for persona "${raw.id || 'unknown'}":`, validation.errors);
         throw new Error(`Invalid persona schema for ${raw.id}: ${validation.errors.join(', ')}`);
       }
-      // Store frozen / immutable definition
-      const definition = Object.freeze(raw as unknown as PersonaDefinition);
+      // Store deeply frozen / immutable definition
+      const definition = deepFreeze(JSON.parse(JSON.stringify(raw)) as PersonaDefinition);
       this.personas.set(definition.id, definition);
     }
 
@@ -56,29 +70,16 @@ export class PersonaRegistry {
     return Array.from(this.personas.values());
   }
 
-  /**
-   * Whether a persona id is one this registry actually serves.
-   *
-   * `get()` falls back to `aura-salon` for an unknown id, which is the right behaviour for
-   * internal display paths that must not throw. It is the wrong behaviour for anything acting
-   * on a caller-supplied value: the fallback is silent, so a caller asking for a persona that
-   * does not exist is quietly given a different business, with that business's hours, prices
-   * and services. Callers that must distinguish "unknown" from "resolved to the default" check
-   * this first.
-   */
   public static has(personaId: string): boolean {
     this.initialize();
     return this.personas.has(personaId);
   }
 
-  public static getRuntimeContext(personaId: string, sessionId: string): RuntimePersonaContext {
-    const definition = this.get(personaId);
-    return {
-      personaId: definition.id,
-      version: definition.version,
-      sessionId,
-      definition,
-      loadedAt: Date.now(),
-    };
+  /**
+   * For tests only: resets the registry state so tests can inject custom fixtures if needed.
+   */
+  public static _reset(): void {
+    this.personas.clear();
+    this.initialized = false;
   }
 }

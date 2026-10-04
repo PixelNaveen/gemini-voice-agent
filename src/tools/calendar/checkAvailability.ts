@@ -1,41 +1,37 @@
 import { ToolExecutionContext, ToolResult } from '../ToolTypes';
-import { CalendarAdapter, AvailableSlot } from '../../integrations/calendar/CalendarAdapter';
-
-export interface CheckAvailabilityInput {
-  service: string;
-  isoDate: string;
-  preferredTime?: string;
-}
+import { getN8nClient } from '../n8n/N8nClientFactory';
+import { CheckAvailabilityOutput } from '../n8n/N8nClient';
 
 export async function checkAvailabilityTool(
   context: ToolExecutionContext,
-  input: CheckAvailabilityInput
-): Promise<ToolResult<{ slots: AvailableSlot[]; requestedSlotAvailable: boolean }>> {
-  if (!input.isoDate) {
-    return {
-      success: false,
-      toolName: 'checkAvailability',
-      operationId: context.operationId,
-      status: 'FAILED',
-      error: { code: 'VALIDATION_ERROR', message: 'Date is required to check availability.' },
-      executedAt: Date.now(),
-    };
+  input: {
+    serviceId?: string;
+    date: string;
+    time?: string;
+    window?: { start: string; end: string };
+    partySize?: number;
+    resourceId?: string;
+    nextWeekdayPolicy?: 'ask' | 'upcoming' | 'following_week';
   }
-
-  const slots = CalendarAdapter.checkAvailability(context.personaId, input.isoDate, input.service || 'Haircut');
-  const requestedSlotAvailable = input.preferredTime
-    ? slots.some((s) => s.startTime === input.preferredTime || s.display.toLowerCase().includes(input.preferredTime!.toLowerCase()))
-    : slots.length > 0;
+): Promise<ToolResult<CheckAvailabilityOutput>> {
+  const client = getN8nClient();
+  const res = await client.checkAvailability({
+    personaId: context.personaId,
+    serviceId: input.serviceId,
+    date: input.date,
+    time: input.time,
+    window: input.window,
+    partySize: input.partySize,
+    resourceId: input.resourceId,
+    nextWeekdayPolicy: input.nextWeekdayPolicy,
+  });
 
   return {
     success: true,
     toolName: 'checkAvailability',
     operationId: context.operationId,
-    status: requestedSlotAvailable ? 'AVAILABLE' : 'UNAVAILABLE',
-    data: {
-      slots,
-      requestedSlotAvailable,
-    },
+    status: 'SUCCESS',
+    data: res,
     executedAt: Date.now(),
   };
 }

@@ -37,7 +37,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-[#FBF9F8] text-[#111111] antialiased selection:bg-emerald-accent/15 selection:text-emerald-accent scroll-smooth scroll-snap-container lg:snap-y lg:snap-proximity">
+      <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-[#FBF9F8] text-[#111111] antialiased selection:bg-emerald-accent/15 selection:text-emerald-accent scroll-smooth scroll-snap-container lg:snap-y lg:snap-proximity">
         {/* Top Reading Scroll Progress Bar */}
         <ScrollProgress />
 
@@ -86,7 +86,7 @@ export default function App() {
         <AnimatedSeparator />
 
         {/* Section 4: Where every conversation matters */}
-        <SectionReveal delay={0.05} overflowVisible={true}>
+        <SectionReveal delay={0.05}>
           <IndustryShowcase />
         </SectionReveal>
 

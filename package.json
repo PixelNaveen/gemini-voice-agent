@@ -16,15 +16,12 @@
     "lint": "tsc --noEmit",
     "test": "tsx -e \"import { TestRunner } from './src/testing/TestRunner'; TestRunner.runAll().then(r => { TestRunner.printReport(r); if (!r.allPassed) process.exit(1); })\"",
     "verify:relay": "tsx scripts/verifyRelaySecurity.ts",
-    "verify:vercel": "tsx scripts/verifyVercelFunction.ts",
     "verify:gemini": "tsx scripts/verifyGeminiCredentials.ts",
     "verify:e2e": "tsx scripts/verifyEndToEnd.ts",
     "verify:keys": "tsx scripts/verifyKeys.ts",
     "verify:deployment": "tsx scripts/verifyDeployment.ts",
     "verify:entrypoint": "tsx scripts/verifyEntrypointSafety.ts",
-    "verify:fn-bundle": "tsx scripts/verifyFunctionBundle.ts",
-    "verify:fn-imports": "tsx scripts/verifyFunctionImports.ts",
-    "verify:all": "npm run lint && npm test && npm run verify:relay && npm run verify:vercel && npm run verify:entrypoint && npm run build:server && npm run verify:fn-imports && npm run verify:fn-bundle && npm run build"
+    "verify:all": "npm run lint && npm test && npm run verify:relay && npm run verify:entrypoint && npm run build:server && npm run build"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

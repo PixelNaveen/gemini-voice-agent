@@ -1,0 +1,113 @@
+{
+  "personaId": "aura-salon",
+  "scenarios": [
+    {
+      "id": "salon-01",
+      "title": "Haircut Friday afternoon",
+      "tags": [
+        "happy",
+        "date",
+        "window"
+      ],
+      "callerSays": "Hi, can I get a haircut Friday afternoon?",
+      "agentShould": "Resolve Friday to the coming Friday, treat afternoon as a window, ask one narrowing question, check availability, offer two real slots (Marcus is busy Fri 2-4), then ask name and email only after a slot is chosen.",
+      "tools": [
+        "checkAvailability",
+        "createAppointment"
+      ],
+      "mustNot": "Ask for the name first. Invent a stylist or slot."
+    },
+    {
+      "id": "salon-02",
+      "title": "Booking plus an unlisted service",
+      "tags": [
+        "multi-intent"
+      ],
+      "callerSays": "Book a blowout Saturday, and do you do keratin treatments?",
+      "agentShould": "Handle the booking and say keratin is not on the menu. Do not invent it.",
+      "tools": [
+        "checkAvailability"
+      ],
+      "mustNot": "Claim keratin is offered."
+    },
+    {
+      "id": "salon-03",
+      "title": "Ambiguous 'color'",
+      "tags": [
+        "clarify",
+        "alias"
+      ],
+      "callerSays": "I want to get my color done Tuesday.",
+      "agentShould": "'Color' matches balayage and full color. Ask: highlights and balayage, or all-over color? Then continue.",
+      "tools": [
+        "checkAvailability"
+      ],
+      "mustNot": "Pick one service silently."
+    },
+    {
+      "id": "salon-04",
+      "title": "Self-correction",
+      "tags": [
+        "correction"
+      ],
+      "callerSays": "Tuesday at 2... no, sorry, Thursday.",
+      "agentShould": "Switch to Thursday and keep the service. No apology speech, no re-asking.",
+      "tools": [
+        "checkAvailability"
+      ],
+      "mustNot": "Re-ask the service. Confirm Tuesday."
+    },
+    {
+      "id": "salon-05",
+      "title": "Multi-service discount",
+      "tags": [
+        "pricing"
+      ],
+      "callerSays": "If I get a haircut and a manicure, is there a discount?",
+      "agentShould": "State that two or more services in one visit get 10% off. Backend calculates any total.",
+      "tools": [],
+      "mustNot": "Calculate the total in the model."
+    },
+    {
+      "id": "salon-06",
+      "title": "Unhappy with previous color",
+      "tags": [
+        "emotion",
+        "escalation"
+      ],
+      "callerSays": "My last color came out orange and I'm upset.",
+      "agentShould": "Apologize once, give the manager phone number. Offer a new booking only if they ask.",
+      "tools": [],
+      "mustNot": "Promise a free correction. Blame a stylist."
+    },
+    {
+      "id": "salon-07",
+      "title": "Closed day",
+      "tags": [
+        "hours"
+      ],
+      "callerSays": "Do you have anything Sunday?",
+      "agentShould": "Say the salon is closed Sundays, then offer Saturday or Monday via availability.",
+      "tools": [
+        "checkAvailability"
+      ],
+      "mustNot": "Offer a Sunday slot."
+    },
+    {
+      "id": "salon-08",
+      "title": "Reschedule with and without a code",
+      "tags": [
+        "reschedule",
+        "lookup"
+      ],
+      "callerSays": "Actually, can you move that appointment to Thursday?",
+      "agentShould": "If booked earlier in this call, use that booking. Otherwise ask for the confirmation code from the email. If the caller has neither, explain it can't be located.",
+      "tools": [
+        "lookupAppointment",
+        "checkAvailability",
+        "rescheduleAppointment"
+      ],
+      "mustNot": "Find a booking by name alone."
+    }
+  ]
+}

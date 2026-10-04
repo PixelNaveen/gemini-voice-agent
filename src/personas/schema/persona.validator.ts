@@ -26,10 +26,18 @@ export class PersonaValidator {
 
     if (!Array.isArray(persona.services) || persona.services.length === 0) {
       errors.push('"services" must be a non-empty array of ServiceItems.');
+    } else {
+      for (const s of persona.services) {
+        if (!s.id || typeof s.id !== 'string') errors.push(`Service missing id: ${JSON.stringify(s)}`);
+        if (!s.name || typeof s.name !== 'string') errors.push(`Service ${s.id || 'unnamed'} missing name.`);
+        if (typeof s.durationMinutes !== 'number') errors.push(`Service ${s.id || 'unnamed'} missing durationMinutes.`);
+        if (!s.priceType || typeof s.priceType !== 'string') errors.push(`Service ${s.id || 'unnamed'} missing priceType.`);
+        if (!Array.isArray(s.aliases)) errors.push(`Service ${s.id || 'unnamed'} missing aliases array.`);
+      }
     }
 
-    if (!persona.pricing || typeof persona.pricing.services !== 'object') {
-      errors.push('Missing "pricing.services" map.');
+    if (!Array.isArray(persona.resources) || persona.resources.length === 0) {
+      errors.push('"resources" must be a non-empty array of ResourceConfigs.');
     }
 
     if (!persona.hours || typeof persona.hours.schedule !== 'object') {
@@ -40,12 +48,22 @@ export class PersonaValidator {
       errors.push('Missing "contactPolicy.required" array.');
     }
 
+    if (!persona.booking || typeof persona.booking !== 'object') {
+      errors.push('Missing "booking" configuration.');
+    }
+
     if (!persona.tools || !Array.isArray(persona.tools.allowed)) {
       errors.push('Missing "tools.allowed" array.');
     }
 
-    if (!persona.safety || typeof persona.safety !== 'object') {
-      errors.push('Missing "safety" policies object.');
+    if (!persona.escalation || !Array.isArray(persona.escalation.triggers)) {
+      errors.push('Missing "escalation.triggers" array.');
+    } else {
+      for (const t of persona.escalation.triggers) {
+        if (!t.id || typeof t.id !== 'string') errors.push(`Escalation trigger missing id.`);
+        if (!Array.isArray(t.detectKeywords)) errors.push(`Escalation trigger ${t.id || 'unnamed'} missing detectKeywords.`);
+        if (!t.action || typeof t.action !== 'string') errors.push(`Escalation trigger ${t.id || 'unnamed'} missing action.`);
+      }
     }
 
     return {

@@ -1,32 +1,63 @@
 import { ToolExecutionContext, ToolResult } from '../ToolTypes';
-import { BookingService, ExecuteBookingInput } from '../booking/BookingService';
-import { AppointmentRecord } from '../../integrations/calendar/CalendarAdapter';
-
-export interface CreateAppointmentInput {
-  service: string;
-  date: string;
-  startTime: string;
-  customerName: string;
-  customerEmail: string;
-  customerPhone?: string;
-  vehicleInfo?: string;
-  partySize?: number;
-}
+import { getN8nClient } from '../n8n/N8nClientFactory';
+import { CreateAppointmentOutput } from '../n8n/N8nClient';
 
 export async function createAppointmentTool(
   context: ToolExecutionContext,
-  input: CreateAppointmentInput
-): Promise<ToolResult<{ appointment: AppointmentRecord }>> {
-  const bookingInput: ExecuteBookingInput = {
-    service: input.service,
-    isoDate: input.date,
-    time24: input.startTime,
-    customerName: input.customerName,
-    customerEmail: input.customerEmail,
-    customerPhone: input.customerPhone,
-    vehicleInfo: input.vehicleInfo,
-    partySize: input.partySize,
-  };
+  input: {
+    requestId?: string;
+    serviceId: string;
+    date: string;
+    start: string;
+    resourceId?: string;
+    customerName: string;
+    email: string;
+    phone?: string;
+    partySize?: number;
+    vehicleInfo?: string;
+    notes?: string;
+  }
+): Promise<ToolResult<CreateAppointmentOutput>> {
+  const client = getN8nClient();
+  const requestId = input.requestId || context.operationId;
 
-  return BookingService.executeBooking(context, bookingInput);
+  const res = await client.createAppointment({
+    personaId: context.personaId,
+    sessionId: context.sessionId,
+    requestId,
+    serviceId: input.serviceId,
+    date: input.date,
+    start: input.start,
+    resourceId: input.resourceId,
+    customerName: input.customerName,
+    email: input.email,
+    phone: input.phone,
+    partySize: input.partySize,
+    vehicleInfo: input.vehicleInfo,
+    notes: input.notes,
+  });
+
+  if (!res.success) {
+    return {
+      success: false,
+      toolName: 'createAppointment',
+      operationId: context.operationId,
+      status: 'FAILED',
+      error: {
+        code: (res.errorCode as any) || 'CONFLICT',
+        message: res.message || 'Failed to create appointment.',
+      },
+      data: res,
+      executedAt: Date.now(),
+    };
+  }
+
+  return {
+    success: true,
+    toolName: 'createAppointment',
+    operationId: context.operationId,
+    status: 'SUCCESS',
+    data: res,
+    executedAt: Date.now(),
+  };
 }

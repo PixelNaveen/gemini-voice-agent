@@ -56,13 +56,6 @@ export async function sendConfirmationTool(
     executedAt: Date.now(),
   });
 
-  if (!PersonaBusinessTruth.isToolAllowed(context.personaId, 'sendConfirmation')) {
-    return fail(
-      'AUTHORIZATION_ERROR',
-      `The ${context.personaId} persona is not permitted to send confirmations. Do not claim an email was sent.`
-    );
-  }
-
   const email = (input?.customerEmail ?? '').trim();
   if (!email || !EMAIL_RE.test(email)) {
     return fail('VALIDATION_ERROR', 'A valid customer email address is required to send a confirmation.');

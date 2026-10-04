@@ -86,7 +86,7 @@ const INITIAL_FACTS: SessionFact[] = [
   {
     id: 'fact_4',
     category: 'protocol',
-    content: 'Email Spell-Back Rule (Zero Mistakes): Always ask for caller email (not phone) and spell it out letter-by-letter out loud to confirm accuracy.',
+    content: 'Email Confirmation Rule: Confirm the email once naturally. Spell it out letter-by-letter only if the email sounded unclear or the caller corrects it.',
     source: 'SYSTEM',
     timestamp: Date.now(),
   },

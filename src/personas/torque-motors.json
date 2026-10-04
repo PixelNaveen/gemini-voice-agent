@@ -1,6 +1,6 @@
 {
   "id": "torque-motors",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "identity": {
     "name": "AURA",
     "role": "Service Advisor Receptionist",
@@ -24,65 +24,468 @@
     }
   },
   "services": [
-    { "id": "oil-change", "name": "Full Synthetic Oil Change", "durationMinutes": 45, "category": "Maintenance" },
-    { "id": "brakes", "name": "Brake Pad & Rotor Replacement", "durationMinutes": 90, "category": "Brakes" },
-    { "id": "diagnostics", "name": "Check Engine Diagnostic Scan", "durationMinutes": 60, "category": "Diagnostics" },
-    { "id": "alignment", "name": "4-Wheel Laser Alignment", "durationMinutes": 60, "category": "Suspension" },
-    { "id": "tire-patch", "name": "Tire Puncture Repair", "durationMinutes": 30, "category": "Tires" }
-  ],
-  "pricing": {
-    "currency": "USD",
-    "services": {
-      "Full Synthetic Oil Change": 79.99,
-      "Brake Pad & Rotor Replacement": 189,
-      "Check Engine Diagnostic Scan": 95,
-      "4-Wheel Laser Alignment": 119,
-      "Tire Puncture Repair": 35
+    {
+      "id": "oil-change",
+      "name": "Full Synthetic Oil Change",
+      "category": "Maintenance",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 79.99,
+      "description": "Full synthetic oil and filter change.",
+      "bookable": true,
+      "aliases": [
+        "oil change",
+        "oil",
+        "lube"
+      ],
+      "prepNote": "We'll need the vehicle's make, model and year."
+    },
+    {
+      "id": "brakes",
+      "name": "Brake Pad & Rotor Replacement",
+      "category": "Brakes",
+      "durationMinutes": 90,
+      "priceType": "starting_at",
+      "price": 189,
+      "description": "Final price depends on vehicle and parts.",
+      "bookable": true,
+      "priceNote": "per axle, starting price",
+      "aliases": [
+        "brakes",
+        "brake pads",
+        "rotors",
+        "squeaky brakes",
+        "squealing"
+      ],
+      "prepNote": "Mention any noises or vibrations when you drop off."
+    },
+    {
+      "id": "diagnostics",
+      "name": "Check Engine Diagnostic Scan",
+      "category": "Diagnostics",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 95,
+      "description": "Computer scan and fault code report.",
+      "bookable": true,
+      "aliases": [
+        "check engine",
+        "engine light",
+        "diagnostic",
+        "scan",
+        "warning light"
+      ]
+    },
+    {
+      "id": "alignment",
+      "name": "4-Wheel Laser Alignment",
+      "category": "Suspension",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 119,
+      "description": "Four-wheel laser alignment.",
+      "bookable": true,
+      "aliases": [
+        "alignment",
+        "wheel alignment",
+        "pulling to one side"
+      ]
+    },
+    {
+      "id": "tire-patch",
+      "name": "Tire Puncture Repair",
+      "category": "Tires",
+      "durationMinutes": 30,
+      "priceType": "fixed",
+      "price": 35,
+      "description": "Patch and plug repair.",
+      "bookable": true,
+      "aliases": [
+        "flat",
+        "flat tire",
+        "puncture",
+        "tire repair",
+        "nail in my tire"
+      ]
+    },
+    {
+      "id": "tire-rotation",
+      "name": "Tire Rotation",
+      "category": "Tires",
+      "durationMinutes": 30,
+      "priceType": "fixed",
+      "price": 29.99,
+      "description": "Rotate and inspect all four tires.",
+      "bookable": true,
+      "aliases": [
+        "tire rotation",
+        "rotate my tires",
+        "rotation"
+      ]
+    },
+    {
+      "id": "brake-inspection",
+      "name": "Complimentary Brake Inspection",
+      "category": "Brakes",
+      "durationMinutes": 30,
+      "priceType": "complimentary",
+      "price": null,
+      "description": "Visual brake check with a written estimate if work is needed.",
+      "bookable": true,
+      "aliases": [
+        "brake inspection",
+        "check my brakes",
+        "brake check",
+        "free inspection"
+      ]
+    },
+    {
+      "id": "battery",
+      "name": "Battery Test & Replacement",
+      "category": "Electrical",
+      "durationMinutes": 30,
+      "priceType": "starting_at",
+      "price": 149,
+      "description": "Battery test, and replacement if needed. Price depends on vehicle.",
+      "bookable": true,
+      "aliases": [
+        "battery",
+        "dead battery",
+        "car won't start",
+        "battery test"
+      ]
+    },
+    {
+      "id": "ac-service",
+      "name": "Car A/C Service",
+      "category": "Climate",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 129,
+      "description": "A/C performance check and recharge.",
+      "bookable": true,
+      "aliases": [
+        "a/c service",
+        "car ac",
+        "air conditioning",
+        "ac recharge",
+        "no cold air in car"
+      ]
+    },
+    {
+      "id": "coolant-flush",
+      "name": "Coolant Flush",
+      "category": "Maintenance",
+      "durationMinutes": 45,
+      "priceType": "fixed",
+      "price": 119,
+      "description": "Drain and refill the cooling system.",
+      "bookable": true,
+      "aliases": [
+        "coolant",
+        "coolant flush",
+        "radiator flush",
+        "overheating service"
+      ]
+    },
+    {
+      "id": "pre-purchase",
+      "name": "Pre-Purchase Vehicle Inspection",
+      "category": "Diagnostics",
+      "durationMinutes": 60,
+      "priceType": "fixed",
+      "price": 129,
+      "description": "Inspection before you buy a used vehicle.",
+      "bookable": true,
+      "aliases": [
+        "pre-purchase",
+        "used car inspection",
+        "buying a car",
+        "inspect before i buy"
+      ]
     }
-  },
+  ],
+  "resources": [
+    {
+      "id": "bay-1",
+      "name": "Service Bay 1",
+      "type": "bay",
+      "title": "General service bay",
+      "serviceIds": [
+        "oil-change",
+        "brakes",
+        "tire-patch",
+        "tire-rotation",
+        "brake-inspection",
+        "battery",
+        "ac-service",
+        "coolant-flush",
+        "pre-purchase"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "bay-2",
+      "name": "Service Bay 2",
+      "type": "bay",
+      "title": "General service bay",
+      "serviceIds": [
+        "oil-change",
+        "brakes",
+        "tire-patch",
+        "tire-rotation",
+        "brake-inspection",
+        "battery",
+        "ac-service",
+        "coolant-flush",
+        "pre-purchase"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "diag-bay",
+      "name": "Diagnostic Bay",
+      "type": "bay",
+      "title": "Diagnostics bay",
+      "serviceIds": [
+        "diagnostics"
+      ],
+      "capacity": 1
+    },
+    {
+      "id": "align-rack",
+      "name": "Alignment Rack",
+      "type": "bay",
+      "title": "Alignment rack",
+      "serviceIds": [
+        "alignment"
+      ],
+      "capacity": 1
+    }
+  ],
   "hours": {
     "schedule": {
-      "monday": { "intervals": [{ "open": "07:30", "close": "18:00" }] },
-      "tuesday": { "intervals": [{ "open": "07:30", "close": "18:00" }] },
-      "wednesday": { "intervals": [{ "open": "07:30", "close": "18:00" }] },
-      "thursday": { "intervals": [{ "open": "07:30", "close": "18:00" }] },
-      "friday": { "intervals": [{ "open": "07:30", "close": "18:00" }] },
-      "saturday": { "intervals": [{ "open": "08:00", "close": "14:00" }] },
-      "sunday": { "intervals": [], "closed": true }
+      "monday": {
+        "intervals": [
+          {
+            "open": "07:30",
+            "close": "18:00"
+          }
+        ]
+      },
+      "tuesday": {
+        "intervals": [
+          {
+            "open": "07:30",
+            "close": "18:00"
+          }
+        ]
+      },
+      "wednesday": {
+        "intervals": [
+          {
+            "open": "07:30",
+            "close": "18:00"
+          }
+        ]
+      },
+      "thursday": {
+        "intervals": [
+          {
+            "open": "07:30",
+            "close": "18:00"
+          }
+        ]
+      },
+      "friday": {
+        "intervals": [
+          {
+            "open": "07:30",
+            "close": "18:00"
+          }
+        ]
+      },
+      "saturday": {
+        "intervals": [
+          {
+            "open": "08:00",
+            "close": "14:00"
+          }
+        ]
+      },
+      "sunday": {
+        "intervals": [],
+        "closed": true
+      }
     },
     "holidays": []
   },
   "policies": {
-    "cancellation": { "minimumNoticeHours": 12, "fee": "No fee with 12h notice" },
-    "rescheduling": { "allowed": true, "minimumNoticeHours": 2 }
+    "cancellation": {
+      "minimumNoticeHours": 12,
+      "fee": "No fee with 12 hours notice."
+    },
+    "rescheduling": {
+      "allowed": true,
+      "minimumNoticeHours": 2
+    }
   },
+  "faqs": [
+    {
+      "q": "Do you need my vehicle's make, model and year?",
+      "a": "Yes, we collect that when booking so the shop can prepare."
+    },
+    {
+      "q": "How long does an oil change take?",
+      "a": "About 45 minutes."
+    },
+    {
+      "q": "Do you offer towing?",
+      "a": "We don't tow. For towing requests I can give you the shop number."
+    },
+    {
+      "q": "Is a diagnostic scan the same as a repair?",
+      "a": "No. The scan finds the cause, and any repair is quoted separately."
+    },
+    {
+      "q": "Do you work on all makes?",
+      "a": "Please tell me your vehicle and the shop will confirm."
+    },
+    {
+      "q": "Do I have to wait during service?",
+      "a": "You can wait or drop off the vehicle. Let the advisor know at check-in."
+    }
+  ],
+  "seededBusy": [
+    {
+      "resourceId": "bay-1",
+      "days": [
+        "friday"
+      ],
+      "start": "14:00",
+      "end": "16:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "bay-2",
+      "days": [
+        "friday"
+      ],
+      "start": "14:30",
+      "end": "16:30",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "diag-bay",
+      "days": [
+        "thursday"
+      ],
+      "start": "09:00",
+      "end": "11:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "align-rack",
+      "days": [
+        "saturday"
+      ],
+      "start": "09:00",
+      "end": "11:00",
+      "label": "Booked"
+    },
+    {
+      "resourceId": "bay-1",
+      "days": [
+        "monday"
+      ],
+      "start": "08:00",
+      "end": "10:00",
+      "label": "Booked"
+    }
+  ],
   "contactPolicy": {
-    "required": ["service", "date", "time", "name", "email", "phone", "vehicleInfo"],
-    "optional": [],
+    "required": [
+      "service",
+      "date",
+      "time",
+      "name",
+      "email",
+      "vehicleInfo"
+    ],
+    "optional": [
+      "phone",
+      "concernNotes"
+    ],
     "collectNameEarly": false,
     "verifyEmail": true,
     "spellWhenLowConfidence": true
   },
   "booking": {
     "enabled": true,
-    "requiredEntities": ["service", "date", "time", "customerName", "email", "phone", "vehicleInfo"],
+    "requiredEntities": [
+      "service",
+      "date",
+      "time",
+      "customerName",
+      "email",
+      "vehicleInfo"
+    ],
     "allowRescheduling": true,
     "allowCancellation": true,
     "confirmationRequired": true,
-    "minNoticeHours": 2,
+    "minLeadHours": 2,
     "maxAdvanceDays": 45,
-    "bufferMinutes": 15
+    "bufferMinutes": 15,
+    "confirmationEmail": "automatic",
+    "lookupBy": [
+      "confirmationCode",
+      "sessionBooking"
+    ]
   },
   "escalation": {
     "enabled": true,
-    "triggers": ["engine_failure", "towing_request", "warranty_dispute"],
-    "emergencyTransfer": true,
-    "defaultDepartment": "Master Technician / Shop Foreman"
+    "triggers": [
+      {
+        "id": "engine_failure",
+        "description": "Engine failure or smoke",
+        "detectKeywords": [
+          "engine failure",
+          "engine is smoking",
+          "caught fire"
+        ],
+        "action": "give_business_phone"
+      },
+      {
+        "id": "towing_request",
+        "description": "Caller needs towing",
+        "detectKeywords": [
+          "tow",
+          "towing",
+          "broken down"
+        ],
+        "action": "give_business_phone"
+      },
+      {
+        "id": "warranty_dispute",
+        "description": "Warranty or billing dispute",
+        "detectKeywords": [
+          "warranty",
+          "dispute",
+          "refund"
+        ],
+        "action": "give_business_phone"
+      }
+    ]
   },
   "knowledge": {
     "businessFacts": true,
-    "externalSearch": { "enabled": true, "strictBusinessAuthority": true },
-    "sources": ["business-config", "auto-rates"]
+    "externalSearch": {
+      "enabled": false,
+      "strictBusinessAuthority": true
+    },
+    "sources": [
+      "business-config"
+    ]
   },
   "conversationStyle": {
     "tone": "concise",
@@ -91,16 +494,17 @@
     "useBusinessName": true,
     "greetingPhrase": "Thanks for calling Torque Precision Auto. How can we get your vehicle running smoothly?"
   },
+  "greetingPrompt": "Thanks for calling Torque Precision Auto. How can we get your vehicle running smoothly?",
   "tools": {
     "allowed": [
       "checkAvailability",
+      "findAlternativeTimes",
       "createAppointment",
-      "cancelAppointment",
+      "lookupAppointment",
       "rescheduleAppointment",
+      "cancelAppointment",
       "getBusinessHours",
-      "getServicePrice",
-      "sendConfirmation",
-      "transferCall"
+      "getServiceInfo"
     ]
   },
   "safety": {
@@ -109,6 +513,42 @@
     "diagnosis": false,
     "financialCommitments": false
   },
-  "systemPrompt": "You are AURA, the efficient automotive service advisor for Torque Precision Auto Repair. Answer pricing, oil changes, brake service, and diagnostics questions directly. Always collect vehicle make/model/year along with booking details. Greet only on call start. Keep answers sharp and concise.",
-  "greetingPrompt": "Thanks for calling Torque Precision Auto Repair. How can we help your vehicle today?"
+  "systemPrompt": "You are AURA, the efficient service advisor for Torque Precision Auto Repair. Answer pricing and service questions directly from business data. Always collect vehicle make, model and year with the booking details. Never diagnose a problem; offer a diagnostic scan. Keep answers sharp. Greet only at call start.",
+  "personality": {
+    "traits": [
+      "direct",
+      "practical",
+      "friendly",
+      "dry-humored"
+    ],
+    "energy": 6,
+    "humor": "light",
+    "slangTier": 2,
+    "register": {
+      "acknowledgements": [
+        "Got it.",
+        "Sure thing.",
+        "No problem.",
+        "Gotcha.",
+        "Okay."
+      ],
+      "avoid": [
+        "bro",
+        "dude",
+        "trust me",
+        "guaranteed"
+      ]
+    },
+    "emotionPlaybook": {
+      "worried_about_cost": "Be transparent: give the listed price, say repairs are quoted before any work starts.",
+      "stranded_or_stressed": "'That's a rough spot.' We don't tow, so give the shop number. Never imply the shop can send help.",
+      "unsure_whats_wrong": "'No problem, you don't need to know. A diagnostic scan finds it.' Never guess the cause.",
+      "unsafe_vehicle": "If brakes feel unsafe or the car is smoking, tell them not to drive it and give the shop number.",
+      "impatient": "Shortest path to a slot."
+    },
+    "speechRhythm": {
+      "maxSentencesPerTurn": 2,
+      "fillerBudgetPerCall": 3
+    }
+  }
 }

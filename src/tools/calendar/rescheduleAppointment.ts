@@ -1,45 +1,41 @@
 import { ToolExecutionContext, ToolResult } from '../ToolTypes';
-import { RescheduleService } from '../booking/RescheduleService';
-import { AppointmentRecord } from '../../integrations/calendar/CalendarAdapter';
-
-export interface RescheduleAppointmentInput {
-  customerEmail: string;
-  newDate: string;
-  newTime: string;
-  service?: string;
-}
+import { getN8nClient } from '../n8n/N8nClientFactory';
+import { RescheduleAppointmentOutput } from '../n8n/N8nClient';
 
 export async function rescheduleAppointmentTool(
   context: ToolExecutionContext,
-  input: RescheduleAppointmentInput
-): Promise<ToolResult<{ appointment: AppointmentRecord }>> {
-  if (!input.customerEmail || !input.newDate || !input.newTime) {
-    return {
-      success: false,
-      toolName: 'rescheduleAppointment',
-      operationId: context.operationId,
-      status: 'FAILED',
-      error: { code: 'VALIDATION_ERROR', message: 'Missing customer email, new date, or new time.' },
-      executedAt: Date.now(),
-    };
+  input: {
+    requestId?: string;
+    confirmationCode: string;
+    newDate: string;
+    newStart: string;
+    resourceId?: string;
   }
+): Promise<ToolResult<RescheduleAppointmentOutput>> {
+  const client = getN8nClient();
+  const requestId = input.requestId || context.operationId;
 
-  const result = RescheduleService.reschedule({
+  const res = await client.rescheduleAppointment({
     personaId: context.personaId,
-    customerEmail: input.customerEmail,
+    sessionId: context.sessionId,
+    requestId,
+    confirmationCode: input.confirmationCode,
     newDate: input.newDate,
-    newTime: input.newTime,
-    service: input.service,
-    idempotencyKey: context.idempotencyKey || `${context.sessionId}_reschedule_${context.operationId}`,
+    newStart: input.newStart,
+    resourceId: input.resourceId,
   });
 
-  if (!result.success || !result.newAppointment) {
+  if (!res.success) {
     return {
       success: false,
       toolName: 'rescheduleAppointment',
       operationId: context.operationId,
       status: 'FAILED',
-      error: { code: 'CONFLICT', message: result.error || 'Failed to reschedule appointment.' },
+      error: {
+        code: (res.errorCode as any) || 'CONFLICT',
+        message: res.message || 'Failed to reschedule appointment.',
+      },
+      data: res,
       executedAt: Date.now(),
     };
   }
@@ -48,8 +44,8 @@ export async function rescheduleAppointmentTool(
     success: true,
     toolName: 'rescheduleAppointment',
     operationId: context.operationId,
-    status: 'CONFIRMED',
-    data: { appointment: result.newAppointment },
+    status: 'SUCCESS',
+    data: res,
     executedAt: Date.now(),
   };
 }
