@@ -35,9 +35,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
+      className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-500 ease-out ${
         isScrolled
-          ? 'bg-white/75 backdrop-blur-2xl saturate-180 border-b border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.8)] py-2.5 sm:py-3'
+          ? 'bg-white/75 backdrop-blur-2xl saturate-180 border-b border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)] py-2.5 sm:py-3'
           : 'bg-transparent border-b border-transparent shadow-none py-4 sm:py-5'
       }`}
     >
@@ -55,13 +55,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
             <span className="font-semibold tracking-tight">Aura AI</span>
           </a>
 
-          {/* Zone 2: Navigation links with dynamic pill-to-navbar morphing (Desktop only) */}
+          {/* Zone 2: Navigation links (Desktop lg+ only) - morphs from floating capsule in State A to direct in-bar in State B */}
           <nav
             onMouseLeave={() => setHoveredLink(null)}
             className={`hidden lg:flex items-center gap-1 text-sm font-medium text-neutral-700 transition-all duration-500 ease-out ${
               isScrolled
                 ? 'bg-transparent backdrop-blur-none border border-transparent shadow-none px-0 py-0'
-                : 'bg-white/70 backdrop-blur-xl saturate-150 px-3 py-1 rounded-full border border-white/80 shadow-[0_2px_12px_rgba(0,0,0,0.03),inset_0_1px_0_rgba(255,255,255,0.9)]'
+                : 'bg-white/70 backdrop-blur-xl border border-white/80 shadow-sm px-3.5 py-1.5 rounded-full'
             }`}
           >
             {NAV_LINKS.map((link) => (
@@ -69,9 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
                 key={link.href}
                 href={link.href}
                 onMouseEnter={() => setHoveredLink(link.href)}
-                className={`relative rounded-full text-xs xl:text-sm font-medium transition-colors hover:text-neutral-950 ${
-                  isScrolled ? 'px-3.5 py-1.5' : 'px-3.5 py-1.5'
-                }`}
+                className="relative px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-medium transition-colors hover:text-neutral-950"
               >
                 {hoveredLink === link.href && (
                   <motion.div
@@ -85,21 +83,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
             ))}
           </nav>
 
-          {/* Zone 3: Action Buttons & Mobile Toggle */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Quick Call Button on Mobile & Tablet */}
+          {/* Zone 3: Action Buttons & Responsive Mobile/Tablet Access */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Call Action Button (All devices) */}
             <ShinyButton
               variant="secondary"
               onClick={onOpenCallModal}
               className="px-3 sm:px-3.5 lg:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium backdrop-blur-md bg-white/80 border border-white/90 shadow-2xs"
             >
               <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span className="hidden xs:inline sm:inline">Talk to Receptionist</span>
-              <span className="xs:hidden sm:hidden">Call</span>
+              <span className="hidden sm:inline">Talk to Receptionist</span>
+              <span className="sm:hidden">Call</span>
             </ShinyButton>
 
-            {/* Desktop & Tablet Demo Button */}
-            <div className="hidden sm:block">
+            {/* Experience AI Demo Action Button (Desktop lg+ only to keep tablet uncluttered) */}
+            <div className="hidden lg:block">
               <ShinyButton
                 variant="primary"
                 onClick={onOpenDemoModal}
@@ -110,7 +108,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
               </ShinyButton>
             </div>
 
-            {/* Tablet & Mobile hamburger button (visible < lg) */}
+            {/* Mobile / Tablet Hamburger Toggle Button (< lg) */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 rounded-xl text-neutral-800 hover:text-neutral-950 bg-white/80 backdrop-blur-xl border border-white/90 hover:bg-white focus:outline-hidden transition-all shadow-2xs cursor-pointer active:scale-95"
