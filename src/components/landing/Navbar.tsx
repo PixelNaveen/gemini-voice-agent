@@ -35,10 +35,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
         isScrolled
-          ? 'bg-white/70 backdrop-blur-2xl saturate-180 border-b border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.8)] py-2.5 sm:py-3'
-          : 'bg-white/45 backdrop-blur-xl saturate-150 border-b border-white/40 shadow-[0_4px_24px_rgba(0,0,0,0.02),inset_0_1px_0_rgba(255,255,255,0.6)] py-3 sm:py-4'
+          ? 'bg-white/75 backdrop-blur-2xl saturate-180 border-b border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.8)] py-2.5 sm:py-3'
+          : 'bg-transparent border-b border-transparent shadow-none py-4 sm:py-5'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,23 +55,29 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
             <span className="font-semibold tracking-tight">Aura AI</span>
           </a>
 
-          {/* Zone 2: Navigation links with animated hover pill (Desktop only) */}
+          {/* Zone 2: Navigation links with dynamic pill-to-navbar morphing (Desktop only) */}
           <nav
             onMouseLeave={() => setHoveredLink(null)}
-            className="hidden lg:flex items-center gap-1 text-sm font-medium text-neutral-700 bg-white/60 backdrop-blur-xl saturate-150 px-3 py-1 rounded-full border border-white/80 shadow-[0_2px_12px_rgba(0,0,0,0.03),inset_0_1px_0_rgba(255,255,255,0.9)]"
+            className={`hidden lg:flex items-center gap-1 text-sm font-medium text-neutral-700 transition-all duration-500 ease-out ${
+              isScrolled
+                ? 'bg-transparent backdrop-blur-none border border-transparent shadow-none px-0 py-0'
+                : 'bg-white/70 backdrop-blur-xl saturate-150 px-3 py-1 rounded-full border border-white/80 shadow-[0_2px_12px_rgba(0,0,0,0.03),inset_0_1px_0_rgba(255,255,255,0.9)]'
+            }`}
           >
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onMouseEnter={() => setHoveredLink(link.href)}
-                className="relative px-3.5 py-1.5 rounded-full text-xs xl:text-sm transition-colors hover:text-neutral-950"
+                className={`relative rounded-full text-xs xl:text-sm font-medium transition-colors hover:text-neutral-950 ${
+                  isScrolled ? 'px-3.5 py-1.5' : 'px-3.5 py-1.5'
+                }`}
               >
                 {hoveredLink === link.href && (
                   <motion.div
                     layoutId="navHoverPill"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    className="absolute inset-0 bg-neutral-900/5 backdrop-blur-xs rounded-full -z-10"
+                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                    className="absolute inset-0 bg-neutral-900/[0.06] backdrop-blur-md rounded-full -z-10 border border-neutral-900/[0.04]"
                   />
                 )}
                 {link.label}
