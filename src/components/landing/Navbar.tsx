@@ -35,18 +35,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled
-          ? 'glass-panel shadow-xs py-2.5 sm:py-3'
-          : 'bg-transparent py-4 sm:py-5'
+          ? 'bg-white/70 backdrop-blur-2xl saturate-180 border-b border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.8)] py-2.5 sm:py-3'
+          : 'bg-white/45 backdrop-blur-xl saturate-150 border-b border-white/40 shadow-[0_4px_24px_rgba(0,0,0,0.02),inset_0_1px_0_rgba(255,255,255,0.6)] py-3 sm:py-4'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3 sm:gap-4">
           {/* Zone 1: Single text element wordmark with reactive pulsing dot */}
           <a
             href="/"
-            className="flex items-center gap-2 group text-neutral-950 font-medium tracking-tight text-xl focus:outline-hidden shrink-0"
+            className="flex items-center gap-2 group text-neutral-950 font-medium tracking-tight text-lg sm:text-xl focus:outline-hidden shrink-0"
           >
             <div className="relative flex items-center justify-center">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-accent transition-transform duration-300 group-hover:scale-125" />
@@ -55,10 +55,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
             <span className="font-semibold tracking-tight">Aura AI</span>
           </a>
 
-          {/* Zone 2: Navigation links with animated hover pill (Desktop & Large Tablet) */}
+          {/* Zone 2: Navigation links with animated hover pill (Desktop only) */}
           <nav
             onMouseLeave={() => setHoveredLink(null)}
-            className="hidden lg:flex items-center gap-1 text-sm font-medium text-neutral-600 bg-white/60 backdrop-blur-md px-3 py-1 rounded-full border border-neutral-200/70 shadow-2xs"
+            className="hidden lg:flex items-center gap-1 text-sm font-medium text-neutral-700 bg-white/60 backdrop-blur-xl saturate-150 px-3 py-1 rounded-full border border-white/80 shadow-[0_2px_12px_rgba(0,0,0,0.03),inset_0_1px_0_rgba(255,255,255,0.9)]"
           >
             {NAV_LINKS.map((link) => (
               <a
@@ -71,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
                   <motion.div
                     layoutId="navHoverPill"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    className="absolute inset-0 bg-neutral-100 rounded-full -z-10"
+                    className="absolute inset-0 bg-neutral-900/5 backdrop-blur-xs rounded-full -z-10"
                   />
                 )}
                 {link.label}
@@ -79,79 +79,73 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCallModal, onOpenDemoModal
             ))}
           </nav>
 
-          {/* Zone 3: Action Buttons (Responsive on Mobile, Tablet & Desktop) */}
-          <div className="hidden sm:flex items-center gap-2 sm:gap-2.5">
+          {/* Zone 3: Action Buttons & Mobile Toggle */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Quick Call Button on Mobile & Tablet */}
             <ShinyButton
               variant="secondary"
               onClick={onOpenCallModal}
-              className="px-3.5 lg:px-4 py-2 text-xs font-medium"
+              className="px-3 sm:px-3.5 lg:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium backdrop-blur-md bg-white/80 border border-white/90 shadow-2xs"
             >
-              <Phone className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Talk to Receptionist</span>
+              <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="hidden xs:inline sm:inline">Talk to Receptionist</span>
+              <span className="xs:hidden sm:hidden">Call</span>
             </ShinyButton>
 
-            <ShinyButton
-              variant="primary"
-              onClick={onOpenDemoModal}
-              className="px-3.5 lg:px-4 py-2 text-xs font-medium"
+            {/* Desktop & Tablet Demo Button */}
+            <div className="hidden sm:block">
+              <ShinyButton
+                variant="primary"
+                onClick={onOpenDemoModal}
+                className="px-3.5 lg:px-4 py-2 text-xs font-medium shadow-md shadow-emerald-900/10"
+              >
+                <span>Experience AI</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </ShinyButton>
+            </div>
+
+            {/* Tablet & Mobile hamburger button (visible < lg) */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-xl text-neutral-800 hover:text-neutral-950 bg-white/80 backdrop-blur-xl border border-white/90 hover:bg-white focus:outline-hidden transition-all shadow-2xs cursor-pointer active:scale-95"
+              aria-label="Toggle Navigation Menu"
             >
-              <span>Experience AI</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </ShinyButton>
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
-
-          {/* Tablet & Mobile hamburger button (visible < lg) */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl text-neutral-700 hover:text-neutral-950 hover:bg-neutral-100/80 focus:outline-hidden transition-colors"
-            aria-label="Toggle Navigation Menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
         </div>
       </div>
 
-      {/* Tablet & Mobile drawer with AnimatePresence */}
+      {/* Tablet & Mobile dropdown drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="lg:hidden overflow-hidden bg-[#FBF9F8]/95 backdrop-blur-xl border-b border-neutral-200/90 px-6 py-6 space-y-4 shadow-xl"
+            initial={{ opacity: 0, height: 0, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, height: 'auto', filter: 'blur(0px)' }}
+            exit={{ opacity: 0, height: 0, filter: 'blur(8px)' }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:hidden overflow-hidden bg-white/80 backdrop-blur-3xl saturate-200 border-b border-white/70 shadow-[0_16px_40px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] px-5 sm:px-6 py-5 space-y-4"
           >
-            <nav className="flex flex-col space-y-3 text-base font-medium text-neutral-700">
+            <nav className="flex flex-col space-y-1 text-sm font-medium text-neutral-800">
               {NAV_LINKS.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="hover:text-neutral-950 py-1.5 px-2 rounded-lg hover:bg-neutral-100/70 transition-colors"
+                  className="hover:text-neutral-950 py-2.5 px-3.5 rounded-xl hover:bg-neutral-900/5 transition-colors"
                 >
                   {link.label}
                 </a>
               ))}
             </nav>
-            <div className="pt-4 border-t border-neutral-200 flex flex-col sm:hidden gap-2.5">
-              <ShinyButton
-                variant="secondary"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenCallModal();
-                }}
-                className="w-full py-3 text-sm font-medium"
-              >
-                <Phone className="w-4 h-4 text-emerald-600" />
-                <span>Talk to Receptionist</span>
-              </ShinyButton>
+            <div className="pt-3 border-t border-neutral-200/50 flex flex-col gap-2.5">
               <ShinyButton
                 variant="primary"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   onOpenDemoModal();
                 }}
-                className="w-full py-3 text-sm font-medium shadow-sm"
+                className="w-full py-3 text-xs font-medium shadow-md shadow-emerald-900/10"
               >
                 <span>Experience AI Receptionist</span>
                 <ArrowUpRight className="w-4 h-4" />
