@@ -199,8 +199,8 @@ export const CorePrinciples: React.FC = () => {
           </TouchSwipeDeck>
         </div>
 
-        {/* Tablet & Desktop Grid */}
-        <div className="hidden md:grid md:grid-cols-3 gap-5 lg:gap-8 mt-12 lg:mt-14">
+        {/* Tablet & Desktop Grid: 2 columns on Tablet (md), 3 columns on Desktop (lg) */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-8 mt-12 lg:mt-14">
           {PRINCIPLES_DATA.map((item, idx) => (
             <PrincipleCard
               key={item.number}

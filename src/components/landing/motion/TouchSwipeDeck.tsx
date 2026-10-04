@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, type Variants } from 'motion/react';
 import { ChevronLeft, ChevronRight, Hand, Sparkles } from 'lucide-react';
 import { useTouchDevice } from '../../../hooks/useTouchDevice.ts';
 
@@ -44,13 +44,13 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
     triggerHaptic(10);
   };
 
-  // Silky deceleration curve with balanced spring physics (no hard snap)
-  const slideVariants = {
+  // Silky smooth overlapping cross-fade slide transitions
+  const slideVariants: Variants = {
     enter: (dir: number) => ({
-      x: dir > 0 ? 80 : -80,
+      x: dir > 0 ? '60%' : '-60%',
       opacity: 0,
-      scale: 0.96,
-      filter: 'blur(3px)',
+      scale: 0.95,
+      filter: 'blur(4px)',
     }),
     center: {
       zIndex: 1,
@@ -60,49 +60,52 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
       filter: 'blur(0px)',
       transition: {
         x: {
-          type: 'spring' as const,
-          stiffness: 220,
-          damping: 28,
-          mass: 1.08,
-          restDelta: 0.001,
+          type: 'spring',
+          stiffness: 260,
+          damping: 26,
+          mass: 0.8,
         },
         opacity: {
-          duration: 0.4,
-          ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+          duration: 0.35,
+          ease: [0.16, 1, 0.3, 1],
         },
         scale: {
-          duration: 0.4,
-          ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+          duration: 0.35,
+          ease: [0.16, 1, 0.3, 1],
         },
         filter: {
-          duration: 0.3,
-          ease: 'easeOut' as const,
+          duration: 0.25,
         },
       },
     },
     exit: (dir: number) => ({
       zIndex: 0,
-      x: dir < 0 ? 80 : -80,
+      x: dir > 0 ? '-60%' : '60%',
       opacity: 0,
-      scale: 0.96,
-      filter: 'blur(3px)',
+      scale: 0.95,
+      filter: 'blur(4px)',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       transition: {
         x: {
-          type: 'spring' as const,
-          stiffness: 220,
-          damping: 28,
-          mass: 1.08,
+          type: 'spring',
+          stiffness: 260,
+          damping: 26,
+          mass: 0.8,
         },
         opacity: {
           duration: 0.28,
-          ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+          ease: [0.22, 1, 0.36, 1],
         },
         scale: {
           duration: 0.28,
-          ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+          ease: [0.22, 1, 0.36, 1],
         },
         filter: {
-          duration: 0.25,
+          duration: 0.2,
         },
       },
     }),
@@ -138,7 +141,7 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
 
       {/* Swipeable Viewport with deceleration momentum & rubber-band elastic bounds */}
       <div className={`relative ${minHeightClass} flex items-center justify-center`}>
-        <AnimatePresence initial={false} custom={direction} mode="wait">
+        <AnimatePresence initial={false} custom={direction}>
           <motion.div
             key={currentIndex}
             custom={direction}
