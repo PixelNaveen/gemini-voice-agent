@@ -256,24 +256,24 @@ export const HeroReceptionist3DCard: React.FC = () => {
 
         {/* Bottom Interactive Bar & Scenario Switcher */}
         <div className="pt-3 border-t border-neutral-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-1.5 text-neutral-500">
-            <span className="text-[11px]">Simulate:</span>
-            <div className="inline-flex p-0.5 bg-neutral-100 rounded-lg border border-neutral-200">
+          <div className="flex items-center gap-2 text-neutral-500">
+            <span className="text-[11px] font-mono text-neutral-400 uppercase tracking-wider">Simulate:</span>
+            <div className="inline-flex p-0.5 bg-neutral-100 rounded-lg border border-neutral-200/80">
               {HERO_SCENARIOS.map((sc, i) => (
                 <button
                   key={sc.id}
                   onClick={() => setActiveScenarioIdx(i)}
-                  className={`relative px-2.5 py-0.5 text-[11px] font-medium rounded-md transition-colors cursor-pointer ${
+                  className={`relative px-3 py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer ${
                     activeScenarioIdx === i
-                      ? 'text-neutral-900'
-                      : 'text-neutral-500 hover:text-neutral-900'
+                      ? 'text-white font-semibold'
+                      : 'text-neutral-600 hover:text-neutral-950'
                   }`}
                 >
                   {activeScenarioIdx === i && (
                     <motion.div
                       layoutId="activeHeroTab"
-                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                      className="absolute inset-0 bg-white rounded-md shadow-2xs -z-10"
+                      transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                      className="absolute inset-0 bg-emerald-accent rounded-md shadow-[0_2px_8px_rgba(12,120,87,0.28)] -z-10"
                     />
                   )}
                   {i === 0 ? 'Hotel' : i === 1 ? 'Clinic' : 'Salon'}
