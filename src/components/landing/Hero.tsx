@@ -94,26 +94,9 @@ export const Hero: React.FC<HeroProps> = ({
             variants={heroContainerVariants}
             initial="hidden"
             animate="visible"
-            className="lg:col-span-6 space-y-4 sm:space-y-5 md:space-y-6 text-center lg:text-left max-w-2xl mx-auto lg:mx-0"
+            className="lg:col-span-6 space-y-5 sm:space-y-6 md:space-y-7 text-center lg:text-left max-w-2xl mx-auto lg:mx-0"
           >
-            {/* 1. Live Status Pill Header with Shimmer Beam */}
-            <motion.div
-              variants={heroItemVariants}
-              className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-neutral-200/90 shadow-2xs group cursor-default"
-            >
-              <div className="relative flex items-center justify-center">
-                <span className="w-2 h-2 rounded-full bg-emerald-accent" />
-                <span className="absolute w-3.5 h-3.5 rounded-full bg-emerald-500/40 animate-ping" />
-              </div>
-              <span className="text-xs font-medium text-neutral-800 tracking-tight">
-                Aura 4.2 Autonomous Voice Engine
-              </span>
-              <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">
-                Live Sub-second
-              </span>
-            </motion.div>
-
-            {/* 2. Main Headline: Staggered-in Kinetic Reveal */}
+            {/* Main Headline: Staggered-in Kinetic Reveal */}
             <motion.div
               variants={heroItemVariants}
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-editorial font-normal tracking-tight text-neutral-950 leading-[1.08] text-balance perspective-1000"
