@@ -273,10 +273,11 @@ export const HeroReceptionist3DCard: React.FC = () => {
                     <motion.div
                       layoutId="activeHeroTab"
                       transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-                      className="absolute inset-0 bg-emerald-accent rounded-md shadow-[0_2px_8px_rgba(12,120,87,0.28)] -z-10"
+                      className="absolute inset-0 bg-emerald-accent rounded-md shadow-[0_2px_8px_rgba(12,120,87,0.28)]"
+                      style={{ zIndex: 0 }}
                     />
                   )}
-                  {i === 0 ? 'Hotel' : i === 1 ? 'Clinic' : 'Salon'}
+                  <span className="relative z-10">{i === 0 ? 'Hotel' : i === 1 ? 'Clinic' : 'Salon'}</span>
                 </button>
               ))}
             </div>
