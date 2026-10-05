@@ -69,29 +69,34 @@ const HERO_SCENARIOS: Scenario[] = [
 
 export const HeroReceptionist3DCard: React.FC = () => {
   const [activeScenarioIdx, setActiveScenarioIdx] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const [isDesktopPointer, setIsDesktopPointer] = useState(false);
 
-  // Auto-switch simulation scenarios every 3 seconds as a smooth loop (pauses on hover)
   useEffect(() => {
-    if (isHovered) return;
+    // Check if device is desktop with fine pointer
+    if (typeof window !== 'undefined') {
+      setIsDesktopPointer(window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+    }
+  }, []);
 
+  // Continuous auto-switch simulation scenarios every 4 seconds
+  useEffect(() => {
     const interval = setInterval(() => {
       setActiveScenarioIdx((prev) => (prev + 1) % HERO_SCENARIOS.length);
-    }, 3000);
+    }, 4000);
 
     return () => clearInterval(interval);
-  }, [isHovered]);
+  }, []);
 
-  // Smooth Motion Spring Physics
+  // Smooth Motion Spring Physics (Desktop only to prevent mobile/Android GPU text blur)
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [7, -7]), {
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [6, -6]), {
     stiffness: 260,
     damping: 24,
   });
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-7, 7]), {
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-6, 6]), {
     stiffness: 260,
     damping: 24,
   });
@@ -99,8 +104,7 @@ export const HeroReceptionist3DCard: React.FC = () => {
   const scenario = HERO_SCENARIOS[activeScenarioIdx];
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-    if (!isHovered) setIsHovered(true);
+    if (!isDesktopPointer || !cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -109,27 +113,31 @@ export const HeroReceptionist3DCard: React.FC = () => {
   };
 
   const handleMouseLeave = () => {
-    setIsHovered(false);
+    if (!isDesktopPointer) return;
     mouseX.set(0);
     mouseY.set(0);
   };
 
   return (
-    <div className="relative w-full max-w-xl mx-auto perspective-1000 select-none">
+    <div className="relative w-full max-w-xl mx-auto md:perspective-1000 select-none">
       {/* Decorative ambient underglow */}
       <div className="absolute -inset-2 bg-gradient-to-r from-emerald-500/15 via-neutral-200/40 to-emerald-500/15 rounded-3xl blur-2xl opacity-70 pointer-events-none" />
 
-      {/* Floating 3D Spring Container */}
+      {/* Card Container - Crisp native rendering on mobile, smooth 3D tilt on desktop */}
       <motion.div
         ref={cardRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        style={{
-          rotateX,
-          rotateY,
-          transformStyle: 'preserve-3d',
-        }}
-        whileHover={{ translateY: -6 }}
+        style={
+          isDesktopPointer
+            ? {
+                rotateX,
+                rotateY,
+                transformStyle: 'preserve-3d',
+              }
+            : undefined
+        }
+        whileHover={isDesktopPointer ? { translateY: -6 } : undefined}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         className="relative bg-white/95 backdrop-blur-xl border border-neutral-200/80 rounded-2xl p-5 sm:p-7 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_24px_48px_rgb(0,0,0,0.12)] transition-shadow duration-300"
       >
