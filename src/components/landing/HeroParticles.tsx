@@ -35,9 +35,9 @@ export const HeroParticles: React.FC = () => {
               },
               modes: {
                 grab: {
-                  distance: 140,
+                  distance: 180,
                   links: {
-                    opacity: 0.45,
+                    opacity: 0.65,
                     color: palette.emeraldAccent,
                   },
                 },
@@ -45,14 +45,14 @@ export const HeroParticles: React.FC = () => {
             },
             particles: {
               color: {
-                value: [palette.emeraldAccent, palette.emeraldAccentLight, '#34d399', '#6ee7b7', '#94a3b8'],
+                value: ['#0C7857', '#047857', '#059669', '#10B981', '#6ee7b7'],
               },
               links: {
-                color: '#10b981',
-                distance: 125,
+                color: '#0C7857',
+                distance: 140,
                 enable: true,
-                opacity: 0.18,
-                width: 1,
+                opacity: 0.32,
+                width: 1.15,
               },
               move: {
                 direction: 'none',
@@ -61,7 +61,7 @@ export const HeroParticles: React.FC = () => {
                   default: 'out',
                 },
                 random: true,
-                speed: 0.65,
+                speed: 0.7,
                 straight: false,
               },
               number: {
@@ -70,10 +70,10 @@ export const HeroParticles: React.FC = () => {
                   width: 900,
                   height: 600,
                 },
-                value: 48,
+                value: 56,
               },
               opacity: {
-                value: { min: 0.15, max: 0.5 },
+                value: { min: 0.28, max: 0.65 },
                 animation: {
                   enable: true,
                   speed: 0.8,
@@ -84,7 +84,7 @@ export const HeroParticles: React.FC = () => {
                 type: 'circle',
               },
               size: {
-                value: { min: 1.5, max: 3.5 },
+                value: { min: 1.8, max: 3.8 },
               },
             },
             detectRetina: true,
