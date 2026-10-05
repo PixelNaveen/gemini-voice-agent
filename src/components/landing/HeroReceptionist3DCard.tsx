@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { Calendar, CheckCircle2, Sparkles, User, ShieldCheck, Activity, PhoneCall } from 'lucide-react';
 import { BorderBeam } from './motion/BorderBeam.tsx';
@@ -69,7 +69,19 @@ const HERO_SCENARIOS: Scenario[] = [
 
 export const HeroReceptionist3DCard: React.FC = () => {
   const [activeScenarioIdx, setActiveScenarioIdx] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Auto-switch simulation scenarios every 3 seconds as a smooth loop (pauses on hover)
+  useEffect(() => {
+    if (isHovered) return;
+
+    const interval = setInterval(() => {
+      setActiveScenarioIdx((prev) => (prev + 1) % HERO_SCENARIOS.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isHovered]);
 
   // Smooth Motion Spring Physics
   const mouseX = useMotionValue(0);
@@ -88,6 +100,7 @@ export const HeroReceptionist3DCard: React.FC = () => {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
+    if (!isHovered) setIsHovered(true);
     const rect = cardRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -96,6 +109,7 @@ export const HeroReceptionist3DCard: React.FC = () => {
   };
 
   const handleMouseLeave = () => {
+    setIsHovered(false);
     mouseX.set(0);
     mouseY.set(0);
   };
