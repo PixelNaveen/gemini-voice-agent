@@ -56,14 +56,12 @@ const wordContainerVariants: Variants = {
 const wordVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 28,
-    rotateX: -18,
-    filter: 'blur(5px)',
+    y: 20,
+    filter: 'blur(4px)',
   },
   visible: {
     opacity: 1,
     y: 0,
-    rotateX: 0,
     filter: 'blur(0px)',
     transition: {
       duration: 0.65,
@@ -99,7 +97,7 @@ export const Hero: React.FC<HeroProps> = ({
             {/* Main Headline: Staggered-in Kinetic Reveal */}
             <motion.div
               variants={heroItemVariants}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-editorial font-normal tracking-tight text-neutral-950 leading-[1.08] text-balance perspective-1000"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-editorial font-normal tracking-tight text-neutral-950 leading-[1.08] text-balance"
             >
               <motion.span
                 variants={wordContainerVariants}
