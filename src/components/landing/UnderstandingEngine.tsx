@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Brain, Volume2, Sparkles, CheckCircle2, Shield } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { Brain, Volume2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AudioWaveformCanvas } from './AudioWaveformCanvas.tsx';
 import { BlurText } from './motion/BlurText.tsx';
 import { AuroraGlow } from './motion/AuroraGlow.tsx';
 import { BorderBeam } from './motion/BorderBeam.tsx';
 import { CursorSpotlight } from './motion/CursorSpotlight.tsx';
 
+/**
+ * Responsive architecture (one source of truth):
+ *   Desktop  ≥1200px  → split layout, three comparable case cards
+ *   Tablet   768–1199 → horizontal case rail above one showcase
+ *   Mobile   <768px   → focused single case + tap / swipe / arrows
+ *
+ * All three views read the same ENGINE_CASES data and the same
+ * `activeCase` state. Only presentation and navigation change.
+ */
 interface EngineCase {
   id: string;
+  number: string;
+  navTitle: string;
   tag: string;
   title: string;
   callerQuery: string;
@@ -21,6 +32,8 @@ interface EngineCase {
 const ENGINE_CASES: EngineCase[] = [
   {
     id: 'case-1',
+    number: '01',
+    navTitle: 'Reschedule',
     tag: 'Case 01: Rescheduling & Special Needs',
     title: 'Adaptive Appointment Rescheduling',
     callerQuery:
@@ -33,6 +46,8 @@ const ENGINE_CASES: EngineCase[] = [
   },
   {
     id: 'case-2',
+    number: '02',
+    navTitle: 'Triage',
     tag: 'Case 02: Ambiguous Clinical Concerns',
     title: 'Contextual Triage & Protocol Routing',
     callerQuery:
@@ -45,6 +60,8 @@ const ENGINE_CASES: EngineCase[] = [
   },
   {
     id: 'case-3',
+    number: '03',
+    navTitle: 'Dining',
     tag: 'Case 03: Complex Hospitality Requests',
     title: 'Multi-Party Dining & Dietary Synthesis',
     callerQuery:
@@ -57,9 +74,195 @@ const ENGINE_CASES: EngineCase[] = [
   },
 ];
 
+const WIDE_QUERY = '(min-width: 1200px)';
+
+function useIsWideLayout(): boolean {
+  const [matches, setMatches] = useState<boolean>(
+    () => typeof window !== 'undefined' && window.matchMedia(WIDE_QUERY).matches
+  );
+
+  useEffect(() => {
+    const mql = window.matchMedia(WIDE_QUERY);
+    const onChange = (e: MediaQueryListEvent) => setMatches(e.matches);
+    setMatches(mql.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+
+  return matches;
+}
+
+interface TelemetryProps {
+  activeCase: EngineCase;
+}
+
+const TelemetryCards: React.FC<TelemetryProps> = ({ activeCase }) => (
+  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+    <div className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+      <div className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">
+        Latency
+      </div>
+      <div className="text-xl font-mono font-semibold text-emerald-400 mt-1">
+        {activeCase.latency}ms
+      </div>
+      <div className="text-[11px] text-neutral-400 mt-0.5">
+        Sub-second speech response
+      </div>
+    </div>
+
+    <div className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+      <div className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">
+        Audio Fidelity
+      </div>
+      <div className="text-xl font-mono font-semibold text-white mt-1">
+        48kHz
+      </div>
+      <div className="text-[11px] text-neutral-400 mt-0.5">
+        Studio voice rendering
+      </div>
+    </div>
+
+    <div className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors col-span-2 sm:col-span-1">
+      <div className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">
+        Guardrails
+      </div>
+      <div className="text-xl font-mono font-semibold text-white mt-1">
+        100% Policy
+      </div>
+      <div className="text-[11px] text-neutral-400 mt-0.5">
+        Zero hallucination bounds
+      </div>
+    </div>
+  </div>
+);
+
+const TelemetryCompact: React.FC<TelemetryProps> = ({ activeCase }) => (
+  <div className="grid grid-cols-3 rounded-xl border border-white/10 bg-white/5 overflow-hidden">
+    <div className="px-3 py-2.5 text-center">
+      <div className="text-sm font-mono font-semibold text-emerald-400">
+        {activeCase.latency}ms
+      </div>
+      <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400">
+        Latency
+      </div>
+    </div>
+    <div className="px-3 py-2.5 text-center border-x border-white/10">
+      <div className="text-sm font-mono font-semibold text-white">48kHz</div>
+      <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400">
+        Audio
+      </div>
+    </div>
+    <div className="px-3 py-2.5 text-center">
+      <div className="text-sm font-mono font-semibold text-white">100%</div>
+      <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400">
+        Policy
+      </div>
+    </div>
+  </div>
+);
+
+interface AuditionBarProps {
+  activeCase: EngineCase;
+  onSpeak: (text: string) => void;
+}
+
+const AuditionBar: React.FC<AuditionBarProps> = ({ activeCase, onSpeak }) => (
+  <motion.div
+    whileHover={{ scale: 1.01 }}
+    className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/25 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3"
+  >
+    <div className="flex items-center gap-3">
+      <Volume2 className="w-5 h-5 text-emerald-400 shrink-0" />
+      <div className="text-xs text-neutral-300 leading-relaxed">
+        <span className="font-semibold text-white">Browser Voice Test:</span> Hear this response synthesized in your local browser voice.
+      </div>
+    </div>
+    <motion.button
+      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.96 }}
+      onClick={() => onSpeak(activeCase.aiResponse)}
+      className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition-colors shrink-0 cursor-pointer shadow-xs ml-auto sm:ml-0"
+    >
+      Audition
+    </motion.button>
+  </motion.div>
+);
+
+const DiagnosticCard: React.FC<TelemetryProps> = ({ activeCase }) => {
+  const reducedMotion = useReducedMotion();
+  const yOffset = reducedMotion ? 0 : 6;
+
+  return (
+    <div
+      role="region"
+      aria-label="Active case transcript and execution details"
+      className="relative p-5 sm:p-6 rounded-2xl glass-panel-dark border border-white/15 space-y-4 shadow-xl overflow-hidden"
+    >
+      <BorderBeam size={200} duration={12} />
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeCase.id}
+          initial={{ opacity: 0, y: yOffset }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: yOffset }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+          className="space-y-4"
+        >
+          <div>
+            <div className="flex items-center justify-between text-[11px] font-mono text-neutral-400 mb-1.5">
+              <span className="uppercase tracking-wider">Caller Audio Input</span>
+              <span>Natural Dialect & Speech</span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-black/60 border border-white/10 text-sm text-neutral-200 leading-relaxed font-sans italic">
+              "{activeCase.callerQuery}"
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between text-[11px] font-mono text-emerald-400 mb-1.5">
+              <span className="uppercase tracking-wider">Aura Autonomous Response</span>
+              <span>Synthesized in {activeCase.latency}ms</span>
+            </div>
+            <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-sm text-neutral-100 leading-relaxed font-sans">
+              "{activeCase.aiResponse}"
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <span className="text-[11px] font-mono text-neutral-400 block mb-0.5">
+                Institutional Rule Enforced:
+              </span>
+              <span className="text-neutral-200 font-medium">
+                {activeCase.policyEnforced}
+              </span>
+            </div>
+            <div>
+              <span className="text-[11px] font-mono text-neutral-400 block mb-0.5">
+                Integrated System Action:
+              </span>
+              <span className="text-emerald-400 font-medium">
+                {activeCase.actionTaken}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+};
+
 export const UnderstandingEngine: React.FC = () => {
-  const [selectedCaseIdx, setSelectedCaseIdx] = useState(0);
-  const activeCase = ENGINE_CASES[selectedCaseIdx];
+  const [activeCase, setActiveCase] = useState(0);
+  const isWide = useIsWideLayout();
+  const currentCase = ENGINE_CASES[activeCase];
+  const totalCases = ENGINE_CASES.length;
+  const touchOrigin = useRef<{ x: number; y: number } | null>(null);
+
+  const goTo = (idx: number) => {
+    setActiveCase(((idx % totalCases) + totalCases) % totalCases);
+  };
 
   const handleSpeakSpeech = (text: string) => {
     if ('speechSynthesis' in window) {
@@ -77,6 +280,65 @@ export const UnderstandingEngine: React.FC = () => {
       window.speechSynthesis.speak(utterance);
     }
   };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchOrigin.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const origin = touchOrigin.current;
+    touchOrigin.current = null;
+    if (!origin) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - origin.x;
+    const dy = t.clientY - origin.y;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      goTo(activeCase + (dx < 0 ? 1 : -1));
+    }
+  };
+
+  const caseRailButton = (item: EngineCase, idx: number) => {
+    const isActive = activeCase === idx;
+    return (
+      <button
+        key={item.id}
+        onClick={() => goTo(idx)}
+        aria-pressed={isActive}
+        aria-label={`Show case ${item.number}: ${item.title}`}
+        className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-colors duration-200 cursor-pointer ${
+          isActive
+            ? 'bg-neutral-900 border border-emerald-500/60 text-white shadow-lg'
+            : 'border border-transparent text-neutral-500 hover:text-neutral-300 hover:bg-white/5'
+        }`}
+      >
+        <span className={isActive ? 'text-emerald-400' : 'text-neutral-600'}>
+          {isActive ? '●' : '○'}
+        </span>
+        <span>
+          {item.number} {item.navTitle}
+        </span>
+      </button>
+    );
+  };
+
+  const showcase = (
+    <>
+      <AudioWaveformCanvas
+        key={currentCase.id}
+        isPlaying={true}
+        sampleText={currentCase.aiResponse}
+        latencyMs={currentCase.latency}
+      />
+      <div className="hidden md:block">
+        <TelemetryCards activeCase={currentCase} />
+      </div>
+      <div className="md:hidden">
+        <TelemetryCompact activeCase={currentCase} />
+      </div>
+      <AuditionBar activeCase={currentCase} onSpeak={handleSpeakSpeech} />
+    </>
+  );
 
   return (
     <section id="understanding" className="py-24 md:py-32 bg-[#0B0B0B] text-white relative overflow-hidden">
@@ -110,173 +372,133 @@ export const UnderstandingEngine: React.FC = () => {
           </p>
         </div>
 
-        {/* Core Interactive Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 mt-14 items-start">
-          {/* Left Side: Audio Waveform Canvas & Telemetry */}
-          <div className="lg:col-span-6 space-y-6">
-            <AudioWaveformCanvas
-              key={activeCase.id}
-              isPlaying={true}
-              sampleText={activeCase.aiResponse}
-              latencyMs={activeCase.latency}
-            />
+        {isWide ? (
+          /* ───────── Desktop ≥1200px: split console, cases compared side by side ───────── */
+          <div className="grid grid-cols-12 gap-8 lg:gap-10 mt-14 items-start">
+            {/* Left: Voice Experience */}
+            <div className="col-span-6 space-y-6">{showcase}</div>
 
-            {/* Live Model Telemetry Specs */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                <div className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">
-                  Latency
-                </div>
-                <div className="text-xl font-mono font-semibold text-emerald-400 mt-1">
-                  {activeCase.latency}ms
-                </div>
-                <div className="text-[11px] text-neutral-400 mt-0.5">
-                  Sub-second speech response
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                <div className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">
-                  Audio Fidelity
-                </div>
-                <div className="text-xl font-mono font-semibold text-white mt-1">
-                  48kHz
-                </div>
-                <div className="text-[11px] text-neutral-400 mt-0.5">
-                  Studio voice rendering
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors col-span-2 sm:col-span-1">
-                <div className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">
-                  Guardrails
-                </div>
-                <div className="text-xl font-mono font-semibold text-white mt-1">
-                  100% Policy
-                </div>
-                <div className="text-[11px] text-neutral-400 mt-0.5">
-                  Zero hallucination bounds
-                </div>
-              </div>
-            </div>
-
-            {/* Test Voice Pronunciation Button with ripple */}
-            <motion.div
-              whileHover={{ scale: 1.01 }}
-              className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/25 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3"
-            >
-              <div className="flex items-center gap-3">
-                <Volume2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                <div className="text-xs text-neutral-300 leading-relaxed">
-                  <span className="font-semibold text-white">Browser Voice Test:</span> Hear this response synthesized in your local browser voice.
-                </div>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => handleSpeakSpeech(activeCase.aiResponse)}
-                className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition-colors shrink-0 cursor-pointer shadow-xs ml-auto sm:ml-0"
-              >
-                Audition
-              </motion.button>
-            </motion.div>
-          </div>
-
-          {/* Right Side: Scenario Navigator & Reasoning Inspector */}
-          <div className="lg:col-span-6 space-y-4">
-            {/* Scenario Tabs with layoutId */}
-            <div className="flex flex-col space-y-2">
-              {ENGINE_CASES.map((item, idx) => (
-                <button
-                  key={item.id}
-                  onClick={() => setSelectedCaseIdx(idx)}
-                  className={`relative w-full text-left p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-between ${
-                    selectedCaseIdx === idx
-                      ? 'border-emerald-500/60 shadow-lg'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10 text-neutral-400'
-                  }`}
-                >
-                  {selectedCaseIdx === idx && (
-                    <motion.div
-                      layoutId="engineActiveTab"
-                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                      className="absolute inset-0 bg-neutral-900 rounded-xl border border-emerald-500/60 ring-1 ring-emerald-500/25 -z-10"
-                    />
-                  )}
-                  <div>
-                    <span className="text-xs font-mono block text-emerald-400">
-                      {item.tag}
-                    </span>
-                    <h4 className="text-sm font-semibold text-white mt-0.5">
-                      {item.title}
-                    </h4>
-                  </div>
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      selectedCaseIdx === idx ? 'bg-emerald-400 animate-pulse' : 'bg-neutral-600'
+            {/* Right: Case cards + diagnostic */}
+            <div className="col-span-6 space-y-4">
+              <div className="flex flex-col space-y-2" role="tablist" aria-label="Case studies">
+                {ENGINE_CASES.map((item, idx) => (
+                  <button
+                    key={item.id}
+                    role="tab"
+                    aria-selected={activeCase === idx}
+                    onClick={() => goTo(idx)}
+                    className={`relative w-full text-left p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-between ${
+                      activeCase === idx
+                        ? 'border-emerald-500/60 shadow-lg'
+                        : 'bg-white/5 border-white/10 hover:bg-white/10 text-neutral-400'
                     }`}
-                  />
-                </button>
-              ))}
-            </div>
-
-            {/* Deep Diagnostic Card with AnimatePresence */}
-            <div className="relative p-6 rounded-2xl glass-panel-dark border border-white/15 space-y-4 shadow-xl overflow-hidden">
-              <BorderBeam size={200} duration={12} />
-
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeCase.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-4"
-                >
-                  <div>
-                    <div className="flex items-center justify-between text-[11px] font-mono text-neutral-400 mb-1.5">
-                      <span className="uppercase tracking-wider">Caller Audio Input</span>
-                      <span>Natural Dialect & Speech</span>
-                    </div>
-                    <div className="p-3.5 rounded-xl bg-black/60 border border-white/10 text-sm text-neutral-200 leading-relaxed font-sans italic">
-                      "{activeCase.callerQuery}"
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between text-[11px] font-mono text-emerald-400 mb-1.5">
-                      <span className="uppercase tracking-wider">Aura Autonomous Response</span>
-                      <span>Synthesized in {activeCase.latency}ms</span>
-                    </div>
-                    <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-sm text-neutral-100 leading-relaxed font-sans">
-                      "{activeCase.aiResponse}"
-                    </div>
-                  </div>
-
-                  {/* Policy & Action Inspector */}
-                  <div className="pt-3 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  >
+                    {activeCase === idx && (
+                      <motion.div
+                        layoutId="engineActiveTab"
+                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                        className="absolute inset-0 bg-neutral-900 rounded-xl border border-emerald-500/60 ring-1 ring-emerald-500/25 -z-10"
+                      />
+                    )}
                     <div>
-                      <span className="text-[11px] font-mono text-neutral-400 block mb-0.5">
-                        Institutional Rule Enforced:
+                      <span className="text-xs font-mono block text-emerald-400">
+                        {item.tag}
                       </span>
-                      <span className="text-neutral-200 font-medium">
-                        {activeCase.policyEnforced}
-                      </span>
+                      <h4 className="text-sm font-semibold text-white mt-0.5">
+                        {item.title}
+                      </h4>
                     </div>
-                    <div>
-                      <span className="text-[11px] font-mono text-neutral-400 block mb-0.5">
-                        Integrated System Action:
-                      </span>
-                      <span className="text-emerald-400 font-medium">
-                        {activeCase.actionTaken}
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        activeCase === idx ? 'bg-emerald-400 animate-pulse' : 'bg-neutral-600'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              <DiagnosticCard activeCase={currentCase} />
             </div>
           </div>
-        </div>
+        ) : (
+          /* ───────── Tablet 768–1199: horizontal case rail → showcase ─────────
+             ───────── Mobile  <768:   one focused case, tap / swipe / arrows ───────── */
+          <div className="mt-10 md:mt-14 space-y-5">
+            {/* Tablet: operational case rail */}
+            <div className="hidden md:flex items-center gap-1 p-1.5 rounded-xl border border-white/12 bg-white/[0.03] backdrop-blur-sm">
+              {ENGINE_CASES.map((item, idx) => caseRailButton(item, idx))}
+            </div>
+
+            {/* Mobile: segmented case selector */}
+            <div className="md:hidden flex items-center gap-1 p-1.5 rounded-xl border border-white/12 bg-white/[0.03] backdrop-blur-sm">
+              {ENGINE_CASES.map((item, idx) => caseRailButton(item, idx))}
+            </div>
+
+            {/* Mobile: active case identity */}
+            <div className="md:hidden space-y-1.5">
+              <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider text-emerald-400">
+                <span>
+                  Case {currentCase.number} / {String(totalCases).padStart(2, '0')}
+                </span>
+                <span className="flex-1 h-px bg-white/10" />
+              </div>
+              <h3 className="text-xl font-editorial text-white leading-snug">
+                {currentCase.title}
+              </h3>
+            </div>
+
+            {/* Showcase + diagnostic, swipable */}
+            <div
+              className="space-y-5"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div className="space-y-6">{showcase}</div>
+              <DiagnosticCard activeCase={currentCase} />
+            </div>
+
+            {/* Mobile: indicators + prev/next controls */}
+            <div className="md:hidden flex items-center justify-between pt-4 border-t border-white/10">
+              <button
+                onClick={() => goTo(activeCase - 1)}
+                aria-label="Previous case"
+                className="p-3 rounded-lg border border-white/10 text-neutral-300 hover:text-white hover:border-emerald-500/50 transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-2.5" role="tablist" aria-label="Case indicators">
+                {ENGINE_CASES.map((item, idx) => (
+                  <button
+                    key={item.id}
+                    role="tab"
+                    aria-selected={activeCase === idx}
+                    aria-label={`Case ${item.number}: ${item.title}`}
+                    onClick={() => goTo(idx)}
+                    className="p-2 cursor-pointer"
+                  >
+                    <motion.span
+                      animate={{
+                        width: activeCase === idx ? 22 : 8,
+                        backgroundColor: activeCase === idx ? '#34d399' : '#52525b',
+                      }}
+                      transition={{ duration: 0.22 }}
+                      className="block h-2 rounded-full"
+                    />
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => goTo(activeCase + 1)}
+                aria-label="Next case"
+                className="p-3 rounded-lg border border-white/10 text-neutral-300 hover:text-white hover:border-emerald-500/50 transition-colors cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
