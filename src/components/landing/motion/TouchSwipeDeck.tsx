@@ -8,6 +8,9 @@ interface TouchSwipeDeckProps {
   className?: string;
   minHeightClass?: string;
   showHint?: boolean;
+  showArrows?: boolean;
+  autoPlay?: boolean;
+  autoPlayInterval?: number;
   onIndexChange?: (index: number) => void;
 }
 
@@ -16,6 +19,9 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
   className = '',
   minHeightClass = 'min-h-[440px] sm:min-h-[460px]',
   showHint = true,
+  showArrows = true,
+  autoPlay = false,
+  autoPlayInterval = 5000,
   onIndexChange,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -29,6 +35,21 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
   const isTablet = containerWidth >= 640;
   const itemsPerView = isTablet ? 2 : 1;
   const maxIndex = Math.max(0, total - itemsPerView);
+
+  // Auto-play continuous loop
+  useEffect(() => {
+    if (!autoPlay || maxIndex <= 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => {
+        const next = prev >= maxIndex ? 0 : prev + 1;
+        if (onIndexChange) onIndexChange(next);
+        return next;
+      });
+    }, autoPlayInterval);
+
+    return () => clearInterval(interval);
+  }, [autoPlay, autoPlayInterval, maxIndex, onIndexChange]);
 
   // Measure container width responsively
   useEffect(() => {
@@ -153,15 +174,21 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
       </div>
 
       {/* Touch-Optimized Bottom Controls & Pagination Dots */}
-      <div className="flex items-center justify-between mt-5 pt-4 border-t border-neutral-200/60">
-        <button
-          onClick={() => paginate(-1)}
-          disabled={currentIndex <= 0}
-          aria-label="Previous card"
-          className="p-2.5 rounded-full bg-white border border-neutral-200/90 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-50 shadow-2xs active:scale-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
+      <div
+        className={`flex items-center mt-5 pt-4 border-t border-neutral-200/60 ${
+          showArrows ? 'justify-between' : 'justify-center'
+        }`}
+      >
+        {showArrows && (
+          <button
+            onClick={() => paginate(-1)}
+            disabled={currentIndex <= 0}
+            aria-label="Previous card"
+            className="p-2.5 rounded-full bg-white border border-neutral-200/90 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-50 shadow-2xs active:scale-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        )}
 
         {/* Squishy spring dots with active glow */}
         <div className="flex items-center gap-2">
@@ -184,14 +211,16 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
           ))}
         </div>
 
-        <button
-          onClick={() => paginate(1)}
-          disabled={currentIndex >= maxIndex}
-          aria-label="Next card"
-          className="p-2.5 rounded-full bg-white border border-neutral-200/90 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-50 shadow-2xs active:scale-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+        {showArrows && (
+          <button
+            onClick={() => paginate(1)}
+            disabled={currentIndex >= maxIndex}
+            aria-label="Next card"
+            className="p-2.5 rounded-full bg-white border border-neutral-200/90 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-50 shadow-2xs active:scale-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </div>
   );

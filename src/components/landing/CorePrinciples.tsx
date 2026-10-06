@@ -178,9 +178,15 @@ export const CorePrinciples: React.FC = () => {
           </motion.p>
         </div>
 
-        {/* Mobile & Tablet Continuous Swipeable Track (1 card on mobile, 2 cards on tablet) */}
+        {/* Mobile & Tablet Continuous Auto-Swiping Track (1 card on mobile, 2 cards on tablet) */}
         <div className="block lg:hidden mt-8">
-          <TouchSwipeDeck minHeightClass="min-h-[460px]" showHint={false}>
+          <TouchSwipeDeck
+            minHeightClass="min-h-[460px]"
+            showHint={false}
+            showArrows={false}
+            autoPlay={true}
+            autoPlayInterval={5000}
+          >
             {PRINCIPLES_DATA.map((item) => (
               <PrincipleCard
                 key={item.number}
