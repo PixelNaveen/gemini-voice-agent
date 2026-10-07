@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { Brain, Volume2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Brain, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AudioWaveformCanvas } from './AudioWaveformCanvas.tsx';
 import { BlurText } from './motion/BlurText.tsx';
 import { AuroraGlow } from './motion/AuroraGlow.tsx';
@@ -161,33 +161,6 @@ const TelemetryCompact: React.FC<TelemetryProps> = ({ activeCase }) => (
   </div>
 );
 
-interface AuditionBarProps {
-  activeCase: EngineCase;
-  onSpeak: (text: string) => void;
-}
-
-const AuditionBar: React.FC<AuditionBarProps> = ({ activeCase, onSpeak }) => (
-  <motion.div
-    whileHover={{ scale: 1.01 }}
-    className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/25 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3"
-  >
-    <div className="flex items-center gap-3">
-      <Volume2 className="w-5 h-5 text-emerald-400 shrink-0" />
-      <div className="text-xs text-neutral-300 leading-relaxed">
-        <span className="font-semibold text-white">Browser Voice Test:</span> Hear this response synthesized in your local browser voice.
-      </div>
-    </div>
-    <motion.button
-      whileHover={{ scale: 1.04 }}
-      whileTap={{ scale: 0.96 }}
-      onClick={() => onSpeak(activeCase.aiResponse)}
-      className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition-colors shrink-0 cursor-pointer shadow-xs ml-auto sm:ml-0"
-    >
-      Audition
-    </motion.button>
-  </motion.div>
-);
-
 const DiagnosticCard: React.FC<TelemetryProps> = ({ activeCase }) => {
   const reducedMotion = useReducedMotion();
   const yOffset = reducedMotion ? 0 : 6;
@@ -264,23 +237,6 @@ export const UnderstandingEngine: React.FC = () => {
     setActiveCase(((idx % totalCases) + totalCases) % totalCases);
   };
 
-  const handleSpeakSpeech = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.02;
-      utterance.pitch = 1.0;
-      const voices = window.speechSynthesis.getVoices();
-      const naturalVoice = voices.find(
-        (v) =>
-          v.lang.startsWith('en') &&
-          (v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Google') || v.name.includes('Karen'))
-      );
-      if (naturalVoice) utterance.voice = naturalVoice;
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
   const handleTouchStart = (e: React.TouchEvent) => {
     const t = e.touches[0];
     touchOrigin.current = { x: t.clientX, y: t.clientY };
@@ -335,7 +291,6 @@ export const UnderstandingEngine: React.FC = () => {
       <div className="md:hidden">
         <TelemetryCompact activeCase={currentCase} />
       </div>
-      <AuditionBar activeCase={currentCase} onSpeak={handleSpeakSpeech} />
     </>
   );
 
