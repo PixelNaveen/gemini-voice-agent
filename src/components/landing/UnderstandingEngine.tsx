@@ -183,9 +183,9 @@ const DiagnosticCard: React.FC<TelemetryProps> = ({ activeCase }) => {
           className="space-y-4"
         >
           <div>
-            <div className="flex items-center justify-between text-[11px] font-mono text-neutral-400 mb-1.5">
-              <span className="uppercase tracking-wider">Caller Audio Input</span>
-              <span>Natural Dialect & Speech</span>
+            <div className="flex items-center justify-between text-[clamp(9.5px,2.4vw,11px)] font-mono text-neutral-400 mb-1.5 whitespace-nowrap gap-2">
+              <span className="uppercase tracking-tight sm:tracking-wider shrink-0">Caller Audio Input</span>
+              <span className="truncate text-neutral-400/90 text-right">Natural Dialect & Speech</span>
             </div>
             <div className="p-3.5 rounded-xl bg-black/60 border border-white/10 text-sm text-neutral-200 leading-relaxed font-sans italic">
               "{activeCase.callerQuery}"
@@ -193,9 +193,9 @@ const DiagnosticCard: React.FC<TelemetryProps> = ({ activeCase }) => {
           </div>
 
           <div>
-            <div className="flex items-center justify-between text-[11px] font-mono text-emerald-400 mb-1.5">
-              <span className="uppercase tracking-wider">Autonomous Response</span>
-              <span>Synthesized in {activeCase.latency}ms</span>
+            <div className="flex items-center justify-between text-[clamp(9.5px,2.4vw,11px)] font-mono text-emerald-400 mb-1.5 whitespace-nowrap gap-2">
+              <span className="uppercase tracking-tight sm:tracking-wider shrink-0">Autonomous Response</span>
+              <span className="truncate text-emerald-400/90 text-right">Synthesized in {activeCase.latency}ms</span>
             </div>
             <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-sm text-neutral-100 leading-relaxed font-sans">
               "{activeCase.aiResponse}"
