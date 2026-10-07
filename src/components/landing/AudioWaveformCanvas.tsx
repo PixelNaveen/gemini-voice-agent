@@ -32,7 +32,7 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
       const audio = new Audio(audioUrl);
       audio.preload = 'auto';
       audio.loop = false;
-      audio.playbackRate = 1.08;
+      audio.playbackRate = 1.2;
       audio.muted = isMuted;
 
       audio.onended = () => {
@@ -68,7 +68,7 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
-      audio.playbackRate = 1.08;
+      audio.playbackRate = 1.2;
       audio.muted = isMuted;
       if (!isMuted && internalPlaying) {
         audio.play().catch(() => {});
@@ -79,7 +79,7 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
       if (!isMuted && internalPlaying) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(sampleText);
-        utterance.rate = 1.08;
+        utterance.rate = 1.2;
         utterance.pitch = 1.0;
         utterance.onend = () => {
           setInternalPlaying(false);
@@ -256,7 +256,7 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
         if (!isMuted) {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(sampleText);
-          utterance.rate = 1.08;
+          utterance.rate = 1.2;
           utterance.pitch = 1.0;
           utterance.onend = () => {
             setInternalPlaying(false);
