@@ -31,8 +31,14 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
     if (audioUrl) {
       const audio = new Audio(audioUrl);
       audio.preload = 'auto';
-      audio.loop = true;
+      audio.loop = false;
       audio.muted = isMuted;
+
+      audio.onended = () => {
+        setInternalPlaying(false);
+        audio.currentTime = 0;
+      };
+
       audioRef.current = audio;
 
       if (!isMuted && internalPlaying) {
@@ -42,6 +48,7 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
       return () => {
         audio.pause();
         audio.currentTime = 0;
+        audio.onended = null;
         audioRef.current = null;
       };
     } else {
@@ -72,6 +79,9 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
         const utterance = new SpeechSynthesisUtterance(sampleText);
         utterance.rate = 1.02;
         utterance.pitch = 1.0;
+        utterance.onend = () => {
+          setInternalPlaying(false);
+        };
         const voices = window.speechSynthesis.getVoices();
         const naturalVoice = voices.find(
           (v) =>
@@ -231,6 +241,9 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
         audio.pause();
       } else {
         if (!isMuted) {
+          if (audio.ended || (audio.duration && audio.currentTime >= audio.duration - 0.2)) {
+            audio.currentTime = 0;
+          }
           audio.play().catch(() => {});
         }
       }
@@ -243,6 +256,9 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
           const utterance = new SpeechSynthesisUtterance(sampleText);
           utterance.rate = 1.02;
           utterance.pitch = 1.0;
+          utterance.onend = () => {
+            setInternalPlaying(false);
+          };
           const voices = window.speechSynthesis.getVoices();
           const naturalVoice = voices.find(
             (v) =>
