@@ -19,11 +19,57 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
   const resolvedAccentColor = accentColor || palette.emeraldAccent;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [internalPlaying, setInternalPlaying] = useState(isPlaying);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+
+  const speakText = (text: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    if (!text) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.02;
+    utterance.pitch = 1.0;
+    const voices = window.speechSynthesis.getVoices();
+    const naturalVoice = voices.find(
+      (v) =>
+        v.lang.startsWith('en') &&
+        (v.name.includes('Natural') ||
+          v.name.includes('Samantha') ||
+          v.name.includes('Google') ||
+          v.name.includes('Karen') ||
+          v.name.includes('Jenny'))
+    );
+    if (naturalVoice) utterance.voice = naturalVoice;
+    window.speechSynthesis.speak(utterance);
+  };
 
   useEffect(() => {
     setInternalPlaying(isPlaying);
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (!isMuted && internalPlaying) {
+      speakText(sampleText);
+    } else if (isMuted && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [sampleText, isMuted, internalPlaying]);
+
+  const toggleMute = () => {
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    if (nextMuted) {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    } else {
+      speakText(sampleText);
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -149,10 +195,14 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
         </div>
 
         <button
-          onClick={() => setIsMuted(!isMuted)}
-          className="text-neutral-400 hover:text-white transition-colors cursor-pointer"
-          title={isMuted ? 'Unmute' : 'Mute'}
-          aria-label={isMuted ? 'Unmute' : 'Mute'}
+          onClick={toggleMute}
+          className={`p-1 rounded-md transition-colors cursor-pointer ${
+            isMuted
+              ? 'text-neutral-500 hover:text-neutral-300'
+              : 'text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20'
+          }`}
+          title={isMuted ? 'Unmute to hear voice' : 'Mute voice'}
+          aria-label={isMuted ? 'Unmute to hear voice' : 'Mute voice'}
         >
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>
