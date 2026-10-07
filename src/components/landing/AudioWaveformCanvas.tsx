@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Volume2, VolumeX, Play, Pause } from 'lucide-react';
+import { Play, Pause } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext.tsx';
 
 interface AudioWaveformCanvasProps {
@@ -7,8 +7,6 @@ interface AudioWaveformCanvasProps {
   onTogglePlay?: () => void;
   accentColor?: string;
   sampleText?: string;
-  speakerName?: string;
-  latencyMs?: number;
 }
 
 export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
@@ -16,14 +14,11 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
   onTogglePlay,
   accentColor,
   sampleText = "I've moved your appointment to next Thursday at 10:30 AM with Dr. Aris.",
-  speakerName = "Aura Voice Model 4.2-Pro",
-  latencyMs = 238,
 }) => {
   const { palette } = useTheme();
   const resolvedAccentColor = accentColor || palette.emeraldAccent;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [internalPlaying, setInternalPlaying] = useState(isPlaying);
-  const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
     setInternalPlaying(isPlaying);
@@ -139,38 +134,6 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
 
   return (
     <div className="relative w-full rounded-2xl bg-[#0F0F11] border border-white/10 p-5 md:p-6 overflow-hidden text-white shadow-2xl">
-      {/* Header controls & metrics */}
-      <div className="flex items-center justify-between pb-4 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${internalPlaying ? 'bg-emerald-400 animate-pulse' : 'bg-neutral-600'}`} />
-            <span className="text-xs font-mono uppercase tracking-wider text-neutral-400">
-              {internalPlaying ? 'Voice Stream Live' : 'Voice Standby'}
-            </span>
-          </div>
-          <span className="text-neutral-600 text-xs">/</span>
-          <span className="text-xs text-neutral-400 font-mono">{speakerName}</span>
-        </div>
-
-        <div className="flex items-center gap-4 text-xs font-mono">
-          <div className="hidden sm:flex items-center gap-1.5 text-neutral-400">
-            <span>Latency:</span>
-            <span className="text-emerald-400 font-semibold">{latencyMs}ms</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-1.5 text-neutral-400">
-            <span>Sample:</span>
-            <span className="text-white">48kHz HD</span>
-          </div>
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className="text-neutral-400 hover:text-white transition-colors"
-            title={isMuted ? "Unmute" : "Mute"}
-          >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-
       {/* Waveform Canvas */}
       <div className="relative py-4 my-2">
         <canvas

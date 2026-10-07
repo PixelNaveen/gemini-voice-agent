@@ -328,7 +328,6 @@ export const UnderstandingEngine: React.FC = () => {
         key={currentCase.id}
         isPlaying={true}
         sampleText={currentCase.aiResponse}
-        latencyMs={currentCase.latency}
       />
       <div className="hidden md:block">
         <TelemetryCards activeCase={currentCase} />
