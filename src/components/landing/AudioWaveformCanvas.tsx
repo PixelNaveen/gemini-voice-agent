@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext.tsx';
 
 interface AudioWaveformCanvasProps {
@@ -19,6 +19,7 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
   const resolvedAccentColor = accentColor || palette.emeraldAccent;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [internalPlaying, setInternalPlaying] = useState(isPlaying);
+  const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
     setInternalPlaying(isPlaying);
@@ -134,6 +135,29 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
 
   return (
     <div className="relative w-full rounded-2xl bg-[#0F0F11] border border-white/10 p-5 md:p-6 overflow-hidden text-white shadow-2xl">
+      {/* Header with status at start and speaker/mute control at end */}
+      <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <span
+            className={`w-2 h-2 rounded-full ${
+              internalPlaying ? 'bg-emerald-400 animate-pulse' : 'bg-neutral-600'
+            }`}
+          />
+          <span className="text-xs font-mono uppercase tracking-wider text-neutral-400">
+            {internalPlaying ? 'Voice Stream Live' : 'Voice Standby'}
+          </span>
+        </div>
+
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className="text-neutral-400 hover:text-white transition-colors cursor-pointer"
+          title={isMuted ? 'Unmute' : 'Mute'}
+          aria-label={isMuted ? 'Unmute' : 'Mute'}
+        >
+          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+        </button>
+      </div>
+
       {/* Waveform Canvas */}
       <div className="relative py-4 my-2">
         <canvas
