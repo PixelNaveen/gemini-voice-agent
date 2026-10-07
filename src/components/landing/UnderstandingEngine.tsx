@@ -231,27 +231,39 @@ export const UnderstandingEngine: React.FC = () => {
   const isWide = useIsWideLayout();
   const currentCase = ENGINE_CASES[activeCase];
   const totalCases = ENGINE_CASES.length;
-  const touchOrigin = useRef<{ x: number; y: number } | null>(null);
+
+  const carouselContainerRef = useRef<HTMLDivElement>(null);
+  const [carouselWidth, setCarouselWidth] = useState(0);
+
+  useEffect(() => {
+    if (!carouselContainerRef.current) return;
+    const updateWidth = () => {
+      if (carouselContainerRef.current) {
+        setCarouselWidth(carouselContainerRef.current.offsetWidth);
+      }
+    };
+    updateWidth();
+    const ro = new ResizeObserver(updateWidth);
+    ro.observe(carouselContainerRef.current);
+    window.addEventListener('resize', updateWidth);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', updateWidth);
+    };
+  }, [isWide]);
+
+  const cardWidth =
+    carouselWidth > 0
+      ? carouselWidth < 640
+        ? carouselWidth * 0.88
+        : carouselWidth * 0.9
+      : 0;
+  const gap = 14;
+  const offset = (carouselWidth - cardWidth) / 2;
+  const targetX = -activeCase * (cardWidth + gap) + offset;
 
   const goTo = (idx: number) => {
     setActiveCase(((idx % totalCases) + totalCases) % totalCases);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    touchOrigin.current = { x: t.clientX, y: t.clientY };
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const origin = touchOrigin.current;
-    touchOrigin.current = null;
-    if (!origin) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - origin.x;
-    const dy = t.clientY - origin.y;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      goTo(activeCase + (dx < 0 ? 1 : -1));
-    }
   };
 
   const caseRailButton = (item: EngineCase, idx: number) => {
@@ -262,16 +274,21 @@ export const UnderstandingEngine: React.FC = () => {
         onClick={() => goTo(idx)}
         aria-pressed={isActive}
         aria-label={`Show case ${item.number}: ${item.title}`}
-        className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg font-mono text-[clamp(10px,2.4vw,12px)] uppercase tracking-tight sm:tracking-wider whitespace-nowrap transition-colors duration-200 cursor-pointer ${
-          isActive
-            ? 'bg-neutral-900 border border-emerald-500/60 text-white shadow-lg'
-            : 'border border-transparent text-neutral-500 hover:text-neutral-300 hover:bg-white/5'
+        className={`relative flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg font-mono text-[clamp(10px,2.4vw,12px)] uppercase tracking-tight sm:tracking-wider whitespace-nowrap transition-colors duration-200 cursor-pointer ${
+          isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'
         }`}
       >
-        <span className={`shrink-0 ${isActive ? 'text-emerald-400' : 'text-neutral-600'}`}>
+        {isActive && (
+          <motion.div
+            layoutId="activeRailTab"
+            transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+            className="absolute inset-0 bg-neutral-900 rounded-lg border border-emerald-500/60 ring-1 ring-emerald-500/25 shadow-md -z-10"
+          />
+        )}
+        <span className={`shrink-0 z-10 ${isActive ? 'text-emerald-400' : 'text-neutral-600'}`}>
           {isActive ? '●' : '○'}
         </span>
-        <span className="truncate whitespace-nowrap">
+        <span className="truncate whitespace-nowrap z-10">
           {item.number} {item.navTitle}
         </span>
       </button>
@@ -401,14 +418,67 @@ export const UnderstandingEngine: React.FC = () => {
               </h3>
             </div>
 
-            {/* Showcase + diagnostic, swipable */}
+            {/* Smooth peek carousel showing previous and next cards while swiping */}
             <div
-              className="space-y-5"
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
+              ref={carouselContainerRef}
+              className="relative w-full overflow-hidden select-none touch-pan-y"
             >
-              <div className="space-y-6">{showcase}</div>
-              <DiagnosticCard activeCase={currentCase} />
+              {carouselWidth > 0 && (
+                <motion.div
+                  drag="x"
+                  dragDirectionLock
+                  dragConstraints={{
+                    left: -(totalCases - 1) * (cardWidth + gap) + offset,
+                    right: offset,
+                  }}
+                  dragElastic={0.15}
+                  onDragEnd={(_, info) => {
+                    const threshold = cardWidth * 0.22;
+                    if (info.offset.x < -threshold || info.velocity.x < -250) {
+                      if (activeCase < totalCases - 1) goTo(activeCase + 1);
+                      else goTo(totalCases - 1);
+                    } else if (info.offset.x > threshold || info.velocity.x > 250) {
+                      if (activeCase > 0) goTo(activeCase - 1);
+                      else goTo(0);
+                    }
+                  }}
+                  animate={{ x: targetX }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.8 }}
+                  className="flex items-stretch cursor-grab active:cursor-grabbing"
+                  style={{ gap: `${gap}px` }}
+                >
+                  {ENGINE_CASES.map((item, idx) => {
+                    const isCardActive = activeCase === idx;
+                    return (
+                      <motion.div
+                        key={item.id}
+                        style={{ width: `${cardWidth}px` }}
+                        animate={{
+                          opacity: isCardActive ? 1 : 0.45,
+                          scale: isCardActive ? 1 : 0.96,
+                        }}
+                        transition={{ duration: 0.28, ease: 'easeOut' }}
+                        className="shrink-0 space-y-5"
+                      >
+                        <div className="space-y-6">
+                          <AudioWaveformCanvas
+                            key={item.id}
+                            isPlaying={isCardActive}
+                            sampleText={item.aiResponse}
+                          />
+                          <div className="hidden md:block">
+                            <TelemetryCards activeCase={item} />
+                          </div>
+                          <div className="md:hidden">
+                            <TelemetryCompact activeCase={item} />
+                          </div>
+                        </div>
+                        <DiagnosticCard activeCase={item} />
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              )}
             </div>
 
             {/* Mobile: indicators + prev/next controls */}
