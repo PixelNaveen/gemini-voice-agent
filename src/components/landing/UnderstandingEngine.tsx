@@ -194,7 +194,7 @@ const DiagnosticCard: React.FC<TelemetryProps> = ({ activeCase }) => {
 
           <div>
             <div className="flex items-center justify-between text-[11px] font-mono text-emerald-400 mb-1.5">
-              <span className="uppercase tracking-wider">Aura Autonomous Response</span>
+              <span className="uppercase tracking-wider">Autonomous Response</span>
               <span>Synthesized in {activeCase.latency}ms</span>
             </div>
             <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-sm text-neutral-100 leading-relaxed font-sans">
