@@ -27,6 +27,7 @@ interface EngineCase {
   policyEnforced: string;
   actionTaken: string;
   latency: number;
+  audioUrl?: string;
 }
 
 const ENGINE_CASES: EngineCase[] = [
@@ -43,6 +44,7 @@ const ENGINE_CASES: EngineCase[] = [
     policyEnforced: 'ADA Compliance & Clinical Rescheduling Rule 4.1',
     actionTaken: 'EHR Rescheduled · Mobility Support Flagged · SMS Dispatched',
     latency: 218,
+    audioUrl: '/audio/showcase-01-reschedule.mp3',
   },
   {
     id: 'case-2',
@@ -57,6 +59,7 @@ const ENGINE_CASES: EngineCase[] = [
     policyEnforced: 'Pediatric Red-Flag Protocol & Emergency Escalation',
     actionTaken: 'Clinical Pre-Triage Checklist Verified · Reserve Pending',
     latency: 242,
+    audioUrl: '/audio/showcase-02-triage.mp3',
   },
   {
     id: 'case-3',
@@ -71,6 +74,7 @@ const ENGINE_CASES: EngineCase[] = [
     policyEnforced: 'Severe Allergen Safety Protocol & Large Party Floor Plan',
     actionTaken: 'Host Stand Table Blocked · Allergen Alert Injected to POS',
     latency: 205,
+    audioUrl: '/audio/showcase-03-dining.mp3',
   },
 ];
 
@@ -301,6 +305,7 @@ export const UnderstandingEngine: React.FC = () => {
         key={currentCase.id}
         isPlaying={true}
         sampleText={currentCase.aiResponse}
+        audioUrl={currentCase.audioUrl}
       />
       <div className="hidden md:block">
         <TelemetryCards activeCase={currentCase} />
@@ -465,6 +470,7 @@ export const UnderstandingEngine: React.FC = () => {
                             key={item.id}
                             isPlaying={isCardActive}
                             sampleText={item.aiResponse}
+                            audioUrl={item.audioUrl}
                           />
                           <div className="hidden md:block">
                             <TelemetryCards activeCase={item} />

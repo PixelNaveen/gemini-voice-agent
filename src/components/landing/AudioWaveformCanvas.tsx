@@ -7,6 +7,7 @@ interface AudioWaveformCanvasProps {
   onTogglePlay?: () => void;
   accentColor?: string;
   sampleText?: string;
+  audioUrl?: string;
 }
 
 export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
@@ -14,61 +15,92 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
   onTogglePlay,
   accentColor,
   sampleText = "I've moved your appointment to next Thursday at 10:30 AM with Dr. Aris.",
+  audioUrl,
 }) => {
   const { palette } = useTheme();
   const resolvedAccentColor = accentColor || palette.emeraldAccent;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [internalPlaying, setInternalPlaying] = useState(isPlaying);
   const [isMuted, setIsMuted] = useState(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const speakText = (text: string) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    if (!text) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.02;
-    utterance.pitch = 1.0;
-    const voices = window.speechSynthesis.getVoices();
-    const naturalVoice = voices.find(
-      (v) =>
-        v.lang.startsWith('en') &&
-        (v.name.includes('Natural') ||
-          v.name.includes('Samantha') ||
-          v.name.includes('Google') ||
-          v.name.includes('Karen') ||
-          v.name.includes('Jenny'))
-    );
-    if (naturalVoice) utterance.voice = naturalVoice;
-    window.speechSynthesis.speak(utterance);
-  };
+  // Initialize and track audio element
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audio.preload = 'auto';
+      audio.loop = true;
+      audio.muted = isMuted;
+      audioRef.current = audio;
+
+      if (!isMuted && internalPlaying) {
+        audio.play().catch(() => {});
+      }
+
+      return () => {
+        audio.pause();
+        audio.currentTime = 0;
+        audioRef.current = null;
+      };
+    } else {
+      // Fallback speech synthesis
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+  }, [audioUrl]);
 
   useEffect(() => {
     setInternalPlaying(isPlaying);
   }, [isPlaying]);
 
+  // Handle Play/Pause and Mute changes
   useEffect(() => {
-    if (!isMuted && internalPlaying) {
-      speakText(sampleText);
+    const audio = audioRef.current;
+    if (audio) {
+      audio.muted = isMuted;
+      if (!isMuted && internalPlaying) {
+        audio.play().catch(() => {});
+      } else {
+        audio.pause();
+      }
     } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      if (!isMuted && internalPlaying) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(sampleText);
+        utterance.rate = 1.02;
+        utterance.pitch = 1.0;
+        const voices = window.speechSynthesis.getVoices();
+        const naturalVoice = voices.find(
+          (v) =>
+            v.lang.startsWith('en') &&
+            (v.name.includes('Natural') ||
+              v.name.includes('Samantha') ||
+              v.name.includes('Google') ||
+              v.name.includes('Karen') ||
+              v.name.includes('Jenny'))
+        );
+        if (naturalVoice) utterance.voice = naturalVoice;
+        window.speechSynthesis.speak(utterance);
+      } else {
         window.speechSynthesis.cancel();
       }
-    };
-  }, [sampleText, isMuted, internalPlaying]);
+    }
+  }, [isMuted, internalPlaying, sampleText]);
 
   const toggleMute = () => {
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
-    if (nextMuted) {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    } else {
-      if (internalPlaying) {
-        speakText(sampleText);
+
+    const audio = audioRef.current;
+    if (audio) {
+      audio.muted = nextMuted;
+      if (!nextMuted && internalPlaying) {
+        audio.play().catch(() => {});
+      } else if (nextMuted) {
+        audio.pause();
       }
     }
   };
@@ -190,17 +222,43 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
   }, [internalPlaying, accentColor]);
 
   const togglePlayback = () => {
-    const newState = !internalPlaying;
-    setInternalPlaying(newState);
-    if (!newState) {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+    const nextPlaying = !internalPlaying;
+    setInternalPlaying(nextPlaying);
+
+    const audio = audioRef.current;
+    if (audio) {
+      if (!nextPlaying) {
+        audio.pause();
+      } else {
+        if (!isMuted) {
+          audio.play().catch(() => {});
+        }
       }
-    } else {
-      if (!isMuted) {
-        speakText(sampleText);
+    } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      if (!nextPlaying) {
+        window.speechSynthesis.cancel();
+      } else {
+        if (!isMuted) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(sampleText);
+          utterance.rate = 1.02;
+          utterance.pitch = 1.0;
+          const voices = window.speechSynthesis.getVoices();
+          const naturalVoice = voices.find(
+            (v) =>
+              v.lang.startsWith('en') &&
+              (v.name.includes('Natural') ||
+                v.name.includes('Samantha') ||
+                v.name.includes('Google') ||
+                v.name.includes('Karen') ||
+                v.name.includes('Jenny'))
+          );
+          if (naturalVoice) utterance.voice = naturalVoice;
+          window.speechSynthesis.speak(utterance);
+        }
       }
     }
+
     if (onTogglePlay) onTogglePlay();
   };
 
