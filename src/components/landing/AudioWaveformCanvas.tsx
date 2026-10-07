@@ -256,14 +256,23 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
         </button>
       </div>
 
-      {/* Transcript speech display */}
-      <div className="pt-3 border-t border-white/10 flex items-start justify-between gap-4">
-        <p className="text-xs md:text-sm text-neutral-300 leading-relaxed font-sans italic">
-          "{sampleText}"
-        </p>
-        <span className="shrink-0 px-2 py-0.5 text-[10px] font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          Full Duplex
-        </span>
+      {/* Redesigned Transcript & Full Duplex stream container */}
+      <div className="mt-4 pt-3.5 border-t border-white/10 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[10px] font-mono uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Full Duplex</span>
+          </div>
+          <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider">
+            Autonomous Stream
+          </span>
+        </div>
+
+        <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 backdrop-blur-xs">
+          <p className="text-xs md:text-sm text-neutral-200 leading-relaxed font-sans italic">
+            "{sampleText}"
+          </p>
+        </div>
       </div>
     </div>
   );
