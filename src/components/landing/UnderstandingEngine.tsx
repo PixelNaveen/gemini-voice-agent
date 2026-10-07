@@ -262,16 +262,16 @@ export const UnderstandingEngine: React.FC = () => {
         onClick={() => goTo(idx)}
         aria-pressed={isActive}
         aria-label={`Show case ${item.number}: ${item.title}`}
-        className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-lg font-mono text-[11px] uppercase tracking-wider transition-colors duration-200 cursor-pointer ${
+        className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg font-mono text-[clamp(10px,2.4vw,12px)] uppercase tracking-tight sm:tracking-wider whitespace-nowrap transition-colors duration-200 cursor-pointer ${
           isActive
             ? 'bg-neutral-900 border border-emerald-500/60 text-white shadow-lg'
             : 'border border-transparent text-neutral-500 hover:text-neutral-300 hover:bg-white/5'
         }`}
       >
-        <span className={isActive ? 'text-emerald-400' : 'text-neutral-600'}>
+        <span className={`shrink-0 ${isActive ? 'text-emerald-400' : 'text-neutral-600'}`}>
           {isActive ? '●' : '○'}
         </span>
-        <span>
+        <span className="truncate whitespace-nowrap">
           {item.number} {item.navTitle}
         </span>
       </button>
