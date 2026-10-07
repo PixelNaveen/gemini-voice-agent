@@ -49,7 +49,7 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
   useEffect(() => {
     if (!isMuted && internalPlaying) {
       speakText(sampleText);
-    } else if (isMuted && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
     return () => {
@@ -67,7 +67,9 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
         window.speechSynthesis.cancel();
       }
     } else {
-      speakText(sampleText);
+      if (internalPlaying) {
+        speakText(sampleText);
+      }
     }
   };
 
@@ -81,7 +83,17 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
     let phase = 0;
 
     const barCount = 48;
-    const heights = new Array(barCount).fill(10);
+    const heights = new Array(barCount).fill(0).map((_, i) => {
+      const normalizedIdx = i / barCount;
+      const centerDistance = Math.abs(normalizedIdx - 0.5) * 2;
+      const envelope = Math.max(0.15, 1 - Math.pow(centerDistance, 1.4));
+      return (
+        (Math.sin(i * 0.28) * 0.4 + Math.sin(i * 0.4) * 0.3 + Math.cos(i * 0.6) * 0.3 + 1) *
+          (140 * 0.42) *
+          envelope +
+        10
+      );
+    });
 
     const render = () => {
       animationId = requestAnimationFrame(render);
@@ -103,26 +115,29 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
       const barWidth = (width / barCount) * 0.65;
       const barSpacing = (width / barCount) * 0.35;
 
-      phase += internalPlaying ? 0.08 : 0.01;
+      if (internalPlaying) {
+        phase += 0.08;
+      }
 
       for (let i = 0; i < barCount; i++) {
-        // Multi-harmonic audio frequency simulation
         const normalizedIdx = i / barCount;
         const centerDistance = Math.abs(normalizedIdx - 0.5) * 2;
         const envelope = Math.max(0.1, 1 - Math.pow(centerDistance, 1.4));
 
-        const targetHeight = internalPlaying
-          ? (Math.sin(phase * 1.8 + i * 0.28) * 0.4 +
+        if (internalPlaying) {
+          // Multi-harmonic audio frequency simulation
+          const targetHeight =
+            (Math.sin(phase * 1.8 + i * 0.28) * 0.4 +
               Math.sin(phase * 3.2 - i * 0.4) * 0.3 +
               Math.cos(phase * 0.9 + i * 0.6) * 0.3 +
               1) *
               (height * 0.42) *
               envelope +
-            8
-          : 6 + Math.sin(phase * 0.5 + i * 0.2) * 3;
+            8;
 
-        // Smooth height transition
-        heights[i] += (targetHeight - heights[i]) * 0.15;
+          // Smooth height transition
+          heights[i] += (targetHeight - heights[i]) * 0.15;
+        }
 
         const x = i * (barWidth + barSpacing) + barSpacing / 2;
         const yTop = (height - heights[i]) / 2;
@@ -134,8 +149,9 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
           gradient.addColorStop(0.5, resolvedAccentColor);
           gradient.addColorStop(1, '#064e3b');
         } else {
-          gradient.addColorStop(0, 'rgba(156, 163, 175, 0.4)');
-          gradient.addColorStop(1, 'rgba(75, 85, 99, 0.2)');
+          gradient.addColorStop(0, '#10b981');
+          gradient.addColorStop(0.5, 'rgba(5, 150, 105, 0.7)');
+          gradient.addColorStop(1, '#064e3b');
         }
 
         ctx.fillStyle = gradient;
@@ -144,8 +160,8 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
         ctx.fill();
 
         // High frequency glow cap
-        if (internalPlaying && heights[i] > height * 0.35) {
-          ctx.fillStyle = '#6ee7b7';
+        if (heights[i] > height * 0.35) {
+          ctx.fillStyle = internalPlaying ? '#6ee7b7' : 'rgba(110, 231, 183, 0.6)';
           ctx.beginPath();
           ctx.arc(x + barWidth / 2, yTop, 1.8, 0, Math.PI * 2);
           ctx.fill();
@@ -154,11 +170,11 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
 
       // Draw subtle sine overlay wave
       ctx.beginPath();
-      ctx.strokeStyle = internalPlaying ? 'rgba(52, 211, 153, 0.35)' : 'rgba(156, 163, 175, 0.15)';
+      ctx.strokeStyle = internalPlaying ? 'rgba(52, 211, 153, 0.35)' : 'rgba(52, 211, 153, 0.18)';
       ctx.lineWidth = 1.5;
       for (let x = 0; x < width; x += 3) {
         const nx = x / width;
-        const wave = Math.sin(nx * 12 + phase * 2) * Math.cos(nx * 6 - phase) * (internalPlaying ? 24 : 4);
+        const wave = Math.sin(nx * 12 + phase * 2) * Math.cos(nx * 6 - phase) * 24;
         const y = height / 2 + wave;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -176,6 +192,15 @@ export const AudioWaveformCanvas: React.FC<AudioWaveformCanvasProps> = ({
   const togglePlayback = () => {
     const newState = !internalPlaying;
     setInternalPlaying(newState);
+    if (!newState) {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    } else {
+      if (!isMuted) {
+        speakText(sampleText);
+      }
+    }
     if (onTogglePlay) onTogglePlay();
   };
 
