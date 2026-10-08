@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Network, FileText, PhoneForwarded, CheckCircle2, ArrowRight, ShieldCheck, Sliders } from 'lucide-react';
+import { FileText, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
 import { BlurText } from './motion/BlurText.tsx';
 
 interface SetupStep {
-  number: string;
-  title: string;
-  subtitle: string;
-  description: string;
-  deliverables: string[];
-  visualType: 'integrations' | 'knowledge' | 'routing';
+  readonly number: string;
+  readonly title: string;
+  readonly subtitle: string;
+  readonly description: string;
+  readonly deliverables: readonly string[];
+  readonly visualType: 'integrations' | 'knowledge' | 'routing';
 }
 
-const STEPS: SetupStep[] = [
+const STEP_DURATION_MS = 5000; // 5 seconds per phase
+
+const STEPS: readonly SetupStep[] = [
   {
     number: '01',
     title: 'Connect your business',
@@ -52,15 +54,46 @@ const STEPS: SetupStep[] = [
     ],
     visualType: 'routing',
   },
-];
+] as const;
 
 export const SetupTimeline: React.FC = () => {
-  const [activeStepIdx, setActiveStepIdx] = useState(0);
-  const [toneWarmth, setToneWarmth] = useState(85);
+  const [activeStepIdx, setActiveStepIdx] = useState<number>(0);
+  const [cycleKey, setCycleKey] = useState<number>(0);
+  const [toneWarmth, setToneWarmth] = useState<number>(85);
+
   const activeStep = STEPS[activeStepIdx];
 
+  const handleStepSelect = useCallback((idx: number) => {
+    setActiveStepIdx(idx);
+    setCycleKey((k) => k + 1);
+  }, []);
+
+  // 5-second auto-cycle loop; cycleKey restarts both the timer and the fill line
+  useEffect(() => {
+    const startTime = performance.now();
+
+    const tick = (timestamp: number) => {
+      if (timestamp - startTime >= STEP_DURATION_MS) {
+        setActiveStepIdx((prev) => (prev + 1) % STEPS.length);
+        setCycleKey((k) => k + 1);
+      } else {
+        requestAnimationFrame(tick);
+      }
+    };
+
+    const animationFrameId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [cycleKey]);
+
   return (
-    <section className="py-24 md:py-32 bg-[#FBF9F8] border-t border-neutral-200/60 relative">
+    <section
+      id="deployment"
+      className="py-24 md:py-32 bg-[#FBF9F8] border-t border-neutral-200/60 relative"
+      aria-label="Deployment Protocol"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="max-w-3xl space-y-4">
@@ -91,14 +124,13 @@ export const SetupTimeline: React.FC = () => {
             {STEPS.map((step, idx) => {
               const isSelected = activeStepIdx === idx;
               return (
-                <motion.div
+                <div
                   key={step.number}
-                  onClick={() => setActiveStepIdx(idx)}
-                  whileHover={{ x: isSelected ? 0 : 4 }}
-                  className={`p-6 rounded-2xl border transition-all duration-300 cursor-pointer relative ${
+                  onClick={() => handleStepSelect(idx)}
+                  className={`p-6 rounded-2xl border transition-all duration-300 cursor-pointer relative overflow-hidden ${
                     isSelected
-                      ? 'bg-white border-neutral-300 shadow-md ring-1 ring-neutral-200 -translate-y-0.5'
-                      : 'bg-neutral-50/70 border-neutral-200/70 hover:bg-white text-neutral-600'
+                      ? 'bg-white border-neutral-300 shadow-md ring-1 ring-neutral-200'
+                      : 'bg-neutral-50/70 border-neutral-200/70 hover:bg-white text-neutral-600 opacity-75 hover:opacity-100'
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -115,16 +147,28 @@ export const SetupTimeline: React.FC = () => {
                       </h3>
                     </div>
                     {isSelected && (
-                      <motion.span
-                        layoutId="activeStepDot"
-                        className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-2 shadow-xs"
-                      />
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60 shrink-0 font-medium">
+                        Phase {step.number}
+                      </span>
                     )}
                   </div>
 
                   <p className="text-xs text-neutral-500 mt-2 font-mono">
                     {step.subtitle}
                   </p>
+
+                  {/* 5-second Filling Progress Line for the expanded card */}
+                  {isSelected && (
+                    <div className="w-full bg-emerald-950/10 h-1 rounded-full overflow-hidden mt-3 mb-1">
+                      <motion.div
+                        key={cycleKey}
+                        className="bg-emerald-600 h-full w-full rounded-full origin-left"
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ duration: STEP_DURATION_MS / 1000, ease: 'linear' }}
+                      />
+                    </div>
+                  )}
 
                   <AnimatePresence>
                     {isSelected && (
@@ -151,7 +195,7 @@ export const SetupTimeline: React.FC = () => {
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </motion.div>
+                </div>
               );
             })}
           </div>
@@ -170,7 +214,7 @@ export const SetupTimeline: React.FC = () => {
                   <span className="hidden sm:inline">/</span>
                   <span className="text-neutral-800 font-semibold">{activeStep.title}</span>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 font-medium">
                   Step {activeStep.number} of 03
                 </span>
               </div>
@@ -214,7 +258,7 @@ export const SetupTimeline: React.FC = () => {
                             <span className="text-[11px] text-neutral-500 block">
                               {integ.desc}
                             </span>
-                            <span className="text-[10px] font-mono text-emerald-700 mt-2 block">
+                            <span className="text-[10px] font-mono text-emerald-700 mt-2 block font-medium">
                               {integ.status}
                             </span>
                           </motion.div>
@@ -352,7 +396,7 @@ export const SetupTimeline: React.FC = () => {
 
                       <div className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-600 flex items-center justify-between">
                         <span>Forwarding instruction dial code: <code className="font-mono font-bold text-neutral-900">*72 + Aura DID</code></span>
-                        <span className="text-emerald-700 font-medium">Auto-tested OK</span>
+                        <span className="text-emerald-700 font-medium font-mono text-xs">Auto-tested OK</span>
                       </div>
                     </div>
                   )}
