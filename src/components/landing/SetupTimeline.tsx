@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, CheckCircle2, ArrowRight, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
+import { FileText, CheckCircle2, ArrowRight, Check, ChevronLeft, ChevronRight, Circle, ShieldCheck } from 'lucide-react';
 import { BlurText } from './motion/BlurText.tsx';
 
 interface SetupStep {
@@ -104,7 +104,7 @@ const ProductWindow: React.FC<ProductWindowProps> = ({
               Selected active operational connectors:
             </div>
 
-            <div className="grid grid-cols-2 min-[640px]:max-[767px]:grid-cols-3 min-[768px]:max-[1199px]:grid-cols-2 min-[1200px]:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 min-[640px]:max-[767px]:grid-cols-3 min-[768px]:max-[1200px]:grid-cols-2 min-[1200px]:grid-cols-3 gap-3">
               {[
                 { name: 'Google Workspace', status: 'Connected', desc: 'Calendar & Meet' },
                 { name: 'Microsoft 365', status: 'Connected', desc: 'Exchange & Teams' },
@@ -274,12 +274,144 @@ const ProductWindow: React.FC<ProductWindowProps> = ({
   </motion.div>
 );
 
+const MOBILE_CONNECTORS: ReadonlyArray<{ readonly name: string; readonly status: string }> = [
+  { name: 'Google Calendar', status: 'Connected' },
+  { name: 'Microsoft 365', status: 'Connected' },
+  { name: 'Epic EHR / Cerner', status: 'Verified' },
+  { name: 'Boulevard Booking', status: 'Syncing' },
+  { name: 'Stripe Payments', status: 'Ready' },
+  { name: 'Twilio Telephony', status: 'Live' },
+];
+
+const MOBILE_KNOWLEDGE: ReadonlyArray<{ readonly label: string; readonly done: boolean }> = [
+  { label: 'Services & pricing', done: true },
+  { label: 'Business hours', done: true },
+  { label: 'FAQs', done: true },
+  { label: 'Policies & triage', done: true },
+  { label: 'Brand voice', done: true },
+  { label: 'Escalation rules', done: false },
+];
+
+interface MobileProductPreviewProps {
+  readonly step: SetupStep;
+}
+
+// Simplified product UI for phones: one main message per step, single column, auto height
+const MobileProductPreview: React.FC<MobileProductPreviewProps> = ({ step }) => (
+  <div className="mt-6 rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+    {/* Tiny fake top bar for the product illusion */}
+    <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-neutral-100 bg-neutral-50/70">
+      <span className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-neutral-500">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+        Aura Admin Console
+      </span>
+      <span className="shrink-0 text-[10px] font-mono font-semibold text-emerald-700">
+        {step.number}/03
+      </span>
+    </div>
+
+    <div className="p-5">
+      {/* Step 01: connectivity */}
+      {step.visualType === 'integrations' && (
+        <div>
+          <h4 className="text-[17px] font-semibold text-neutral-900">Connected systems</h4>
+          <div className="mt-3 divide-y divide-neutral-100">
+            {MOBILE_CONNECTORS.map((row) => (
+              <div key={row.name} className="flex items-center justify-between gap-3 py-3">
+                <span className="text-[14px] font-medium text-neutral-800 truncate">{row.name}</span>
+                <span className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-[11px] font-mono text-neutral-500">{row.status}</span>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+            End-to-end encrypted · HIPAA BAA
+          </div>
+        </div>
+      )}
+
+      {/* Step 02: knowledge readiness */}
+      {step.visualType === 'knowledge' && (
+        <div>
+          <h4 className="text-[17px] font-semibold text-neutral-900">Knowledge base</h4>
+          <p className="mt-1 text-[13px] text-neutral-500">Your receptionist knows:</p>
+          <div className="mt-3 divide-y divide-neutral-100">
+            {MOBILE_KNOWLEDGE.map((row) => (
+              <div key={row.label} className="flex items-center justify-between gap-3 py-2.5">
+                <span className="text-[14px] text-neutral-800">{row.label}</span>
+                {row.done ? (
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                ) : (
+                  <Circle className="h-4 w-4 shrink-0 text-neutral-300" />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-3 text-[11px] font-mono">
+            <span className="text-neutral-500">5 of 6 sections ready</span>
+            <span className="font-semibold text-emerald-700">83% READY</span>
+          </div>
+          <div className="mt-2 h-1.5 rounded-full bg-neutral-100 overflow-hidden">
+            <div className="h-full w-[83%] rounded-full bg-emerald-600" />
+          </div>
+        </div>
+      )}
+
+      {/* Step 03: live operation */}
+      {step.visualType === 'routing' && (
+        <div>
+          <h4 className="text-[17px] font-semibold text-neutral-900">AI receptionist</h4>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-mono text-[13px] font-semibold tracking-wider text-emerald-700">
+              ACTIVE
+            </span>
+          </div>
+          <div className="mt-2 font-mono text-[15px] text-neutral-900">+1 (800) 492-AURA</div>
+
+          <div className="my-4 h-px bg-neutral-100" />
+
+          <div className="font-mono text-[11px] uppercase tracking-wider text-neutral-400">Today</div>
+          <div className="mt-2 space-y-2">
+            {[
+              { label: 'Calls', value: '27' },
+              { label: 'Answered', value: '27' },
+              { label: 'Missed', value: '0' },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between gap-3">
+                <span className="text-[14px] text-neutral-600">{row.label}</span>
+                <span className="font-mono text-[14px] font-semibold text-neutral-900">{row.value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="my-4 h-px bg-neutral-100" />
+
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[13px] text-neutral-600">Your receptionist is live.</span>
+            <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-mono text-[11px] font-semibold text-emerald-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              READY
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 export const SetupTimeline: React.FC = () => {
   const [activeStepIdx, setActiveStepIdx] = useState<number>(0);
   const [cycleKey, setCycleKey] = useState<number>(0);
   const [toneWarmth, setToneWarmth] = useState<number>(85);
   const [isTablet, setIsTablet] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [mobileActiveStep, setMobileActiveStep] = useState<number>(0);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const stepRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   const activeStep = STEPS[activeStepIdx];
 
@@ -288,18 +420,49 @@ export const SetupTimeline: React.FC = () => {
     setCycleKey((k) => k + 1);
   }, []);
 
-  // Tablet (768px–1199px) is user-controlled: detect the range and pause autoplay
+  // Mobile & tablet are user-driven layouts: detect both ranges and pause autoplay
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(min-width: 768px) and (max-width: 1199px)');
-    const update = () => setIsTablet(mediaQuery.matches);
+    const tabletQuery = window.matchMedia('(min-width: 768px) and (max-width: 1199.9px)');
+    const mobileQuery = window.matchMedia('(max-width: 767.98px)');
+    const update = () => {
+      setIsTablet(tabletQuery.matches);
+      setIsMobile(mobileQuery.matches);
+    };
     update();
-    mediaQuery.addEventListener('change', update);
-    return () => mediaQuery.removeEventListener('change', update);
+    tabletQuery.addEventListener('change', update);
+    mobileQuery.addEventListener('change', update);
+    return () => {
+      tabletQuery.removeEventListener('change', update);
+      mobileQuery.removeEventListener('change', update);
+    };
   }, []);
 
-  // 5-second auto-cycle loop (desktop/mobile only); cycleKey restarts both the timer and the fill line
+  // Mobile timeline state follows the story as steps cross the viewport middle.
+  // Content stays put; only the rail dots change. No scroll-jacking.
   useEffect(() => {
-    if (isTablet) return;
+    if (!isMobile) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const idx = Number((entry.target as HTMLElement).dataset.stepIdx);
+          if (Number.isInteger(idx)) setMobileActiveStep(idx);
+        });
+      },
+      { rootMargin: '-45% 0px -45% 0px', threshold: 0 },
+    );
+
+    stepRefs.current.forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [isMobile]);
+
+  // 5-second auto-cycle loop (desktop only); cycleKey restarts both the timer and the fill line
+  useEffect(() => {
+    if (isTablet || isMobile) return;
 
     const startTime = performance.now();
 
@@ -317,12 +480,12 @@ export const SetupTimeline: React.FC = () => {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [cycleKey, isTablet]);
+  }, [cycleKey, isTablet, isMobile]);
 
   return (
     <section
       id="deployment"
-      className="py-24 md:py-32 bg-[#FBF9F8] border-t border-neutral-200/60 relative"
+      className="py-16 md:py-32 bg-[#FBF9F8] border-t border-neutral-200/60 relative"
       aria-label="Deployment Protocol"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -336,20 +499,84 @@ export const SetupTimeline: React.FC = () => {
           >
             Deployment Protocol
           </motion.span>
-          <div className="text-3xl min-[640px]:max-[767px]:text-4xl min-[768px]:max-[1023px]:text-[44px] min-[1024px]:text-5xl font-editorial font-normal tracking-tight text-neutral-950 text-balance">
+          <div className="text-[36px] max-[768px]:leading-[1.08] max-[768px]:max-w-[340px] min-[768px]:max-[1023px]:text-[44px] min-[768px]:max-[1023px]:leading-[1.1] min-[1024px]:text-5xl font-editorial font-normal tracking-tight text-neutral-950 text-balance">
             <BlurText
               text="From setup to your first conversation."
               delay={40}
               className="font-editorial"
             />
           </div>
-          <p className="text-base sm:text-lg text-neutral-600 font-sans leading-relaxed text-balance">
+          <p className="text-base min-[768px]:text-lg text-neutral-600 font-sans leading-relaxed text-balance">
             No engineering resources required. Your AI receptionist is active and trained in three disciplined phases.
           </p>
         </div>
 
+        {/* Mobile (<768px): vertical deployment story driven by scroll */}
+        <div className="hidden max-[768px]:block mt-10">
+          {STEPS.map((step, idx) => {
+            const dotState =
+              idx < mobileActiveStep ? 'done' : idx === mobileActiveStep ? 'current' : 'future';
+            const isLast = idx === STEPS.length - 1;
+            return (
+              <div
+                key={step.number}
+                className="flex gap-4"
+                data-step-idx={idx}
+                ref={(el) => {
+                  stepRefs.current[idx] = el;
+                }}
+              >
+                {/* Timeline rail: dots + connecting line */}
+                <div className="flex w-4 shrink-0 flex-col items-center pt-1.5">
+                  {dotState === 'done' ? (
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-white">
+                      <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                    </span>
+                  ) : dotState === 'current' ? (
+                    <span className="h-3.5 w-3.5 rounded-full border-2 border-emerald-600 bg-emerald-600 ring-4 ring-emerald-100" />
+                  ) : (
+                    <span className="h-3.5 w-3.5 rounded-full border-2 border-neutral-300 bg-white" />
+                  )}
+                  {!isLast && (
+                    <span
+                      className={`my-1.5 w-px flex-1 ${
+                        idx < mobileActiveStep ? 'bg-emerald-500' : 'bg-neutral-200'
+                      }`}
+                    />
+                  )}
+                </div>
+
+                {/* Step content: label, title, description, simplified product preview */}
+                <motion.div
+                  className={`min-w-0 flex-1 ${isLast ? 'pb-0' : 'pb-16'}`}
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                >
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-mono text-xs font-semibold text-neutral-400">
+                      {step.number}
+                    </span>
+                    <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+                      {step.shortLabel}
+                    </span>
+                  </div>
+                  <h3 className="mt-2 font-editorial text-[26px] leading-[1.12] tracking-tight text-neutral-950">
+                    {step.title}
+                  </h3>
+                  <p className="mt-3 text-[15px] leading-[1.55] text-neutral-600">
+                    {step.description}
+                  </p>
+                  <MobileProductPreview step={step} />
+                </motion.div>
+              </div>
+            );
+          })}
+        </div>
+
         {/* Tablet (768px–1199px): horizontal journey + full-width product interface */}
-        <div className="hidden min-[768px]:max-[1199px]:block mt-12">
+        <div className="hidden min-[768px]:max-[1200px]:block mt-12">
           {/* Horizontal deployment journey rail */}
           <div className="relative">
             <div
@@ -484,7 +711,7 @@ export const SetupTimeline: React.FC = () => {
         </div>
 
         {/* Desktop: vertical step cards beside interactive console */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mt-14 items-center min-[768px]:max-[1199px]:hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mt-14 items-center max-[1200px]:hidden">
           {/* Step Selector List */}
           <div className="lg:col-span-5 space-y-4">
             {STEPS.map((step, idx) => {
