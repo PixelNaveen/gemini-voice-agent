@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useDragControls, type Variants } from 'motion/react';
 import { FileText, CheckCircle2, ArrowRight, Check, ChevronLeft, ChevronRight, Circle, ShieldCheck } from 'lucide-react';
 import { BlurText } from './motion/BlurText.tsx';
 
@@ -14,6 +14,15 @@ interface SetupStep {
 }
 
 const STEP_DURATION_MS = 5000; // 5 seconds per phase
+
+// Polished, direction-aware step transition: the outgoing panel slides + fades
+// the way the user swiped, and the incoming panel enters from the opposite edge.
+const STEP_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+const PRODUCT_STEP_VARIANTS: Variants = {
+  enter: (dir: number) => ({ opacity: 0, x: dir >= 0 ? 72 : -72 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir >= 0 ? -72 : 72 }),
+};
 
 const STEPS: readonly SetupStep[] = [
   {
@@ -62,12 +71,14 @@ const STEPS: readonly SetupStep[] = [
 
 interface ProductWindowProps {
   readonly activeStep: SetupStep;
+  readonly direction: number;
   readonly toneWarmth: number;
   readonly onToneWarmthChange: (value: number) => void;
 }
 
 const ProductWindow: React.FC<ProductWindowProps> = ({
   activeStep,
+  direction,
   toneWarmth,
   onToneWarmthChange,
 }) => (
@@ -75,28 +86,28 @@ const ProductWindow: React.FC<ProductWindowProps> = ({
     layout
     className="bg-white border border-neutral-200 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden"
   >
-    {/* Header */}
-    <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 pb-5 border-b border-neutral-100">
-      <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
-        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-        <span className="hidden sm:inline">Aura Admin Console</span>
-        <span className="hidden sm:inline">/</span>
-        <span className="text-neutral-800 font-semibold">{activeStep.title}</span>
-      </div>
-      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 font-medium">
-        Step {activeStep.number} of 03
-      </span>
-    </div>
-
-    {/* Step Transitions with AnimatePresence */}
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" custom={direction} initial={false}>
       <motion.div
-        key={activeStep.visualType}
-        initial={{ opacity: 0, scale: 0.98, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.98, y: -10 }}
-        transition={{ duration: 0.25 }}
+        key={activeStep.number}
+        custom={direction}
+        variants={PRODUCT_STEP_VARIANTS}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.32, ease: STEP_EASE }}
       >
+        {/* Header */}
+        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 pb-5 border-b border-neutral-100">
+          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="hidden sm:inline">Aura Admin Console</span>
+            <span className="hidden sm:inline">/</span>
+            <span className="text-neutral-800 font-semibold">{activeStep.title}</span>
+          </div>
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 font-medium">
+            Step {activeStep.number} of 03
+          </span>
+        </div>
         {/* Step 1 Visual: Connected Integrations */}
         {activeStep.visualType === 'integrations' && (
           <div className="py-6 space-y-5">
@@ -405,25 +416,30 @@ const MobileProductPreview: React.FC<MobileProductPreviewProps> = ({ step }) => 
 
 export const SetupTimeline: React.FC = () => {
   const [activeStepIdx, setActiveStepIdx] = useState<number>(0);
+  const [direction, setDirection] = useState<number>(1);
   const [cycleKey, setCycleKey] = useState<number>(0);
   const [toneWarmth, setToneWarmth] = useState<number>(85);
   const [isTablet, setIsTablet] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [mobileActiveStep, setMobileActiveStep] = useState<number>(0);
   const [isInView, setIsInView] = useState<boolean>(false);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const stepRefs = useRef<Array<HTMLDivElement | null>>([]);
   const fillRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const storyRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const inViewRef = useRef<boolean>(false);
+  const dragControls = useDragControls();
 
   const activeStep = STEPS[activeStepIdx];
 
-  const goToStep = useCallback((idx: number) => {
-    setActiveStepIdx(idx);
-    setCycleKey((k) => k + 1);
-  }, []);
+  const goToStep = useCallback(
+    (idx: number) => {
+      setDirection(idx >= activeStepIdx ? 1 : -1);
+      setActiveStepIdx(idx);
+      setCycleKey((k) => k + 1);
+    },
+    [activeStepIdx],
+  );
 
   // Mobile & tablet are user-driven layouts: detect both ranges and pause autoplay
   useEffect(() => {
@@ -561,6 +577,7 @@ export const SetupTimeline: React.FC = () => {
     if (isTablet || isMobile || !isInView) return;
 
     const timeoutId = window.setTimeout(() => {
+      setDirection(1);
       setActiveStepIdx((prev) => (prev + 1) % STEPS.length);
       setCycleKey((k) => k + 1);
     }, STEP_DURATION_MS);
@@ -739,35 +756,34 @@ export const SetupTimeline: React.FC = () => {
             </motion.div>
           </div>
 
-          {/* Large product interface (full container width) with swipe navigation */}
-          <div
-            className="mt-8 touch-pan-y"
-            onTouchStart={(e) => {
-              const touch = e.touches[0];
-              touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-            }}
-            onTouchCancel={() => {
-              touchStartRef.current = null;
-            }}
-            onTouchEnd={(e) => {
+          {/* Large product interface (full container width) with horizontal swipe navigation */}
+          <motion.div
+            className="mt-8 touch-pan-y cursor-grab active:cursor-grabbing"
+            drag="x"
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.15}
+            dragMomentum={false}
+            dragTransition={{ bounceStiffness: 520, bounceDamping: 34 }}
+            onPointerDown={(e) => {
               if ((e.target as HTMLElement).closest('input, button, a')) return;
-              const start = touchStartRef.current;
-              touchStartRef.current = null;
-              if (!start) return;
-              const touch = e.changedTouches[0];
-              const dx = touch.clientX - start.x;
-              const dy = touch.clientY - start.y;
-              if (Math.abs(dx) < 60 || Math.abs(dx) <= Math.abs(dy)) return;
-              const target = activeStepIdx + (dx < 0 ? 1 : -1);
-              if (target >= 0 && target < STEPS.length) goToStep(target);
+              dragControls.start(e);
+            }}
+            onDragEnd={(_, info) => {
+              const goNext = info.offset.x < -60 || info.velocity.x < -500;
+              const goPrev = info.offset.x > 60 || info.velocity.x > 500;
+              if (goNext && activeStepIdx < STEPS.length - 1) goToStep(activeStepIdx + 1);
+              else if (goPrev && activeStepIdx > 0) goToStep(activeStepIdx - 1);
             }}
           >
             <ProductWindow
               activeStep={activeStep}
+              direction={direction}
               toneWarmth={toneWarmth}
               onToneWarmthChange={setToneWarmth}
             />
-          </div>
+          </motion.div>
 
           {/* Previous / Next controls */}
           <div className="mt-6 flex items-center justify-between">
@@ -891,6 +907,7 @@ export const SetupTimeline: React.FC = () => {
           <div className="lg:col-span-7">
             <ProductWindow
               activeStep={activeStep}
+              direction={direction}
               toneWarmth={toneWarmth}
               onToneWarmthChange={setToneWarmth}
             />
