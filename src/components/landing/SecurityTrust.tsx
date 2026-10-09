@@ -115,30 +115,17 @@ export const SecurityTrust: React.FC = () => {
           </p>
         </div>
 
-        {/* Mobile Swipable Cards Deck */}
-        <div className="block md:hidden mt-8">
-          <TouchSwipeDeck minHeightClass="min-h-[380px]">
+        {/* Swipable Security Cards Carousel — arrow navigation on all devices */}
+        <div className="mt-8 sm:mt-12 lg:mt-14">
+          <TouchSwipeDeck
+            minHeightClass="min-h-[360px] sm:min-h-[380px]"
+            desktopItemsPerView={3}
+            showHint={false}
+          >
             {SECURITY_ITEMS.map((item, idx) => (
               <SecurityCard key={idx} item={item} idx={idx} />
             ))}
           </TouchSwipeDeck>
-        </div>
-
-        {/* Tablet & Desktop Security Grid */}
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6 mt-12 lg:mt-14">
-          {SECURITY_ITEMS.map((item, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: idx * 0.08 }}
-              whileHover={{ y: -5 }}
-              className="h-full"
-            >
-              <SecurityCard item={item} idx={idx} />
-            </motion.div>
-          ))}
         </div>
       </div>
     </section>

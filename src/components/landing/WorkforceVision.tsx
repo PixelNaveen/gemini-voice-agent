@@ -116,6 +116,7 @@ export const WorkforceVision: React.FC = () => {
         <div className="block sm:hidden mt-8">
           <TouchSwipeDeck
             minHeightClass="min-h-[290px]"
+            showHint={false}
             onIndexChange={(idx) => setSelectedNodeId(NODES[idx].id)}
           >
             {NODES.map((node) => {

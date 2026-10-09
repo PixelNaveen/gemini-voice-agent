@@ -9,6 +9,7 @@ interface TouchSwipeDeckProps {
   minHeightClass?: string;
   showHint?: boolean;
   showArrows?: boolean;
+  desktopItemsPerView?: number;
   autoPlay?: boolean;
   autoPlayInterval?: number;
   onIndexChange?: (index: number) => void;
@@ -20,6 +21,7 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
   minHeightClass = 'min-h-[440px] sm:min-h-[460px]',
   showHint = true,
   showArrows = true,
+  desktopItemsPerView = 2,
   autoPlay = false,
   autoPlayInterval = 5000,
   onIndexChange,
@@ -31,9 +33,10 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
 
   const total = children.length;
 
-  // Determine items visible per view based on container width (Tablet: 2 cards, Mobile: 1 card)
+  // Determine items visible per view based on container width (Desktop: N, Tablet: 2 cards, Mobile: 1 card)
+  const isDesktop = containerWidth >= 1024;
   const isTablet = containerWidth >= 640;
-  const itemsPerView = isTablet ? 2 : 1;
+  const itemsPerView = isDesktop ? desktopItemsPerView : isTablet ? 2 : 1;
   const maxIndex = Math.max(0, total - itemsPerView);
 
   // Auto-play continuous loop
@@ -134,7 +137,7 @@ export const TouchSwipeDeck: React.FC<TouchSwipeDeckProps> = ({
             <span className="inline-flex items-center gap-1.5 text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/70 shadow-2xs">
               <Hand className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
               <span className="font-sans font-medium text-[11px]">
-                {isTablet ? 'Showing 2 cards · Swipe or tap arrows' : 'Swipe card or tap arrows'}
+                {isTablet ? `Showing ${itemsPerView} cards · Swipe or tap arrows` : 'Swipe card or tap arrows'}
               </span>
             </span>
             <span className="text-[11px] font-mono text-neutral-600 bg-neutral-100/90 px-2 py-0.5 rounded-md border border-neutral-200/60">
