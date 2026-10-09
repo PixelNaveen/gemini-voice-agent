@@ -33,7 +33,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {});
     } else {
-      document.exitFullscreen().catch(() => {});
+      document.exitFullscreen() .catch(() => {});
     }
   };
 
