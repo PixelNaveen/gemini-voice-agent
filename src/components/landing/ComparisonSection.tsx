@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, animate } from 'motion/react';
+import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import {
   PhoneOff,
   PhoneCall,
@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Hand,
 } from 'lucide-react';
 import { BlurText } from './motion/BlurText.tsx';
 import { useTouchDevice } from '../../hooks/useTouchDevice.ts';
@@ -159,29 +158,23 @@ export const ComparisonSection: React.FC = () => {
   const carouselContainerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(360);
   const [activeSlide, setActiveSlide] = useState<0 | 1>(0);
+  const activeSlideRef = useRef<0 | 1>(0);
 
-  // Raw interactive drag motion value
+  // Raw drag motion value, bound 1:1 to the pointer while dragging so the deck
+  // tracks the finger with zero lag (no spring smoothing on the live drag).
   const dragX = useMotionValue(0);
 
-  // Physically-accurate, high-fidelity spring for slow, weighted, cinematic transitions
-  // Calibrated with balanced mass and damping for a subtle, silky deceleration curve rather than a hard snap
-  const springX = useSpring(dragX, {
-    stiffness: 180,
-    damping: 28,
-    mass: 1.08,
-    restDelta: 0.001,
-  });
+  // Programmatic snap — stiff and near critically damped so the incoming card
+  // settles FULLY and quickly into view instead of trailing behind.
+  const SNAP_TRANSITION = { type: 'spring', stiffness: 460, damping: 42, mass: 0.7 } as const;
 
-  // Dynamic continuous transforms for parallax depth and slow reveal transitions
-  // Slide 1 (Normal Caller) smoothly scales, fades and blurs gently as dragged away
-  const normalScale = useTransform(springX, [-containerWidth, 0], [0.93, 1]);
-  const normalOpacity = useTransform(springX, [-containerWidth, -containerWidth * 0.15, 0], [0.25, 0.9, 1]);
-  const normalFilter = useTransform(springX, [-containerWidth, 0], ['blur(4px)', 'blur(0px)']);
-
-  // Slide 2 (AI Caller) slowly unveils from subtle scale, depth blur, and opacity
-  const aiScale = useTransform(springX, [-containerWidth, 0], [1, 0.93]);
-  const aiOpacity = useTransform(springX, [-containerWidth, -containerWidth * 0.85, 0], [1, 0.9, 0.25]);
-  const aiFilter = useTransform(springX, [-containerWidth, 0], ['blur(0px)', 'blur(4px)']);
+  // Cheap parallax (transform + opacity only — no per-frame blur, which was the
+  // main cause of the mobile/tablet swipe jank). Derived straight from the drag
+  // position so it also tracks the finger 1:1.
+  const normalScale = useTransform(dragX, [-containerWidth, 0], [0.94, 1]);
+  const normalOpacity = useTransform(dragX, [-containerWidth, 0], [0.35, 1]);
+  const aiScale = useTransform(dragX, [-containerWidth, 0], [1, 0.94]);
+  const aiOpacity = useTransform(dragX, [-containerWidth, 0], [1, 0.35]);
 
   useEffect(() => {
     const updateWidth = () => {
@@ -194,26 +187,30 @@ export const ComparisonSection: React.FC = () => {
     return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
+  // Keep the deck aligned to the active slide whenever the container resizes.
+  useEffect(() => {
+    dragX.set(-activeSlideRef.current * containerWidth);
+  }, [containerWidth, dragX]);
+
   const slideTo = (index: 0 | 1) => {
+    activeSlideRef.current = index;
     setActiveSlide(index);
-    const targetX = -index * containerWidth;
-    dragX.set(targetX);
+    animate(dragX, -index * containerWidth, SNAP_TRANSITION);
     triggerHaptic(14);
   };
 
   const handleDragEnd = (_: any, info: { offset: { x: number }; velocity: { x: number } }) => {
-    const threshold = containerWidth * 0.25;
-    const dragDistance = info.offset.x;
+    const threshold = containerWidth * 0.22;
     const velocity = info.velocity.x;
 
-    if (activeSlide === 0) {
-      if (dragDistance < -threshold || velocity < -250) {
+    if (activeSlideRef.current === 0) {
+      if (info.offset.x < -threshold || velocity < -320) {
         slideTo(1);
       } else {
         slideTo(0);
       }
     } else {
-      if (dragDistance > threshold || velocity > 250) {
+      if (info.offset.x > threshold || velocity > 320) {
         slideTo(0);
       } else {
         slideTo(1);
@@ -223,7 +220,7 @@ export const ComparisonSection: React.FC = () => {
 
   // Render Card Content: Normal Caller
   const renderNormalCard = () => (
-    <div className="h-full rounded-3xl bg-gradient-to-br from-[#171214] via-[#140e10] to-[#0c0809] border border-rose-900/40 p-6 sm:p-8 shadow-xl text-white flex flex-col justify-between relative overflow-hidden select-none">
+    <div className="h-full rounded-3xl bg-gradient-to-br from-[#171214] via-[#140e10] to-[#0c0809] border border-rose-900/40 p-6 sm:p-8 shadow-xl text-white flex flex-col justify-between relative overflow-hidden select-none max-sm:p-4">
       {/* Crimson micro-glow radial corner */}
       <div className="absolute top-0 left-0 w-80 h-80 bg-radial from-rose-500/12 via-rose-500/03 to-transparent blur-3xl pointer-events-none" />
 
@@ -235,40 +232,40 @@ export const ComparisonSection: React.FC = () => {
               <PhoneOff className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold text-neutral-100 tracking-tight">
+              <div className="flex items-center gap-2 min-w-0">
+                <h3 className="text-lg font-semibold text-neutral-100 tracking-tight max-sm:text-fluid-lg">
                   Normal Caller Experience
                 </h3>
               </div>
-              <p className="text-xs text-rose-400/80 font-mono">
+              <p className="text-xs text-rose-400/80 font-mono max-sm:text-fluid-xs">
                 Legacy IVR · Hold Queues · Operational Friction
               </p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider px-3 py-1 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 shrink-0">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider px-3 py-1 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 shrink-0 max-sm:text-fluid-xs">
             Traditional
           </span>
         </div>
 
         {/* Summary Metric Strip */}
-        <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-white/5 border border-rose-900/30 text-center">
+        <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-white/5 border border-rose-900/30 text-center max-sm:gap-1.5 max-sm:p-2.5 [&>div]:flex [&>div]:flex-col [&>div]:justify-center [&>div]:max-sm:px-1">
           <div>
-            <span className="text-[10px] text-neutral-400 font-mono block">Wait Time</span>
-            <span className="text-sm font-semibold text-rose-400">4.8 min avg</span>
+            <span className="text-[10px] max-sm:text-[clamp(0.5rem,2.3vw,0.625rem)] text-neutral-400 font-mono block">Wait Time</span>
+            <span className="text-sm max-sm:text-[clamp(0.5625rem,3vw,0.8125rem)] font-semibold text-rose-400">4.8 min avg</span>
           </div>
           <div className="border-x border-white/10">
-            <span className="text-[10px] text-neutral-400 font-mono block">Drop Off</span>
-            <span className="text-sm font-semibold text-rose-400">67% Hang up</span>
+            <span className="text-[10px] max-sm:text-[clamp(0.5rem,2.3vw,0.625rem)] text-neutral-400 font-mono block">Drop Off</span>
+            <span className="text-sm max-sm:text-[clamp(0.5625rem,3vw,0.8125rem)] font-semibold text-rose-400">67% Hang up</span>
           </div>
           <div>
-            <span className="text-[10px] text-neutral-400 font-mono block">Resolution</span>
-            <span className="text-sm font-semibold text-neutral-300">Uncertain</span>
+            <span className="text-[10px] max-sm:text-[clamp(0.5rem,2.3vw,0.625rem)] text-neutral-400 font-mono block">Resolution</span>
+            <span className="text-sm max-sm:text-[clamp(0.5625rem,3vw,0.8125rem)] font-semibold text-neutral-300">Uncertain</span>
           </div>
         </div>
 
         {/* Point-by-Point Operational Facts */}
         <div className="space-y-3 pt-1">
-          <span className="text-[11px] font-mono text-neutral-400 uppercase tracking-wider block">
+          <span className="text-[11px] font-mono text-neutral-400 uppercase tracking-wider block max-sm:text-fluid-xs">
             Operational Realities:
           </span>
           {NORMAL_CALLER_FACTS.map((fact, idx) => (
@@ -276,16 +273,16 @@ export const ComparisonSection: React.FC = () => {
               key={idx}
               className="p-3 rounded-xl bg-white/5 border border-rose-900/30 text-xs space-y-1.5 hover:border-rose-700/50 transition-colors"
             >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-2 max-sm:flex-col max-sm:items-start max-sm:gap-1.5">
+                <div className="flex items-center gap-2 min-w-0">
                   <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                  <span className="font-semibold text-neutral-100">{fact.title}</span>
+                  <span className="font-semibold text-neutral-100 max-sm:text-fluid-sm">{fact.title}</span>
                 </div>
-                <span className="text-[10px] font-mono text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900/40 shrink-0">
+                <span className="text-[10px] font-mono text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900/40 shrink-0 max-sm:text-fluid-xs">
                   {fact.metric}
                 </span>
               </div>
-              <p className="text-[11px] text-neutral-300/90 leading-relaxed pl-5.5">
+              <p className="text-[11px] text-neutral-300/90 leading-relaxed pl-5.5 max-sm:text-fluid-xs">
                 {fact.detail}
               </p>
             </div>
@@ -294,19 +291,19 @@ export const ComparisonSection: React.FC = () => {
       </div>
 
       {/* Bottom Call Outcome Banner */}
-      <div className="relative z-10 pt-5 mt-6 border-t border-rose-900/30 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="relative z-10 pt-5 mt-6 border-t border-rose-900/30 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-3">
+        <div className="flex items-center gap-2 min-w-0">
           <TrendingDown className="w-4 h-4 text-rose-400 shrink-0" />
           <div>
-            <div className="text-xs font-semibold text-rose-300">
+            <div className="text-xs font-semibold text-rose-300 max-sm:text-fluid-xs">
               Result: Lost Customer & Negative Sentiment
             </div>
-            <div className="text-[10px] text-neutral-400">
+            <div className="text-[10px] max-sm:text-fluid-2xs text-neutral-400">
               Patient books with local competitor who answered first
             </div>
           </div>
         </div>
-        <span className="text-xs font-mono font-semibold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/20">
+        <span className="text-xs font-mono font-semibold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/20 max-sm:text-fluid-xs max-sm:self-start">
           -$420 Lost
         </span>
       </div>
@@ -315,7 +312,7 @@ export const ComparisonSection: React.FC = () => {
 
   // Render Card Content: AI Caller
   const renderAiCard = () => (
-    <div className="h-full rounded-3xl bg-gradient-to-br from-[#021f15] via-[#04281c] to-[#01140e] border border-emerald-500/35 p-6 sm:p-8 shadow-xl text-white flex flex-col justify-between relative overflow-hidden select-none">
+    <div className="h-full rounded-3xl bg-gradient-to-br from-[#021f15] via-[#04281c] to-[#01140e] border border-emerald-500/35 p-6 sm:p-8 shadow-xl text-white flex flex-col justify-between relative overflow-hidden select-none max-sm:p-4">
       {/* Luminous emerald micro-glow radial corner */}
       <div className="absolute top-0 right-0 w-80 h-80 bg-radial from-emerald-500/18 via-emerald-500/03 to-transparent blur-3xl pointer-events-none" />
 
@@ -327,41 +324,41 @@ export const ComparisonSection: React.FC = () => {
               <PhoneCall className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold text-white tracking-tight">
+              <div className="flex items-center gap-2 min-w-0">
+                <h3 className="text-lg font-semibold text-white tracking-tight max-sm:text-fluid-lg">
                   AI Caller Experience
                 </h3>
               </div>
-              <p className="text-xs text-emerald-400 font-mono">
+              <p className="text-xs text-emerald-400 font-mono max-sm:text-fluid-xs">
                 Instant Pickup · Empathetic Timbre · Direct Lock
               </p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shrink-0">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shrink-0 max-sm:text-fluid-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             Aura Autonomous
           </span>
         </div>
 
         {/* Summary Metric Strip */}
-        <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-white/5 border border-emerald-500/20 text-center">
+        <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-white/5 border border-emerald-500/20 text-center max-sm:gap-1.5 max-sm:p-2.5 [&>div]:flex [&>div]:flex-col [&>div]:justify-center [&>div]:max-sm:px-1">
           <div>
-            <span className="text-[10px] text-neutral-400 font-mono block">Pickup Speed</span>
-            <span className="text-sm font-semibold text-emerald-400">&lt; 250ms</span>
+            <span className="text-[10px] max-sm:text-[clamp(0.5rem,2.3vw,0.625rem)] text-neutral-400 font-mono block">Pickup Speed</span>
+            <span className="text-sm max-sm:text-[clamp(0.5625rem,3vw,0.8125rem)] font-semibold text-emerald-400">&lt; 250ms</span>
           </div>
           <div className="border-x border-white/10">
-            <span className="text-[10px] text-neutral-400 font-mono block">Inbound Capture</span>
-            <span className="text-sm font-semibold text-emerald-400">100% Zero-Drop</span>
+            <span className="text-[10px] max-sm:text-[clamp(0.5rem,2.3vw,0.625rem)] text-neutral-400 font-mono block">Inbound Capture</span>
+            <span className="text-sm max-sm:text-[clamp(0.5625rem,3vw,0.8125rem)] font-semibold text-emerald-400">100% <span className="whitespace-nowrap">Zero-Drop</span></span>
           </div>
           <div>
-            <span className="text-[10px] text-neutral-400 font-mono block">Resolution</span>
-            <span className="text-sm font-semibold text-white">42 seconds</span>
+            <span className="text-[10px] max-sm:text-[clamp(0.5rem,2.3vw,0.625rem)] text-neutral-400 font-mono block">Resolution</span>
+            <span className="text-sm max-sm:text-[clamp(0.5625rem,3vw,0.8125rem)] font-semibold text-white">42 seconds</span>
           </div>
         </div>
 
         {/* Point-by-Point Operational Facts */}
         <div className="space-y-3 pt-1">
-          <span className="text-[11px] font-mono text-emerald-300/80 uppercase tracking-wider block">
+          <span className="text-[11px] font-mono text-emerald-300/80 uppercase tracking-wider block max-sm:text-fluid-xs">
             Autonomous Capabilities:
           </span>
           {AI_CALLER_FACTS.map((fact, idx) => (
@@ -369,16 +366,16 @@ export const ComparisonSection: React.FC = () => {
               key={idx}
               className="p-3 rounded-xl bg-white/5 border border-emerald-500/25 text-xs space-y-1.5 hover:border-emerald-400/50 transition-colors"
             >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-2 max-sm:flex-col max-sm:items-start max-sm:gap-1.5">
+                <div className="flex items-center gap-2 min-w-0">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span className="font-semibold text-white">{fact.title}</span>
+                  <span className="font-semibold text-white max-sm:text-fluid-sm">{fact.title}</span>
                 </div>
-                <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950/70 px-2 py-0.5 rounded border border-emerald-500/40 shrink-0">
+                <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950/70 px-2 py-0.5 rounded border border-emerald-500/40 shrink-0 max-sm:text-fluid-xs">
                   {fact.metric}
                 </span>
               </div>
-              <p className="text-[11px] text-neutral-200/90 leading-relaxed pl-5.5">
+              <p className="text-[11px] text-neutral-200/90 leading-relaxed pl-5.5 max-sm:text-fluid-xs">
                 {fact.detail}
               </p>
             </div>
@@ -387,19 +384,19 @@ export const ComparisonSection: React.FC = () => {
       </div>
 
       {/* Bottom Call Outcome Banner */}
-      <div className="relative z-10 pt-5 mt-6 border-t border-emerald-500/25 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="relative z-10 pt-5 mt-6 border-t border-emerald-500/25 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-3">
+        <div className="flex items-center gap-2 min-w-0">
           <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
           <div>
-            <div className="text-xs font-semibold text-white">
+            <div className="text-xs font-semibold text-white max-sm:text-fluid-xs">
               Result: Confirmed EHR Booking & 5-Star Delight
             </div>
-            <div className="text-[10px] text-neutral-400">
+            <div className="text-[10px] max-sm:text-fluid-2xs text-neutral-400">
               Appointment locked, SMS intake sent, staff stayed relaxed
             </div>
           </div>
         </div>
-        <span className="text-xs font-mono font-semibold text-emerald-300 bg-emerald-500/20 px-2.5 py-1 rounded border border-emerald-500/40">
+        <span className="text-xs font-mono font-semibold text-emerald-300 bg-emerald-500/20 px-2.5 py-1 rounded border border-emerald-500/40 max-sm:text-fluid-xs max-sm:self-start">
           +$420 Secured
         </span>
       </div>
@@ -507,43 +504,32 @@ export const ComparisonSection: React.FC = () => {
             className="relative w-full overflow-hidden rounded-3xl touch-pan-y cursor-grab active:cursor-grabbing"
           >
             <motion.div
-              style={{ x: springX }}
+              style={{ x: dragX }}
               drag="x"
-              _dragX={dragX}
-              dragConstraints={{
-                left: -containerWidth,
-                right: 0,
-              }}
-              dragElastic={0.2}
-              dragTransition={{
-                bounceStiffness: 260,
-                bounceDamping: 28,
-                power: 0.18,
-                timeConstant: 240,
-              }}
+              dragConstraints={{ left: -containerWidth, right: 0 }}
+              dragElastic={0.12}
+              dragMomentum={false}
               onDragEnd={handleDragEnd}
               className="flex w-[200%] items-stretch"
             >
-              {/* Slide 1: Normal Caller with slow-reveal scale, opacity & depth transforms */}
+              {/* Slide 1: Normal Caller with instant-follow scale & opacity transforms */}
               <motion.div
                 style={{
                   width: `${containerWidth}px`,
                   scale: normalScale,
                   opacity: normalOpacity,
-                  filter: normalFilter,
                 }}
                 className="shrink-0 p-1 transform-gpu origin-center will-change-transform"
               >
                 {renderNormalCard()}
               </motion.div>
 
-              {/* Slide 2: AI Caller with slow-reveal scale, opacity & depth transforms */}
+              {/* Slide 2: AI Caller with instant-follow scale & opacity transforms */}
               <motion.div
                 style={{
                   width: `${containerWidth}px`,
                   scale: aiScale,
                   opacity: aiOpacity,
-                  filter: aiFilter,
                 }}
                 className="shrink-0 p-1 transform-gpu origin-center will-change-transform"
               >
@@ -565,7 +551,7 @@ export const ComparisonSection: React.FC = () => {
 
             {/* Middle Indicator with Spring Dots & Gesture Hint */}
             <div className="flex flex-col items-center gap-1.5">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <button
                   onClick={() => slideTo(0)}
                   aria-label="View normal caller experience"
@@ -595,10 +581,6 @@ export const ComparisonSection: React.FC = () => {
                   />
                 </button>
               </div>
-              <span className="text-[11px] font-mono text-neutral-400 flex items-center gap-1">
-                <Hand className="w-3 h-3 text-neutral-400 animate-pulse" />
-                <span>Swipe left/right to compare</span>
-              </span>
             </div>
 
             <button

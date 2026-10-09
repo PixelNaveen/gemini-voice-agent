@@ -16,6 +16,7 @@
 
   /* Fluid type scale (clamp) for smooth mobile -> tablet responsiveness.
      Min = small-phone size, Max = desktop size, preferred = viewport-scaled. */
+  --text-fluid-2xs: clamp(0.625rem, 0.6rem + 0.2vw, 0.6875rem);    /* 10 -> 11 */
   --text-fluid-xs: clamp(0.6875rem, 0.65rem + 0.3vw, 0.8125rem);   /* 11 -> 13 */
   --text-fluid-sm: clamp(0.75rem, 0.72rem + 0.4vw, 0.875rem);      /* 12 -> 14 */
   --text-fluid-base: clamp(0.875rem, 0.84rem + 0.45vw, 1rem);      /* 14 -> 16 */
