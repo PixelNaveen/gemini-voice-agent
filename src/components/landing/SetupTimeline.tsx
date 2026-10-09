@@ -412,6 +412,8 @@ export const SetupTimeline: React.FC = () => {
   const [mobileActiveStep, setMobileActiveStep] = useState<number>(0);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const stepRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const fillRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const storyRef = useRef<HTMLDivElement>(null);
 
   const activeStep = STEPS[activeStepIdx];
 
@@ -458,6 +460,70 @@ export const SetupTimeline: React.FC = () => {
     });
 
     return () => observer.disconnect();
+  }, [isMobile]);
+
+  // Mobile rail line fills continuously with scroll. A rAF loop (active only
+  // while the story is on screen) measures each step's viewport position and
+  // drives every segment's emerald overlay directly via the DOM, so the fill
+  // stays smooth and needs no scroll-event plumbing.
+  useEffect(() => {
+    if (!isMobile) return;
+    const story = storyRef.current;
+    if (!story) return;
+
+    let rafId = 0;
+    let inView = true;
+
+    const update = () => {
+      const els = stepRefs.current.filter(Boolean) as HTMLDivElement[];
+      if (els.length >= 2) {
+        const center = window.innerHeight * 0.5;
+        const tops = els.map((el) => el.getBoundingClientRect().top);
+
+        let progress: number;
+        if (center <= tops[0]) {
+          progress = 0;
+        } else if (center >= tops[tops.length - 1]) {
+          progress = tops.length - 1;
+        } else {
+          let i = 0;
+          while (i < tops.length - 2 && center >= tops[i + 1]) i++;
+          const span = tops[i + 1] - tops[i];
+          progress = i + (span > 0 ? (center - tops[i]) / span : 1);
+        }
+
+        for (let i = 0; i < fillRefs.current.length; i++) {
+          const fill = fillRefs.current[i];
+          if (!fill) continue;
+          const trackHeight = fill.parentElement?.clientHeight ?? 0;
+          const fraction = Math.min(Math.max(progress - i, 0), 1);
+          fill.style.height = `${fraction * trackHeight}px`;
+        }
+      }
+      if (inView) rafId = requestAnimationFrame(update);
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !inView) {
+          inView = true;
+          rafId = requestAnimationFrame(update);
+        } else if (!entry.isIntersecting && inView) {
+          inView = false;
+          cancelAnimationFrame(rafId);
+        }
+      },
+      { rootMargin: '200px 0px 200px 0px' },
+    );
+    observer.observe(story);
+
+    rafId = requestAnimationFrame(update);
+
+    return () => {
+      inView = false;
+      cancelAnimationFrame(rafId);
+      observer.disconnect();
+    };
   }, [isMobile]);
 
   // 5-second auto-cycle loop (desktop only); cycleKey restarts both the timer and the fill line
@@ -512,7 +578,7 @@ export const SetupTimeline: React.FC = () => {
         </div>
 
         {/* Mobile (<768px): vertical deployment story driven by scroll */}
-        <div className="hidden max-[768px]:block mt-10">
+        <div ref={storyRef} className="hidden max-[768px]:block mt-10">
           {STEPS.map((step, idx) => {
             const dotState =
               idx < mobileActiveStep ? 'done' : idx === mobileActiveStep ? 'current' : 'future';
@@ -538,11 +604,15 @@ export const SetupTimeline: React.FC = () => {
                     <span className="h-3.5 w-3.5 rounded-full border-2 border-neutral-300 bg-white" />
                   )}
                   {!isLast && (
-                    <span
-                      className={`my-1.5 w-px flex-1 ${
-                        idx < mobileActiveStep ? 'bg-emerald-500' : 'bg-neutral-200'
-                      }`}
-                    />
+                    <span className="relative my-1.5 w-[2px] flex-1 overflow-hidden rounded-full bg-neutral-200">
+                      <span
+                        ref={(el) => {
+                          fillRefs.current[idx] = el;
+                        }}
+                        className="absolute left-0 top-0 w-full rounded-full bg-emerald-600"
+                        style={{ height: 0 }}
+                      />
+                    </span>
                   )}
                 </div>
 
