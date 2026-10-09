@@ -410,10 +410,13 @@ export const SetupTimeline: React.FC = () => {
   const [isTablet, setIsTablet] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [mobileActiveStep, setMobileActiveStep] = useState<number>(0);
+  const [isInView, setIsInView] = useState<boolean>(false);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const stepRefs = useRef<Array<HTMLDivElement | null>>([]);
   const fillRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const storyRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const inViewRef = useRef<boolean>(false);
 
   const activeStep = STEPS[activeStepIdx];
 
@@ -437,6 +440,31 @@ export const SetupTimeline: React.FC = () => {
       tabletQuery.removeEventListener('change', update);
       mobileQuery.removeEventListener('change', update);
     };
+  }, []);
+
+  // Auto-cycle only runs once the section is actually reached. On entry we
+  // reset to the first step so the loop always begins at step 1; scrolling away
+  // pauses it. This keeps the rotation from ticking while the visitor is still
+  // up in the hero.
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const now = entry.isIntersecting;
+        if (now && !inViewRef.current) {
+          setActiveStepIdx(0);
+          setCycleKey((k) => k + 1);
+        }
+        inViewRef.current = now;
+        setIsInView(now);
+      },
+      { rootMargin: '-40% 0px -40% 0px', threshold: 0 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   // Mobile timeline state follows the story as steps cross the viewport middle.
@@ -526,10 +554,11 @@ export const SetupTimeline: React.FC = () => {
     };
   }, [isMobile]);
 
-  // Fixed auto-cycle (desktop & tablet): each step holds for exactly
-  // STEP_DURATION_MS before advancing. cycleKey/breakpoint changes restart it.
+  // Fixed auto-cycle (desktop only): each step holds for exactly
+  // STEP_DURATION_MS before advancing, once the section is on screen. Tablet
+  // and mobile are fully user-driven (rail tap, Prev/Next, swipe).
   useEffect(() => {
-    if (isMobile) return;
+    if (isTablet || isMobile || !isInView) return;
 
     const timeoutId = window.setTimeout(() => {
       setActiveStepIdx((prev) => (prev + 1) % STEPS.length);
@@ -537,10 +566,11 @@ export const SetupTimeline: React.FC = () => {
     }, STEP_DURATION_MS);
 
     return () => window.clearTimeout(timeoutId);
-  }, [cycleKey, isMobile]);
+  }, [cycleKey, isTablet, isMobile, isInView]);
 
   return (
     <section
+      ref={sectionRef}
       id="deployment"
       className="py-16 md:py-32 bg-[#FBF9F8] border-t border-neutral-200/60 relative"
       aria-label="Deployment Protocol"
@@ -711,10 +741,13 @@ export const SetupTimeline: React.FC = () => {
 
           {/* Large product interface (full container width) with swipe navigation */}
           <div
-            className="mt-8"
+            className="mt-8 touch-pan-y"
             onTouchStart={(e) => {
               const touch = e.touches[0];
               touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+            }}
+            onTouchCancel={() => {
+              touchStartRef.current = null;
             }}
             onTouchEnd={(e) => {
               if ((e.target as HTMLElement).closest('input, button, a')) return;
