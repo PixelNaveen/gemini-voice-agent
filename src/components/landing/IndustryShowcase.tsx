@@ -161,7 +161,7 @@ const IndustryCard: React.FC<{
 
             {/* Top Badges */}
             <div className="absolute top-3.5 left-4 right-4 flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md text-[11px] font-mono font-medium text-neutral-800 shadow-2xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md text-fluid-xs font-mono font-medium text-neutral-800 shadow-2xs">
                 {industry.icon === 'clinic' && <Stethoscope className="w-3 h-3 text-emerald-600" />}
                 {industry.icon === 'hotel' && <Building2 className="w-3 h-3 text-amber-600" />}
                 {industry.icon === 'salon' && <Scissors className="w-3 h-3 text-rose-600" />}
@@ -169,7 +169,7 @@ const IndustryCard: React.FC<{
               </span>
 
               {/* Beacon badge - visible and animated on both mobile & desktop */}
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-mono tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 backdrop-blur-md">
+              <span className="inline-flex items-center gap-1.5 text-fluid-xs font-mono tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 backdrop-blur-md">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Live Ready
               </span>
@@ -177,47 +177,47 @@ const IndustryCard: React.FC<{
 
             {/* Bottom Image Label */}
             <div className="absolute bottom-3.5 left-4 right-4 flex items-center justify-between text-white">
-              <span className="text-xs font-mono tracking-wider uppercase text-emerald-300 font-semibold drop-shadow-xs">
+              <span className="text-fluid-xs font-mono tracking-wider uppercase text-emerald-300 font-semibold drop-shadow-xs">
                 {industry.name.split('&')[0].trim()}
               </span>
-              <span className="text-xs font-mono tabular-nums text-neutral-200">
+              <span className="text-fluid-xs font-mono tabular-nums text-neutral-200">
                 {industry.secondaryStat}
               </span>
             </div>
           </div>
 
           {/* Content Section */}
-          <div className="p-5 sm:p-6 space-y-4">
+          <div className="p-5 sm:p-6 space-y-4 @container">
             <div>
-              <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 tracking-tight">
+              <h3 className="text-fluid-title font-semibold text-neutral-900 tracking-tight whitespace-nowrap">
                 {industry.name}
               </h3>
-              <p className="text-xs text-neutral-500 font-mono mt-1">
+              <p className="text-fluid-xs text-neutral-500 font-mono mt-1">
                 {industry.subtitle}
               </p>
             </div>
 
-            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed">
+            <p className="text-fluid-sm text-neutral-600 leading-relaxed">
               {industry.description}
             </p>
 
             {/* Autonomous Voice Persona Specification */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 px-3.5 py-2.5 rounded-xl border border-neutral-200/80 bg-neutral-50/80 text-xs">
+            <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 px-3.5 py-2.5 rounded-xl border border-neutral-200/80 bg-neutral-50/80 text-fluid-xs">
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                <span className="font-mono text-[11px] text-neutral-500 uppercase tracking-wider">Acoustic Persona</span>
+                <span className="font-mono text-fluid-xs text-neutral-500 uppercase tracking-wider">Acoustic Persona</span>
               </div>
-              <span className="text-[11px] font-medium text-emerald-800 font-sans">
+              <span className="text-fluid-xs font-medium text-emerald-800 font-sans">
                 {industry.voiceStyle}
               </span>
             </div>
 
             {/* Authentic Dialogue Excerpt */}
-            <div className="p-3.5 rounded-xl bg-neutral-50/90 border border-neutral-200/60 text-xs space-y-2">
-              <div className="text-neutral-500 font-mono text-[11px]">
+            <div className="p-3.5 rounded-xl bg-neutral-50/90 border border-neutral-200/60 text-fluid-xs space-y-2">
+              <div className="text-neutral-500 font-mono text-fluid-xs">
                 Caller: <span className="text-neutral-700 italic">"{industry.dialogueSnippet.caller}"</span>
               </div>
-              <div className="text-emerald-700 font-mono text-[11px] pt-1 border-t border-neutral-200/40">
+              <div className="text-emerald-700 font-mono text-fluid-xs pt-1 border-t border-neutral-200/40">
                 Aura: <span className="text-neutral-900 font-sans font-medium">"{industry.dialogueSnippet.receptionist}"</span>
               </div>
             </div>
@@ -228,7 +228,7 @@ const IndustryCard: React.FC<{
         <div className="p-5 sm:p-6 pt-0 mt-2">
           <div className="pt-4 border-t border-neutral-100 flex items-center justify-between">
             <div>
-              <div className="text-2xl font-editorial font-normal text-neutral-950">
+              <div className="text-fluid-2xl font-editorial font-normal text-neutral-950">
                 <AnimatedCounter
                   value={industry.statNum}
                   prefix={industry.statPrefix}
@@ -236,7 +236,7 @@ const IndustryCard: React.FC<{
                   decimals={industry.statDecimals || 0}
                 />
               </div>
-              <div className="text-[11px] text-neutral-500 font-mono">
+              <div className="text-fluid-xs text-neutral-500 font-mono">
                 {industry.statLabel}
               </div>
             </div>
@@ -292,13 +292,13 @@ const TabletIndustryBar: React.FC<{
 
           {/* Top Badges */}
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md text-[11px] font-mono font-medium text-neutral-800 shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md text-fluid-xs font-mono font-medium text-neutral-800 shadow-2xs">
               {industry.icon === 'clinic' && <Stethoscope className="w-3 h-3 text-emerald-600" />}
               {industry.icon === 'hotel' && <Building2 className="w-3 h-3 text-amber-600" />}
               {industry.icon === 'salon' && <Scissors className="w-3 h-3 text-rose-600" />}
               {industry.tag}
             </span>
-            <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 backdrop-blur-md">
+            <span className="inline-flex items-center gap-1 text-fluid-xs font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 backdrop-blur-md">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Live
             </span>
@@ -306,75 +306,75 @@ const TabletIndustryBar: React.FC<{
 
           {/* Bottom Metric */}
           <div className="absolute bottom-3 left-3 right-3">
-            <span className="text-[10px] font-mono text-neutral-300 block uppercase tracking-wider">
+            <span className="text-fluid-xs font-mono text-neutral-300 block uppercase tracking-wider">
               {industry.statLabel}
             </span>
-            <span className="text-xl font-bold font-tech text-emerald-400 drop-shadow-xs">
+            <span className="text-fluid-xl font-bold font-tech text-emerald-400 drop-shadow-xs">
               {industry.statNumber}
             </span>
           </div>
         </div>
 
         {/* Content Details */}
-        <div className="flex-1 p-5 sm:p-6 flex flex-col justify-between space-y-3.5">
+        <div className="flex-1 p-5 sm:p-6 flex flex-col justify-between space-y-3.5 @container">
           <div>
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-medium">
+                  <span className="text-fluid-xs font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-medium">
                     {industry.tag}
                   </span>
-                  <span className="text-[10px] font-mono text-neutral-400">
+                  <span className="text-fluid-xs font-mono text-neutral-400">
                     Sector 0{idx + 1}
                   </span>
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 tracking-tight mt-1">
+                <h3 className="text-fluid-title font-semibold text-neutral-900 tracking-tight mt-1 whitespace-nowrap">
                   {industry.name}
                 </h3>
-                <p className="text-xs text-neutral-500 font-mono mt-0.5">
+                <p className="text-fluid-xs text-neutral-500 font-mono mt-0.5">
                   {industry.subtitle}
                 </p>
               </div>
 
-              <span className="px-2.5 py-1 rounded-full bg-neutral-100 text-xs font-mono font-medium text-neutral-600 border border-neutral-200/80 shrink-0">
+              <span className="px-2.5 py-1 rounded-full bg-neutral-100 text-fluid-xs font-mono font-medium text-neutral-600 border border-neutral-200/80 shrink-0 whitespace-nowrap">
                 0{idx + 1} / 0{total}
               </span>
             </div>
 
-            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed mt-2 line-clamp-2">
+            <p className="text-fluid-sm text-neutral-600 leading-relaxed mt-2 line-clamp-2">
               {industry.description}
             </p>
           </div>
 
           {/* Persona & Dialogue Excerpt */}
           <div className="grid grid-cols-2 gap-2.5">
-            <div className="p-2.5 rounded-xl bg-neutral-50/90 border border-neutral-200/70 text-xs flex flex-col justify-center">
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-neutral-500 uppercase tracking-wider mb-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="p-2.5 rounded-xl bg-neutral-50/90 border border-neutral-200/70 text-fluid-xs flex flex-col justify-center">
+              <div className="flex items-center gap-1.5 text-fluid-xs font-mono text-neutral-500 uppercase tracking-wider mb-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                 <span>Voice Persona</span>
               </div>
-              <span className="text-xs font-medium text-emerald-900 font-sans truncate">
+              <span className="text-fluid-xs font-medium text-emerald-900 font-sans truncate">
                 {industry.voiceStyle}
               </span>
             </div>
 
-            <div className="p-2.5 rounded-xl bg-neutral-50/90 border border-neutral-200/70 text-xs">
-              <span className="text-[10px] font-mono text-neutral-500 block mb-0.5">Caller Excerpt</span>
-              <p className="text-neutral-700 italic truncate text-[11px]">
+            <div className="p-2.5 rounded-xl bg-neutral-50/90 border border-neutral-200/70 text-fluid-xs">
+              <span className="text-fluid-xs font-mono text-neutral-500 block mb-0.5">Caller Excerpt</span>
+              <p className="text-neutral-700 italic truncate text-fluid-xs">
                 "{industry.dialogueSnippet.caller}"
               </p>
             </div>
           </div>
 
           {/* Bottom Action Row */}
-          <div className="pt-2.5 border-t border-neutral-200/60 flex items-center justify-between">
-            <span className="text-xs font-mono text-emerald-700 font-medium">
+          <div className="pt-2.5 border-t border-neutral-200/60 flex items-center justify-between gap-2">
+            <span className="text-fluid-xs font-mono text-emerald-700 font-medium">
               ✦ {industry.secondaryStat}
             </span>
 
             <button
               onClick={() => onSelectCase(industry)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-emerald-600 text-white text-xs font-medium transition-colors cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-emerald-600 text-white text-fluid-xs font-medium transition-colors cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
             >
               <span>Explore Case Study</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -410,14 +410,14 @@ export const IndustryShowcase: React.FC = () => {
             </span>
           </motion.div>
 
-          <div className="text-3xl sm:text-4xl lg:text-5xl font-editorial font-normal tracking-tight text-neutral-950 text-balance">
+          <div className="text-fluid-3xl font-editorial font-normal tracking-tight text-neutral-950 text-balance">
             <BlurText
               text="Where every conversation matters."
               delay={35}
               className="font-editorial"
             />
           </div>
-          <p className="text-base sm:text-lg text-neutral-600 font-sans leading-relaxed text-balance">
+          <p className="text-fluid-lg text-neutral-600 font-sans leading-relaxed text-balance">
             In high-touch healthcare, boutique hospitality, and luxury studios, a call is never just a transaction. It is an authentic extension of your brand.
           </p>
         </div>
@@ -494,69 +494,69 @@ export const IndustryShowcase: React.FC = () => {
                   alt={selectedCase.name}
                   className="w-14 h-14 rounded-2xl object-cover border border-neutral-200 shadow-2xs"
                 />
-                <div>
-                  <span className="text-xs font-mono text-emerald-700 uppercase tracking-wider font-semibold">
+                <div className="flex-1 min-w-0 @container">
+                  <span className="text-fluid-xs font-mono text-emerald-700 uppercase tracking-wider font-semibold">
                     Deployment Case Study
                   </span>
-                  <h3 className="text-2xl font-editorial font-normal text-neutral-900 leading-tight">
+                  <h3 className="text-fluid-title font-editorial font-normal text-neutral-900 leading-tight whitespace-nowrap">
                     {selectedCase.name}
                   </h3>
-                  <p className="text-xs font-mono text-neutral-500">
+                  <p className="text-fluid-xs font-mono text-neutral-500">
                     {selectedCase.subtitle}
                   </p>
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-100 italic text-sm text-neutral-700 leading-relaxed font-editorial">
+              <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-100 italic text-fluid-sm text-neutral-700 leading-relaxed font-editorial">
                 {selectedCase.quote}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-100">
-                  <span className="text-[11px] text-neutral-500 font-mono block">Primary Metric</span>
-                  <span className="text-3xl font-editorial text-neutral-900 block mt-1">
+                  <span className="text-fluid-xs text-neutral-500 font-mono block">Primary Metric</span>
+                  <span className="text-fluid-2xl font-editorial text-neutral-900 block mt-1">
                     {selectedCase.statNumber}
                   </span>
-                  <span className="text-xs text-neutral-600 mt-0.5 block">
+                  <span className="text-fluid-xs text-neutral-600 mt-0.5 block">
                     {selectedCase.statLabel}
                   </span>
                 </div>
                 <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-100">
-                  <span className="text-[11px] text-neutral-500 font-mono block">Operational Outcome</span>
-                  <span className="text-lg font-semibold text-emerald-700 block mt-1">
+                  <span className="text-fluid-xs text-neutral-500 font-mono block">Operational Outcome</span>
+                  <span className="text-fluid-base font-semibold text-emerald-700 block mt-1">
                     {selectedCase.secondaryStat}
                   </span>
-                  <span className="text-xs text-neutral-600 mt-0.5 block">
+                  <span className="text-fluid-xs text-neutral-600 mt-0.5 block">
                     Audited across 90-day deployment
                   </span>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <span className="text-xs font-mono uppercase tracking-wider text-neutral-400 block">
+                <span className="text-fluid-xs font-mono uppercase tracking-wider text-neutral-400 block">
                   Representative Voice Exchange
                 </span>
-                <div className="p-4 rounded-xl bg-neutral-900 text-white space-y-3 text-xs sm:text-sm">
+                <div className="p-4 rounded-xl bg-neutral-900 text-white space-y-3 text-fluid-sm">
                   <p className="text-neutral-300">
-                    <span className="text-neutral-400 font-mono text-[11px] block">Caller:</span>
+                    <span className="text-neutral-400 font-mono text-fluid-xs block">Caller:</span>
                     "{selectedCase.dialogueSnippet.caller}"
                   </p>
                   <p className="text-emerald-400 pt-2 border-t border-white/10">
-                    <span className="text-emerald-300/70 font-mono text-[11px] block">Aura Receptionist:</span>
+                    <span className="text-emerald-300/70 font-mono text-fluid-xs block">Aura Receptionist:</span>
                     "{selectedCase.dialogueSnippet.receptionist}"
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center gap-2 text-xs text-neutral-500 font-mono">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-neutral-100">
+                <div className="flex items-start sm:items-center gap-2 text-fluid-xs text-neutral-500 font-mono min-w-0">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
                   <span>Tested with real telephony infrastructure</span>
                 </div>
 
                 <button
                   onClick={() => setSelectedCase(null)}
-                  className="px-5 py-2.5 rounded-full bg-neutral-900 text-white text-xs font-semibold hover:bg-neutral-800 transition-colors cursor-pointer"
+                  className="w-full sm:w-auto shrink-0 whitespace-nowrap px-5 py-2.5 rounded-full bg-neutral-900 text-white text-fluid-xs font-semibold hover:bg-neutral-800 transition-colors cursor-pointer text-center"
                 >
                   Close Case Study
                 </button>

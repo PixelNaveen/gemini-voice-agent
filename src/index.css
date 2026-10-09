@@ -13,6 +13,20 @@
   --color-canvas: #FBF9F8;
   --color-canvas-muted: #F5F3F0;
   --color-surface-dark: #0B0B0B;
+
+  /* Fluid type scale (clamp) for smooth mobile -> tablet responsiveness.
+     Min = small-phone size, Max = desktop size, preferred = viewport-scaled. */
+  --text-fluid-xs: clamp(0.6875rem, 0.65rem + 0.3vw, 0.8125rem);   /* 11 -> 13 */
+  --text-fluid-sm: clamp(0.75rem, 0.72rem + 0.4vw, 0.875rem);      /* 12 -> 14 */
+  --text-fluid-base: clamp(0.875rem, 0.84rem + 0.45vw, 1rem);      /* 14 -> 16 */
+  --text-fluid-lg: clamp(1.0625rem, 0.98rem + 0.7vw, 1.25rem);     /* 17 -> 20 */
+  --text-fluid-xl: clamp(1.25rem, 1.1rem + 1vw, 1.5rem);           /* 20 -> 24 */
+  --text-fluid-2xl: clamp(1.5rem, 1.25rem + 1.4vw, 2rem);          /* 24 -> 32 */
+  --text-fluid-3xl: clamp(1.75rem, 1.5rem + 2.4vw, 3rem);          /* 28 -> 48 */
+  /* Card titles stay on one line on every device. Uses container-query units
+     (cqi) inside clamp so the size scales to the card's OWN width: larger where
+     there is room, shrinking to fit narrow 3-col desktop cards / small phones. */
+  --text-fluid-title: clamp(0.75rem, 6.2cqi, 1.5rem); /* 12 -> 24 */
 }
 
 /* Standardized Brand Emerald Accent Utilities */
