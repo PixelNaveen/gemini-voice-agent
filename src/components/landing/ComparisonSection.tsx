@@ -594,7 +594,7 @@ export const ComparisonSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Feature-by-Feature Operational Matrix Section */}
+        {/* Feature-by-Feature Operational Matrix Section — hidden for now, kept for reuse
         <div className="mt-16 sm:mt-20">
           <div className="pb-4">
             <h4 className="text-xl sm:text-2xl font-editorial text-neutral-900">
@@ -658,6 +658,7 @@ export const ComparisonSection: React.FC = () => {
             </div>
           </div>
         </div>
+        */}
       </div>
     </section>
   );
