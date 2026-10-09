@@ -212,9 +212,9 @@ export const OperationalTelemetry: React.FC = () => {
           })}
         </div>
 
-        {/* Mobile View: Touch-Swipeable Deck */}
+        {/* Mobile & Tablet View: Touch-Swipeable Deck */}
         <div className="block lg:hidden mt-12">
-          <TouchSwipeDeck>
+          <TouchSwipeDeck showHint={false}>
             {TELEMETRY_STREAMS.map((stream, idx) => (
               <div
                 key={stream.id}

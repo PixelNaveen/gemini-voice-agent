@@ -133,10 +133,11 @@ export default function App() {
         {/* Animated Divider */}
         <AnimatedSeparator />
 
-        {/* Section 10: Less than the cost of one missed booking */}
+        {/* Section 10: Less than the cost of one missed booking — hidden
         <SectionReveal delay={0.05}>
           <Pricing onSelectPlan={(plan) => handleOpenDemoModal(plan)} />
         </SectionReveal>
+        */}
 
         {/* Animated Divider */}
         <AnimatedSeparator />
