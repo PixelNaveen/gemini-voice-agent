@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, type Variants } from 'motion/react';
 import { Volume2, VolumeX, ArrowRight, CheckCircle2, X, Sparkles, Building2, Stethoscope, Scissors, Play, Pause } from 'lucide-react';
 import { IndustryCase } from '../../types/landing.types.ts';
@@ -423,7 +424,7 @@ export const IndustryShowcase: React.FC = () => {
 
         {/* 1. Mobile (< 768px): Touch Swipable Industry Deck */}
         <div className="block md:hidden mt-8">
-          <TouchSwipeDeck minHeightClass="min-h-[580px]">
+          <TouchSwipeDeck minHeightClass="min-h-[580px]" showHint={false}>
             {INDUSTRIES.map((industry) => (
               <IndustryCard
                 key={industry.id}
@@ -461,15 +462,16 @@ export const IndustryShowcase: React.FC = () => {
         </div>
       </div>
 
-      {/* Case Study Detail Modal with AnimatePresence */}
-      <AnimatePresence>
+      {/* Case Study Detail Modal — portaled to <body> so it always renders on the top layer, above every section */}
+      {createPortal(
+        <AnimatePresence>
         {selectedCase && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedCase(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           >
             <motion.div
               initial={{ scale: 0.93, opacity: 0, y: 20 }}
@@ -562,7 +564,9 @@ export const IndustryShowcase: React.FC = () => {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body,
+      )}
     </section>
   );
 };
