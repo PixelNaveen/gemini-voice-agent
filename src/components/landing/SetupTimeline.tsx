@@ -526,27 +526,18 @@ export const SetupTimeline: React.FC = () => {
     };
   }, [isMobile]);
 
-  // 5-second auto-cycle loop (desktop only); cycleKey restarts both the timer and the fill line
+  // Fixed auto-cycle (desktop & tablet): each step holds for exactly
+  // STEP_DURATION_MS before advancing. cycleKey/breakpoint changes restart it.
   useEffect(() => {
-    if (isTablet || isMobile) return;
+    if (isMobile) return;
 
-    const startTime = performance.now();
+    const timeoutId = window.setTimeout(() => {
+      setActiveStepIdx((prev) => (prev + 1) % STEPS.length);
+      setCycleKey((k) => k + 1);
+    }, STEP_DURATION_MS);
 
-    const tick = (timestamp: number) => {
-      if (timestamp - startTime >= STEP_DURATION_MS) {
-        setActiveStepIdx((prev) => (prev + 1) % STEPS.length);
-        setCycleKey((k) => k + 1);
-      } else {
-        requestAnimationFrame(tick);
-      }
-    };
-
-    const animationFrameId = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [cycleKey, isTablet, isMobile]);
+    return () => window.clearTimeout(timeoutId);
+  }, [cycleKey, isMobile]);
 
   return (
     <section
@@ -669,7 +660,7 @@ export const SetupTimeline: React.FC = () => {
                     onClick={() => goToStep(idx)}
                     aria-pressed={isCurrent}
                     aria-label={`Step ${step.number}: ${step.title}`}
-                    className="group flex flex-col items-center gap-1.5 rounded-lg px-1 pb-1 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
+                    className="group relative z-10 flex flex-col items-center gap-1.5 rounded-lg px-1 pb-1 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
                   >
                     <span
                       className={`h-3 w-3 rounded-full border-2 transition-colors ${
@@ -751,7 +742,7 @@ export const SetupTimeline: React.FC = () => {
               <button
                 type="button"
                 onClick={() => goToStep(activeStepIdx - 1)}
-                className="group inline-flex items-center gap-1.5 rounded-md -ml-2 px-2 py-1.5 font-mono text-xs uppercase tracking-wider text-neutral-500 transition-colors hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
+                className="group inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-4 py-2 font-mono text-xs uppercase tracking-wider text-neutral-800 shadow-sm transition-colors hover:border-emerald-500 hover:text-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
               >
                 <ChevronLeft
                   className="h-4 w-4 transition-transform group-hover:-translate-x-0.5"
@@ -766,7 +757,7 @@ export const SetupTimeline: React.FC = () => {
               <button
                 type="button"
                 onClick={() => goToStep(activeStepIdx + 1)}
-                className="group inline-flex items-center gap-1.5 rounded-md -mr-2 px-2 py-1.5 font-mono text-xs uppercase tracking-wider text-neutral-500 transition-colors hover:text-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
+                className="group inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-4 py-2 font-mono text-xs uppercase tracking-wider text-neutral-800 shadow-sm transition-colors hover:border-emerald-500 hover:text-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
               >
                 Next
                 <ChevronRight
